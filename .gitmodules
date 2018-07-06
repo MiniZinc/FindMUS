@@ -1,0 +1,4 @@
+[submodule "submodules/chuffed_assump"]
+	path = submodules/chuffed_assump
+  url = https://github.com/gkgange/chuffed.git
+  branch = feature/assump
