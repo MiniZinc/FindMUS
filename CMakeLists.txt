@@ -34,12 +34,13 @@ endif()
 set(CHUFFED_SOURCE_DIR "${CMAKE_SOURCE_DIR}/submodules/chuffed_assump/")
 add_subdirectory(${CHUFFED_SOURCE_DIR} EXCLUDE_FROM_ALL)
 
-include_directories("include" ${CMAKE_BINARY_DIR} ${CHUFFED_SOURCE_DIR}/chuffed)
+include_directories("include" ${CMAKE_BINARY_DIR} ${CHUFFED_SOURCE_DIR})
 
 # The version number.
 set (findMUS_VERSION_MAJOR 0)
 set (findMUS_VERSION_MINOR 1)
 set (findMUS_VERSION_PATCH 0)
+
 
 add_library(hiermus
   lib/DemoSubProblems.cpp  include/DemoSubProblems.h
@@ -60,9 +61,12 @@ add_library(hiermus
 find_package(libminizinc PATHS ${CMAKE_INSTALL_PREFIX}/lib/CMake/ NO_DEFAULT_PATH)
 if(libminizinc_FOUND)
     message("MiniZinc library found at ${libminizinc_INCLUDE_DIRS}!")
+
     include_directories(${libminizinc_INCLUDE_DIRS})
+    add_executable(findMUS src/findMUS.cpp)
+    target_link_libraries(findMUS hiermus chuffed_fzn chuffed minizinc_fzn minizinc_solver minizinc ${CMAKE_THREAD_LIBS_INIT})
+else()
+    message("Error: Could not find MiniZinc library. findMUS cannot be compiled. Install libminizinc from source and set CMAKE_PREFIX_PATH or libminizinc_DIR.")
 endif()
 
-add_executable(findMUS src/findMUS.cpp)
-target_link_libraries(findMUS hiermus chuffed_fzn chuffed minizinc_fzn minizinc_solver minizinc ${CMAKE_THREAD_LIBS_INIT})
 

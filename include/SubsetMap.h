@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <fstream>
 
 #include "Types.h"
 #include "SubProblem.h"
@@ -57,6 +58,8 @@ namespace HierMUS {
       Selection solution_template;
 
       bool consistent;
+
+      std::fstream null_stream;
 
     private:
       MapNode addConnections(const MapNode& node, int depth = 0);

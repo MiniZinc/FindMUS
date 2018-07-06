@@ -65,12 +65,10 @@ namespace HierMUS {
       engine.propagations = 0;
       engine.solutions = 0;
       engine.next_simp_db = 0;
+      engine.output_stream = &null_stream;
 
       so.time_out = std::numeric_limits<int>::max();
       so.branch_random = true;
-      so.solution_sep_msg = "";
-      so.search_complete_msg = "";
-      so.search_unsat_msg = "";
       so.print_sol = true;
       engine.problem = this;
 
