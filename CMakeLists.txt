@@ -12,7 +12,7 @@ if(APPLE)
   set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
 endif(APPLE)
 
-project (chuffed CXX C)
+project (findMUS CXX C)
 
 if ( (CMAKE_VERSION VERSION_GREATER 3.1.0) OR (CMAKE_VERSION VERSION_EQUAL 3.1.0) )
   set (CMAKE_CXX_STANDARD 11)
