@@ -139,7 +139,7 @@ namespace HierMUS {
     fzn_env.model(fzn_model);
 
     vector<MiniZinc::TypeError> typeErrors;
-    MiniZinc::typecheck(fzn_env, fzn_model, typeErrors, true, true);
+    MiniZinc::typecheck(fzn_env, fzn_model, typeErrors, true, true, true);
     if(typeErrors.size() > 0) {
       for(unsigned int i=0; i<typeErrors.size(); i++) {
         std::cerr << typeErrors[i].loc() << ":" << std::endl;
@@ -155,7 +155,7 @@ namespace HierMUS {
     s2o.initFromEnv(&fzn_env);
 
     for(auto it = fzn_model->begin(); it != fzn_model->end(); ++it) {
-      if((*it)->isa<MiniZinc::IncludeI>()) { (*it)->remove(); }
+      if((*it)->isa<MiniZinc::IncludeI>() || (*it)->isa<MiniZinc::FunctionI>()) { (*it)->remove(); }
       if((*it)->isa<MiniZinc::VarDeclI>()) {
         MiniZinc::VarDeclI* vdi = (*it)->cast<MiniZinc::VarDeclI>();
         MiniZinc::VarDecl* vd = vdi->e();
@@ -235,30 +235,6 @@ namespace HierMUS {
       << std::fixed << std::setprecision(5) << wallClockTime() - start_build
       << " seconds.\n";
     //}
-
-    MiniZinc::MznSolver solver(nullstream, log);
-
-    // Build arguments for MznSolver
-    vector<string> args;
-    args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
-    args.push_back("--solver");
-    args.push_back(mopts.subproblem_solver);
-    if(mopts.subproblem_solver == "org.minizinc.mzn-fzn") {
-        args.push_back("--fzn-time-limit");
-        args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
-    }
-    vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
-    args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
-
-    switch (solver.processOptions(args)) {
-      case 0:
-        break;
-      default:
-        std::cerr << "FznSubProblem:\tError creating solver with args:\t" << utils::join(args, " ") << std::endl;
-        exit(EXIT_FAILURE);
-    }
-    solver_factory = solver.getSF();
-    solver_options = solver.getSI_OPT();
   }
 
   string getExplanation(const MiniZinc::ConstraintI* ci) {
@@ -301,13 +277,35 @@ namespace HierMUS {
     // Activate the selected constraints
     for(const string& l : leaves) { constraints[l]->unremove(); }
 
-    MiniZinc::SolverInstanceBase* si = solver_factory->createSI(fzn_env, log, solver_options);
+    MiniZinc::MznSolver solver(nullstream, log);
+
+    // Build arguments for MznSolver
+    vector<string> args;
+    args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
+    args.push_back("--solver");
+    args.push_back(mopts.subproblem_solver);
+    if(mopts.subproblem_solver == "org.minizinc.mzn-fzn") {
+        args.push_back("--fzn-time-limit");
+        args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
+    }
+    vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
+    args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
+
+    switch (solver.processOptions(args)) {
+      case 0:
+        break;
+      default:
+        std::cerr << "FznSubProblem:\tError creating solver with args:\t" << utils::join(args, " ") << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    MiniZinc::SolverFactory* sf = solver.getSF();
+    MiniZinc::SolverInstanceBase* si = sf->createSI(fzn_env, log, solver.getSI_OPT());
     si->setSolns2Out(&s2o);
     si->processFlatZinc();
 
     MiniZinc::SolverInstance::Status s = si->solve();
 
-    delete si;
+    sf->destroySI(si);
     std::string error_log = log.str();
     if(!error_log.empty()) {
       std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << "\n";

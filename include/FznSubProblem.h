@@ -39,8 +39,6 @@ namespace HierMUS {
       MiniZinc::Env fzn_env;
       NullSolns2Out s2o;
       MiniZinc::Model* fzn_model;
-      MiniZinc::SolverFactory* solver_factory = 0;
-      MiniZinc::SolverInstanceBase::Options* solver_options = 0;
 
       std::unordered_map<std::string, MiniZinc::ConstraintI*> constraints;
       std::unordered_map<std::string, std::string> nameToPath;
@@ -58,8 +56,6 @@ namespace HierMUS {
       FznSubProblem(std::string fznpath, std::string pathfilepath, MUSEnumOptions& mo);
       ~FznSubProblem() {
         delete fzn_model;
-        delete solver_options;
-        delete solver_factory;
       }
 
       void printSol(const Selection& b);
