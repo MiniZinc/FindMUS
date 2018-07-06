@@ -22,8 +22,8 @@ namespace HierMUS {
     if(mo.subproblem_structure == STR_FLAT) {
       tree.children = {b1,b2,b3,b4,b5,b6};
     } else {
-      MapNode c12 {"12", {b1, b2}}; MapNode c34 {"34", {b3, b4}}; MapNode c56 {"56", {b5, b6}};
-      MapNode c1234 {"1234", {c12, c34}};
+      MapNode c12 {"12", vector<MapNode>({b1, b2})}; MapNode c34 {"34", vector<MapNode>({b3, b4})}; MapNode c56 {"56", vector<MapNode>({b5, b6})};
+      MapNode c1234 {"1234", vector<MapNode>({c12, c34})};
       tree.children = {c1234, c56};
     }
   }
@@ -118,8 +118,8 @@ namespace HierMUS {
     if(mo.subproblem_structure == STR_FLAT) {
       tree.children = {b1,b2,b3,b4,b5,b6};
     } else {
-      MapNode c12 {"12", {b1, b2}}; MapNode c34 {"34", {b3, b4}}; MapNode c56 {"56", {b5, b6}};
-      MapNode c3456 {"3456", {c34, c56}};
+      MapNode c12 {"12", vector<MapNode>({b1, b2})}; MapNode c34 {"34", vector<MapNode>({b3, b4})}; MapNode c56 {"56", vector<MapNode>({b5, b6})};
+      MapNode c3456 {"3456", vector<MapNode>({c34, c56})};
       tree.children = {c12, c3456};
     }
   }
