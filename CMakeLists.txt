@@ -32,7 +32,7 @@ else()
 endif()
 
 set(CHUFFED_SOURCE_DIR "${CMAKE_SOURCE_DIR}/submodules/chuffed_assump/")
-add_subdirectory(${CHUFFED_SOURCE_DIR})
+add_subdirectory(${CHUFFED_SOURCE_DIR} EXCLUDE_FROM_ALL)
 
 include_directories("include" ${CMAKE_BINARY_DIR} ${CHUFFED_SOURCE_DIR}/chuffed)
 
@@ -42,31 +42,20 @@ set (findMUS_VERSION_MINOR 1)
 set (findMUS_VERSION_PATCH 0)
 
 add_library(hiermus
-  lib/DemoSubProblems.cpp
-  lib/SubProblem.cpp
-  lib/Node.cpp
-  lib/string_utils.cpp
-  lib/path_utils.cpp
-  lib/SubsetMap.cpp
-  lib/MusEnumerator.cpp
-  lib/Marco.cpp
-  lib/ReMUS.cpp
-  lib/StackMUS.cpp
-  lib/HierMUSEnumer.cpp
-  lib/FznSubProblem.cpp
-  lib/Types.cpp
-  include/DemoSubProblems.h
-  include/SubProblem.h
-  include/Node.h
-  include/string_utils.h
-  include/path_utils.h
-  include/SubsetMap.h
-  include/MusEnumerator.h
-  include/ReMUS.h
-  include/StackMUS.h
-  include/HierMUSEnumer.h
-  include/FznSubProblem.h
-  include/Types.h)
+  lib/DemoSubProblems.cpp  include/DemoSubProblems.h
+  lib/SubProblem.cpp       include/SubProblem.h
+  lib/Node.cpp             include/Node.h
+  lib/string_utils.cpp     include/string_utils.h
+  lib/path_utils.cpp       include/path_utils.h
+  lib/SubsetMap.cpp        include/SubsetMap.h
+  lib/MusEnumerator.cpp    include/MusEnumerator.h
+  lib/Marco.cpp            include/Marco.h
+  lib/ReMUS.cpp            include/ReMUS.h
+  lib/StackMUS.cpp         include/StackMUS.h
+  lib/HierMUSEnumer.cpp    include/HierMUSEnumer.h
+  lib/FznSubProblem.cpp    include/FznSubProblem.h  
+  lib/Types.cpp            include/Types.h 
+                           include/Options.h)
 
 find_package(libminizinc PATHS ${CMAKE_INSTALL_PREFIX}/lib/CMake/ NO_DEFAULT_PATH)
 if(libminizinc_FOUND)
