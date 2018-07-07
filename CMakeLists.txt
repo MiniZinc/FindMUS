@@ -37,8 +37,12 @@ add_library(hiermus
 if(libminizinc_FOUND)
     add_executable(findMUS src/findMUS.cpp)
     target_link_libraries(findMUS hiermus chuffed_fzn chuffed minizinc_fzn minizinc_solver minizinc ${CMAKE_THREAD_LIBS_INIT})
+
+    INSTALL(TARGETS findMUS
+      RUNTIME DESTINATION bin
+      LIBRARY DESTINATION lib
+      ARCHIVE DESTINATION lib)
+
 else()
     message("Error: Could not find MiniZinc library. findMUS cannot be compiled. Install libminizinc from source and set CMAKE_PREFIX_PATH or libminizinc_DIR.")
 endif()
-
-
