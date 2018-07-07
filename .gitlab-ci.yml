@@ -57,7 +57,7 @@ build:win32:
     CMAKE_ARCH: "Visual Studio 14 2015"
     CMAKEDIR: "CMake"
   script:
-    - curl --silent -o vendor.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fvendor/jobs/artifacts/master/download?job=solvers:$MZNARCH"
+    - curl --silent -o vendor.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fvendor/jobs/artifacts/master/download?job=solvers:%MZNARCH%"
     - unzip -q vendor.zip
     - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fminizinc/jobs/artifacts/develop/download?job=build:%MZNARCH%"
     - unzip -q minizinc.zip
