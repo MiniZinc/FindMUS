@@ -28,7 +28,7 @@ stages:
       - build/
 
 
-.build:linux:
+build:linux:
   <<: *build_definition
   image: dekker1/cmake:latest
   variables:
