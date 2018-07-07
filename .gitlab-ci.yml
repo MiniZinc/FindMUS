@@ -16,8 +16,8 @@ stages:
     - rm -rf build
     - mkdir -p build
     - cd build
-    - cmake -G"$CMAKE_ARCH" -v .. -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$PWD/../minizinc/$CMAKEDIR -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
-    - cmake --build .  --config Release VERBOSE=1
+    - cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -G"$CMAKE_ARCH" -v .. -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$PWD/../minizinc/$CMAKEDIR -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
+    - cmake --build .  --config Release
     - cmake --build .  --config Release --target install
   artifacts:
     paths:
