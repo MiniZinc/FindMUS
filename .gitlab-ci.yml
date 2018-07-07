@@ -62,7 +62,7 @@ build:win32:
     - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fminizinc/jobs/artifacts/develop/download?job=build:%MZNARCH%"
     - unzip -q minizinc.zip
     - git submodule update --init submodules/chuffed_assump
-    - \@echo link_directories(${CMAKE_SOURCE_DIR}/vendor/gecode/lib ${CMAKE_SOURCE_DIR}/vendor/CBC/lib) > CMakeLists_link.txt
+    - "@echo link_directories(${CMAKE_SOURCE_DIR}/vendor/gecode/lib ${CMAKE_SOURCE_DIR}/vendor/CBC/lib) > CMakeLists_link.txt"
     - type CMakeLists.txt >> CMakeLists_link.txt
     - mv CMakeLists_link.txt CMakeLists.txt
     - if not exist "build" mkdir build
