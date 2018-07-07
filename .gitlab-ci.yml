@@ -5,13 +5,16 @@ stages:
 .build_template: &build_definition
   stage: build
   script:
+    - curl --silent -o vendor.zip --location --header "PRIVATE-TOKEN:$ACCESS_TOKEN" "https://gitlab.com/api/v4/projects/minizinc%2Fvendor/jobs/artifacts/master/download?job=solvers:$MZNARCH"
+    - unzip -q vendor.zip
     - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:$ACCESS_TOKEN" "https://gitlab.com/api/v4/projects/minizinc%2Fminizinc/jobs/artifacts/develop/download?job=build:$MZNARCH"
     - unzip -q minizinc.zip
     - git submodule update --init submodules/chuffed_assump
+    - (echo "link_directories(vendor/gecode/lib vendor/CBC/lib)"; cat CMakeLists.txt) > CMakeLists_link.txt
     - rm -rf build
     - mkdir -p build
     - cd build
-    - cmake -G"$CMAKE_ARCH" -v .. -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$PWD/../minizinc/$CMAKEDIR -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
+    - cmake -G"$CMAKE_ARCH" -v ../CMakeLists_link.txt -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$PWD/../minizinc/$CMAKEDIR -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
     - cmake --build .  --config Release
     - cmake --build .  --config Release --target install
   artifacts:
