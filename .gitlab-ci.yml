@@ -75,17 +75,24 @@ build:win32:
     - cmake
     - cpp
 
-.build:win64:
+build:win64:
   <<: *build_definition
   variables:
     MZNARCH: "win64"
+    CMAKEDIR: "CMake"
     CMAKE_ARCH: "Visual Studio 14 2015 Win64"
   script:
-    - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fminizinc/jobs/artifacts/%GITREF%/download?job=build:%MZNARCH%"
+    - curl --silent -o vendor.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fvendor/jobs/artifacts/master/download?job=solvers:%MZNARCH%"
+    - unzip -q vendor.zip
+    - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fminizinc/jobs/artifacts/develop/download?job=build:%MZNARCH%"
     - unzip -q minizinc.zip
+    - git submodule update --init submodules/chuffed_assump
+    - "@echo link_directories(${CMAKE_SOURCE_DIR}/vendor/gecode/lib ${CMAKE_SOURCE_DIR}/vendor/CBC/lib) > CMakeLists_link.txt"
+    - type CMakeLists.txt >> CMakeLists_link.txt
+    - mv CMakeLists_link.txt CMakeLists.txt
     - if not exist "build" mkdir build
     - cd build
-    - cmake -G"%CMAKE_ARCH%" .. -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%"  -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"
+    - cmake -G"%CMAKE_ARCH%" .. -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%"  -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"
     - cmake --build .  --config Release
     - cmake --build .  --config Release --target install
   tags:
