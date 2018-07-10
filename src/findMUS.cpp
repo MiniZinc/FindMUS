@@ -15,7 +15,7 @@
 using namespace HierMUS;
 using std::string;
 
-void printHelp() {
+void help_short() {
   std::cout << "findMUS: Explain an unsatisfiable model\n"
     << "  usage: findMUS [flatzinc file] [paths file]\n"
     << "                 [--marco] [--verbose[-X]] [--demo <demo>]\n"
@@ -28,7 +28,12 @@ void printHelp() {
     << "                 [--output-html] [--output-brief]\n"
     << "                 [--solver <s>] [--solver-flags <f>]\n"
     << "                 [--solver-timelimit <ms>]\n"
-    << "                \n"
+    << "                \n";
+}
+
+void help_long() {
+  help_short();
+  std::cout
     << "  flatzinc file\n"
     << "    Unsatisfiable flatzinc model\n"
     << "  paths file\n"
@@ -42,14 +47,15 @@ void printHelp() {
     << "    Use demo model and tree. <string> must be one of:\n"
     << "      hm5, hm5_2\n";
 #endif
-  std::cout << "  --timeout <s>\n"
+  std::cout
+    << "  --paths <path>\n"
+    << "    Explicit path to paths file\n"
+    << "  --timeout <s>\n"
     << "    Stop after <s> seconds. Default: 1800 seconds\n"
     << "  --frequent-stats\n"
     << "    Output high-level stats after each MUS (for logging)\n"
-    << "  --output-html\n"
-    << "    Output html for use with MiniZincIDE\n"
-    << "  --output-brief\n"
-    << "    Don't output traces (useful for debugging)\n"
+    << "  --output-{html, brief}\n"
+    << "    Output modes, html for use with MiniZincIDE, brief for testing\n"
     << "\n"
     << " Enumeration Options:\n"
     << "  --marco\n"
@@ -64,63 +70,52 @@ void printHelp() {
     << "      fzn: the program level constraints (decomposition)\n"
     << "      <n>: integer, a custom depth\n"
     << "\n"
-    << " Subproblem options\n"
+    << " Subproblem: Solving options\n"
     << "  --solver <s>\n"
     << "    Use solver <s> for SAT checking. Default: \"fzn-gecode\"\n"
     << "  --solver-flags <f>\n"
     << "    Pass flags <f> to solver for SAT checking. Default: \"-time 1000\"\n"
     << "  --solver-timelimit <ms>\n"
     << "    Hard time limit for solver in milliseconds. Default: 1100\n"
-    << "  --ignore-unsat-background\n"
-    << "    Skip unsatisfiable background check\n"
-    << "  --structure flat,gen,normal,mix\n"
-    << "    Alters initial structure: (Default: normal)\n"
-    << "      flat:   Remove all structure\n"
-    << "      gen:    Remove instance specific structure\n"
-    << "      normal: No change\n"
-    << "      mix:    Apply 'gen' before 'normal'\n"
-    << "  --binarize normal,leaves,all\n"
-    << "    Add additional structure: (Default: normal)\n"
-    << "      normal: no change\n"
-    << "      leaves: introduce structure at the leaves\n"
-    << "      all:    introduce structure throughout tree\n"
-    << "  --soft-defines\n"
-    << "    Consider functional constraints as part of MUSes\n"
-    << "  --named-only\n"
-    << "    Only consider constraints annotated with string annotations\n"
-    << "  --named-filter <names>\n"
-    << "    Only consider constraints annotated with string annotations that\n"
-    << "    match comma separated <names>\n"
-    << "  --named-filter-exclude <names>\n"
-    << "    Ignore constraints annotated with string annotations that\n"
-    << "    match comma separated <names>\n"
-    << "  --path-filter <paths>\n"
-    << "    Only consider constraints with paths containing strings from\n"
-    << "    comma separated <paths>\n"
-    << "  --path-filter-exclude <paths>\n"
-    << "    Ignore constraints with paths containing strings from\n"
-    << "    comma separated <paths>\n"
-    << "  --filter-sep <sep>\n"
-    << "    Separator used for named and path filters\n"
-    << "  --dump-dot <dot>\n"
-    << "    Write tree to file <dot>\n"
+    << "  Subproblem filtering options:\n"
+    << "   --ignore-unsat-background\n"
+    << "     Skip unsatisfiable background check\n"
+    << "   --soft-defines\n"
+    << "     Consider functional constraints as part of MUSes\n"
+    << "   --named-only\n"
+    << "     Only consider constraints annotated with string annotations\n"
+    << "   --filter-named <names>    --filter-named-exclude <names>\n"
+    << "     Include/exclude constraints with names that match <sep> separated <names>\n"
+    << "   --filter-path <paths>    --filter-path-exclude <paths>\n"
+    << "     Include/exclude based on <paths>\n"
+    << "   --filter-sep <sep>\n"
+    << "     Separator used for named and path filters\n"
+    << "  Subproblem structure options:\n"
+    << "   --structure flat,gen,normal,mix\n"
+    << "     Alters initial structure: (Default: normal)\n"
+    << "       flat:   Remove all structure\n"
+    << "       gen:    Remove instance specific structure\n"
+    << "       normal: No change\n"
+    << "       mix:    Apply 'gen' before 'normal'\n"
+    << "   --binarize normal,leaves,all\n"
+    << "     Add additional structure: (Default: normal)\n"
+    << "       normal: no change\n"
+    << "       leaves: introduce structure at the leaves\n"
+    << "       all:    introduce structure throughout tree\n"
     << "\n"
     << " Verbosity Options:\n"
-    << "  --verbose-enum\n"
-    << "    Output verbose information from Enumerator\n"
-    << "  --verbose-enum-iteration-stats\n"
-    << "    Output stats at the end of each iteration\n"
-    << "  --verbose-map\n"
-    << "    Output verbose information from SubsetMap\n"
-    << "  --verbose-subsolve\n"
-    << "    Output verbose information from subsolver\n"
-    << "  --verbose-subsolve-extra\n"
-    << "    Output more verbose information from subsolver\n"
+    << "  --verbose-{map,enum,subsolve} <n>:\n"
+    << "    Set verbosity level for different components\n"
     << "  --verbose\n"
-    << "    Output more information during enumeration\n"
+    << "    Set verbosity level of all components to 1\n"
+    << "\n"
+    << " Misc Options:\n"
+    << "  --dump-dot <dot>\n"
+    << "    Write tree in GraphViz format to file <dot>\n"
     << "\n";
   exit(EXIT_FAILURE);
 }
+
 
 int main(int argc, char **argv) {
   string fznpath;
@@ -141,7 +136,7 @@ int main(int argc, char **argv) {
   HierMUS::SubProblem* problem = NULL;
   for(int i=1; i<argc; i++) {
     if(strcmp(argv[i], "--help") == 0) {
-      printHelp();
+      help_long();
     } else if(strcmp(argv[i], "--marco") == 0) {
       mo.map_enumeration_alg = ALG_MARCO;
     } else if(strcmp(argv[i], "--remus") == 0) {
@@ -154,21 +149,28 @@ int main(int argc, char **argv) {
       else if(type == "normal") mo.subproblem_structure = STR_NORMAL;
       else if(type == "gen")    mo.subproblem_structure = STR_GEN;
       else if(type == "mix")    mo.subproblem_structure = STR_GEN_MIX;
-      else printHelp();
+      else {
+        std::cout << "Incorrect structure setting. Available options are {flat, <normal>, gen, mix}\n";
+        help_short();
+      }
     } else if(strcmp(argv[i], "--binarize") == 0) {
       std::string type = argv[++i];
       if(type == "none")        mo.subproblem_binarize = BIN_NONE;
       else if(type == "leaves") mo.subproblem_binarize = BIN_LEAVES;
       else if(type == "all")    mo.subproblem_binarize = BIN_EVERYWHERE;
-      else printHelp();
+      else {
+        std::cout << "Incorrect binarize option. Available options are {<none>, leaves, all}\n";
+        help_short();
+      }
     } else if(strcmp(argv[i], "--ignore-unsat-background") == 0) {
       ignore_unsafisfiable_background = true;
     } else if(strcmp(argv[i], "--nmuses") == 0) {
       maxmuses = atoi(argv[++i]);
+      if(maxmuses == 1) {
+        mo.map_enum_focus_mode = true;
+      }
     } else if(strcmp(argv[i], "--timeout") == 0) {
       mo.timeout = atof(argv[++i]);
-    } else if(strcmp(argv[i], "--output-minizinc") == 0) {
-      mo.output_minizinc = true;
     } else if(strcmp(argv[i], "--solver") == 0) {
       mo.subproblem_solver = argv[++i];
     } else if(strcmp(argv[i], "--solver-flags") == 0) {
@@ -184,51 +186,43 @@ int main(int argc, char **argv) {
         mo.map_depth_max = 0;
         if(a == "mzn") mo.map_depth = DEPTH_INSTANCE;
         else if(a == "fzn") mo.map_depth = DEPTH_PROGRAM;
-        else printHelp();
+        else {
+          std::cout << "Incorrect depth setting: Valid options are {<fzn>, mzn} or a positive integer\n";
+          help_short();
+        }
       }
     } else if(strcmp(argv[i], "--soft-defines") == 0) {
       mo.subproblem_hard_functional_constraints = false;
     } else if(strcmp(argv[i], "--named-only") == 0) {
       mo.subproblem_named_only = true;
     } else if(strcmp(argv[i], "--filter-sep") == 0) {
-      filter_sep = argv[++i][0];
-    } else if(strcmp(argv[i], "--named-filter") == 0 ||
-              strcmp(argv[i], "--named-filter-include") == 0) {
+        filter_sep = argv[++i][0];
+    } else if(!string(argv[i]).compare(0, 8, "--filter")) {
+      std::string arg = argv[i];
       std::string csfilter = argv[++i];
       vector<string> filters = utils::split(csfilter, filter_sep);
-      mo.subproblem_name_filters.insert(filters.begin(), filters.end());
-    } else if(strcmp(argv[i], "--named-filter-exclude") == 0) {
-      std::string csfilter = argv[++i];
-      vector<string> filters = utils::split(csfilter, filter_sep);
-      mo.subproblem_name_filters_excludes.insert(filters.begin(), filters.end());
-    } else if(strcmp(argv[i], "--path-filter") == 0 ||
-              strcmp(argv[i], "--path-filter-include") == 0) {
-      std::string csfilter = argv[++i];
-      vector<string> filters = utils::split(csfilter, filter_sep);
-      mo.subproblem_path_filters.insert(filters.begin(), filters.end());
-    } else if(strcmp(argv[i], "--path-filter-exclude") == 0) {
-      std::string csfilter = argv[++i];
-      vector<string> filters = utils::split(csfilter, filter_sep);
-      mo.subproblem_path_filters_excludes.insert(filters.begin(), filters.end());
+      if(arg == "--filter-named-exclude") {
+        mo.subproblem_name_filters_excludes.insert(filters.begin(), filters.end());
+      } else if(arg == "--filter-named") {
+        mo.subproblem_name_filters.insert(filters.begin(), filters.end());
+      } else if(arg == "--filter-path-exclude") {
+        mo.subproblem_path_filters_excludes.insert(filters.begin(), filters.end());
+      } else if(arg == "--filter-path") {
+        mo.subproblem_path_filters.insert(filters.begin(), filters.end());
+      }
     } else if(strcmp(argv[i], "--dump-dot") == 0) {
       dump_dot_path = argv[++i];
     } else if(strcmp(argv[i], "--verbose") == 0) {
       mo.verbose_final_stats = true;
-      mo.verbose_enum_iteration_stats = true;
-      mo.verbose_enum = true;
-      mo.verbose_map = true;
-      mo.verbose_subsolve = true;
+      mo.verbose_enum = 1;
+      mo.verbose_map = 1;
+      mo.verbose_subsolve = 1;
     } else if(strcmp(argv[i], "--verbose-enum") == 0) {
-      mo.verbose_enum = true;
-    } else if(strcmp(argv[i], "--verbose-enum-iteration-stats") == 0) {
-      mo.verbose_enum_iteration_stats = true;
+      mo.verbose_enum = atoi(argv[++i]);
     } else if(strcmp(argv[i], "--verbose-map") == 0) {
-      mo.verbose_map = true;
+      mo.verbose_map = atoi(argv[++i]);
     } else if(strcmp(argv[i], "--verbose-subsolve") == 0) {
-      mo.verbose_subsolve = true;
-    } else if(strcmp(argv[i], "--verbose-subsolve-extra") == 0) {
-      mo.verbose_subsolve = true;
-      mo.verbose_subsolve_extra = true;
+      mo.verbose_subsolve = atoi(argv[++i]);
     } else if(strcmp(argv[i], "--frequent-stats") == 0) {
       frequent_stats = true;
     } else if(strcmp(argv[i], "--output-html") == 0) {
@@ -239,17 +233,19 @@ int main(int argc, char **argv) {
     } else if(strcmp(argv[i], "--demo") == 0) {
       demo_name = argv[++i];
 #endif
+    } else if(strcmp(argv[i], "--paths") == 0) {
+      pathpath = argv[++i];
     } else {
       if(argv[i][0] == '-') {
         std::cerr << "Unknown argument: " << argv[i] << "\n";
-        printHelp();
+        help_short();
       } else if(fznpath.empty()) {
         fznpath = argv[i];
       } else if(pathpath.empty()) {
         pathpath = argv[i];
       } else {
         std::cerr << "Unknown argument: " << argv[i] << "\n";
-        printHelp();
+        help_short();
       }
     }
   }
@@ -265,7 +261,7 @@ int main(int argc, char **argv) {
   if(!problem) {
     if(fznpath.empty()) {
       std::cerr << "No flatzinc file provided\n";
-      printHelp();
+      help_short();
     }
     if(pathpath.empty()) {
       string base = fznpath.substr(0,fznpath.length()-4);

@@ -10,11 +10,9 @@ namespace HierMUS {
   class MUSEnumOptions {
     public:
       bool verbose_final_stats = true;
-      bool verbose_map = false;
-      bool verbose_enum = false;
-      bool verbose_enum_iteration_stats = false;
-      bool verbose_subsolve = false;
-      bool verbose_subsolve_extra = false;
+      unsigned int verbose_map = 0;
+      unsigned int verbose_enum = 0;
+      unsigned int verbose_subsolve = 0;
 
       double timeout = 1800.0;
 
@@ -38,10 +36,10 @@ namespace HierMUS {
       // SubsetMap
       MapDepth map_depth = DEPTH_INSTANCE;
       int map_depth_max = 0;
-      bool output_minizinc = false;
 
       MusAlg map_enumeration_alg = ALG_STACKMUS;
       ShrinkAlg map_shrink_alg = SH_LIN;
+      bool map_enum_focus_mode = false;
 
       MUSEnumOptions& operator=(const MUSEnumOptions& mo) =  delete;
 

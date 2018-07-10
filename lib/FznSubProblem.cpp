@@ -325,7 +325,7 @@ namespace HierMUS {
 
     if(mopts.verbose_subsolve) {
       std::cout << "FznSubProblem:\tSolve: " << s << "(" << res << ":" << (is_sat ? "S" : "U") << ") ";
-      if(mopts.verbose_subsolve_extra) {
+      if(mopts.verbose_subsolve > 1) {
         std::cout << "cons: " << b;
       } else {
         std::cout << "ncons: " << std::setw(8) << leaves.size();

@@ -22,7 +22,7 @@ namespace HierMUS {
         stats.map_calls++;
         Selection s = subsetMap->getSelection(shrink_stack.back());
 
-        if(s.selected.size() == 0) break;
+        if(s.selected.size() == 1) break;
 
         stats.sat_calls++;
         if(!subProblem.check(s)) {
