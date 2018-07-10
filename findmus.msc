@@ -1,0 +1,12 @@
+{
+    "executable": "findMUS",
+    "id": "org.minizinc.findMUS",
+    "isGUIApplication": false,
+    "mznlib": "",
+    "name": "findMUS",
+    "supportsMzn": false,
+    "version": "0.1.0",
+    "needsStdlibDir": false,
+    "needsMznExecutable": false,
+    "stdFlags": ["--output-html", "--paths"]
+}
