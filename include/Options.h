@@ -17,6 +17,7 @@ namespace HierMUS {
       double timeout = 1800.0;
 
       // FznSubProblem
+      string mzn_stdlib_dir;
       bool subproblem_hard_functional_constraints = true;
       bool subproblem_named_only = false;
       std::set<string> subproblem_name_filters;
@@ -26,11 +27,9 @@ namespace HierMUS {
       InitialStructure subproblem_structure = STR_NORMAL;
       Binarize subproblem_binarize = BIN_NONE;
 
-      string subproblem_solver            = "org.minizinc.mzn-fzn";
-      //string subproblem_solver            = "mzn-gurobi";
-      string subproblem_solver_flags      = "--fzn-cmd fzn-gecode"; //"-time 1000"; // Default timeout for gecode to 1000ms
-      //string subproblem_solver_flags      = "--timeout 1"; // Default timeout for gecode to 1000ms
-      int    subproblem_solver_time_limit = 1100;         // Default timeout for gecode to 1000ms
+      string subproblem_solver = "org.gecode.gecode";
+      string subproblem_solver_flags = "";
+      int subproblem_solver_time_limit = 1000;
       SubProblemOutputFormat subproblem_output_format = OUT_NORMAL;
 
       // SubsetMap

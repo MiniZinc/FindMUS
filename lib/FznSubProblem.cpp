@@ -125,12 +125,7 @@ namespace HierMUS {
     MiniZinc::GCLock lock;
     vector<string> includes;
 
-    std::string stdlibdir = MiniZinc::FileUtils::share_directory();
-    if(stdlibdir == "") {
-      std::cerr << "Please set MZN_STDLIB_DIR\n";
-      exit(EXIT_FAILURE);
-    }
-    includes.push_back(stdlibdir + "/std/");
+    includes.push_back(mo.mzn_stdlib_dir + "/std/");
 
     fzn_model = MiniZinc::parse(fzn_env, {fznpath}, {}, includes, false, false, false, std::cerr);
     MiniZinc::SolveI* si = fzn_model->solveItem();
@@ -317,6 +312,8 @@ namespace HierMUS {
     if (s == MiniZinc::SolverInstance::SAT ||
                s == MiniZinc::SolverInstance::OPT) {
       res = "S";
+    } else if (s == MiniZinc::SolverInstance::UNSAT) {
+      res = "U";
     } else if (s == MiniZinc::SolverInstance::ERROR) {
       res = "E";
     } else {

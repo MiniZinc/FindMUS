@@ -15,20 +15,17 @@
 using namespace HierMUS;
 using std::string;
 
-void help_short() {
+void help_short(int exit_code = EXIT_SUCCESS) {
   std::cout << "findMUS: Explain an unsatisfiable model\n"
-    << "  usage: findMUS [flatzinc file] [paths file]\n"
-    << "                 [--marco] [--verbose[-X]] [--demo <demo>]\n"
-    << "                 [--nmuses <n>] [--output-minizinc]\n"
-    << "                 [--binarize {none,all,leaves}]\n"
-    << "                 [--structure {flat,normal,gen,mix}]\n"
-    << "                 [--soft-defines] \n"
-    << "                 [--model-depth] [--depth <n>]\n"
-    << "                 [--frequent-stats] [--timeout <s>]\n"
-    << "                 [--output-html] [--output-brief]\n"
-    << "                 [--solver <s>] [--solver-flags <f>]\n"
-    << "                 [--solver-timelimit <ms>]\n"
-    << "                \n";
+    << "  usage: findMUS <flatzinc file> [paths file]\n"
+    << "                 [--structure {normal, flat, gen, mix}]\n"
+    << "                 [--binarize {none, leaves, all}]\n"
+    << "                 [--depth {mzn, fzn, i}\n"
+    << "                 [--verbose-{enum,map,subsolve} <v>]\n"
+    << "                 [--verbose]\n"
+    << "\n";
+  if(exit_code == EXIT_FAILURE)
+    exit(EXIT_FAILURE);
 }
 
 void help_long() {
@@ -41,7 +38,9 @@ void help_long() {
     << "\n"
     << " Driver Options:\n"
     << "  --nmuses <n>\n"
-    << "    Number of MUSes to find\n";
+    << "    Number of MUSes to find\n"
+    << "  --stdlib-dir <path>\n"
+    << "    Set path to MiniZinc standard library\n";
 #ifdef BUILD_FINDMUS_EXAMPLES
   std::cout << "  --demo <demo>\n"
     << "    Use demo model and tree. <string> must be one of:\n"
@@ -116,7 +115,6 @@ void help_long() {
   exit(EXIT_FAILURE);
 }
 
-
 int main(int argc, char **argv) {
   string fznpath;
   string pathpath;
@@ -151,7 +149,7 @@ int main(int argc, char **argv) {
       else if(type == "mix")    mo.subproblem_structure = STR_GEN_MIX;
       else {
         std::cout << "Incorrect structure setting. Available options are {flat, <normal>, gen, mix}\n";
-        help_short();
+        help_short(EXIT_FAILURE);
       }
     } else if(strcmp(argv[i], "--binarize") == 0) {
       std::string type = argv[++i];
@@ -160,7 +158,7 @@ int main(int argc, char **argv) {
       else if(type == "all")    mo.subproblem_binarize = BIN_EVERYWHERE;
       else {
         std::cout << "Incorrect binarize option. Available options are {<none>, leaves, all}\n";
-        help_short();
+        help_short(EXIT_FAILURE);
       }
     } else if(strcmp(argv[i], "--ignore-unsat-background") == 0) {
       ignore_unsafisfiable_background = true;
@@ -188,7 +186,7 @@ int main(int argc, char **argv) {
         else if(a == "fzn") mo.map_depth = DEPTH_PROGRAM;
         else {
           std::cout << "Incorrect depth setting: Valid options are {<fzn>, mzn} or a positive integer\n";
-          help_short();
+          help_short(EXIT_FAILURE);
         }
       }
     } else if(strcmp(argv[i], "--soft-defines") == 0) {
@@ -238,17 +236,38 @@ int main(int argc, char **argv) {
     } else {
       if(argv[i][0] == '-') {
         std::cerr << "Unknown argument: " << argv[i] << "\n";
-        help_short();
+        help_short(EXIT_FAILURE);
       } else if(fznpath.empty()) {
         fznpath = argv[i];
       } else if(pathpath.empty()) {
         pathpath = argv[i];
       } else {
         std::cerr << "Unknown argument: " << argv[i] << "\n";
-        help_short();
+        help_short(EXIT_FAILURE);
       }
     }
   }
+
+  // Sanity checks:
+  if(!mo.subproblem_name_filters_excludes.empty()) {
+    if(!mo.subproblem_name_filters.empty()) {
+      for(const std::string& exclude : mo.subproblem_name_filters_excludes) {
+        if(mo.subproblem_name_filters.find(exclude) != mo.subproblem_name_filters.end()) {
+          mo.subproblem_name_filters.erase(exclude);
+          mo.subproblem_name_filters_excludes.erase(exclude);
+        }
+      }
+    }
+  }
+
+  if(mo.mzn_stdlib_dir.empty()) {
+    mo.mzn_stdlib_dir = MiniZinc::FileUtils::share_directory();
+    if(mo.mzn_stdlib_dir == "") {
+      std::cerr << "Please set MZN_STDLIB_DIR or pass --stdlib-dir argument.\n";
+      help_short(EXIT_FAILURE);
+    }
+  }
+
 
 #ifdef BUILD_FINDMUS_EXAMPLES
   if(!demo_name.empty()) {
@@ -257,15 +276,27 @@ int main(int argc, char **argv) {
     else if(demo_name == "fflat") problem = new FFLAT(mo);
   }
 #endif
-
   if(!problem) {
     if(fznpath.empty()) {
       std::cerr << "No flatzinc file provided\n";
-      help_short();
+      help_short(EXIT_FAILURE);
+    } else {
+      std::ifstream checkpath(fznpath);
+      if(!checkpath.is_open()) {
+        std::cerr << "Flatzinc file "<< fznpath << " cannot be opened.\n";
+        help_short(EXIT_FAILURE);
+      }
     }
     if(pathpath.empty()) {
       string base = fznpath.substr(0,fznpath.length()-4);
       pathpath = base + ".paths";
+    }
+    {
+      std::ifstream checkpath(pathpath);
+      if(!checkpath.is_open()) {
+        std::cerr << "Path file "<< pathpath << " cannot be opened.\n";
+        help_short(EXIT_FAILURE);
+      }
     }
     problem = new FznSubProblem(fznpath, pathpath, mo);
   }
@@ -283,17 +314,6 @@ int main(int argc, char **argv) {
     exit(EXIT_SUCCESS);
   }
 
-  // Sanity checks:
-  if(!mo.subproblem_name_filters_excludes.empty()) {
-    if(!mo.subproblem_name_filters.empty()) {
-      for(const std::string& exclude : mo.subproblem_name_filters_excludes) {
-        if(mo.subproblem_name_filters.find(exclude) != mo.subproblem_name_filters.end()) {
-          mo.subproblem_name_filters.erase(exclude);
-          mo.subproblem_name_filters_excludes.erase(exclude);
-        }
-      }
-    }
-  }
 
   // Are you using remus in Hierarchical Mode
   if(mo.subproblem_structure != STR_FLAT && mo.map_enumeration_alg == ALG_REMUS) {
@@ -318,11 +338,12 @@ int main(int argc, char **argv) {
     if(html_output) {
       std::cout << "Mus: " << nmuses << " :";
       me.printMUS();
-      std::cout << "<br/>\n";
+      std::cout << "<br/>" << std::endl;
     } else {
       if(!isPipe) std::cout << "\033[1;31m";
       std::cout << "MUS: ";
       me.printMUS();
+      std::cout << std::endl;
       if(!isPipe) std::cout << "\033[0m";
     }
     nmuses++;

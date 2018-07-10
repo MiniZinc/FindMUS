@@ -6,7 +6,7 @@
     "name": "findMUS",
     "supportsMzn": false,
     "version": "0.1.0",
-    "needsStdlibDir": false,
+    "needsStdlibDir": true,
     "needsMznExecutable": false,
     "stdFlags": ["--output-html", "--paths"]
 }
