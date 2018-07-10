@@ -1,0 +1,64 @@
+#ifndef __HIERMUS_CHUFFED_SUBSETMAP_H_
+#define __HIERMUS_CHUFFED_SUBSETMAP_H_
+
+#include <vector>
+#include <memory>
+#include <unordered_map>
+#include <fstream>
+
+#include "Types.h"
+#include "SubProblem.h"
+#include "SubsetMap.h"
+#include "Options.h"
+
+namespace HierMUS {
+
+  class ChuffedSubsetProblem : public SubsetMap, public Problem {
+    private:
+      vec<BoolView> leaves;
+      vec<BoolView> conjs;
+      vec<BoolView> disjs;
+      vec<BoolView> eqs;
+
+      std::vector<MapNode> leafNodes;
+      std::vector<MapNode> branchNodes;
+
+      MapNode root;
+
+      vec<Branching*> branching_vars;
+
+      int leaves_top;
+      int branches_top;
+
+      IntVar* obj;
+
+      Selection solution_set;
+      Selection solution_template;
+
+      bool consistent;
+
+      std::fstream null_stream;
+
+    private:
+      MapNode addConnections(const MapNode& node, int depth = 0);
+      void addObjective();
+
+    public:
+      ChuffedSubsetProblem(SubProblem* prob, MUSEnumOptions& mo);
+      ~ChuffedSubsetProblem() { delete obj; }
+
+      void print(std::ostream&);
+      Selection expand(const Selection& selection);
+      Selection getSelection(const Selection& selection);
+      Selection getSelection();
+      Selection getRootSelector();
+      Selection getLeavesSelector();
+
+      void block(const Selection& selection, bool polarity);
+      void blockSupersets(const Selection& selection);
+      void blockSubsets(const Selection& selection);
+  };
+
+}
+
+#endif

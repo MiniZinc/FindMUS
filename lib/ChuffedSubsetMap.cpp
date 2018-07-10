@@ -8,7 +8,7 @@
 #include <iomanip>
 #include <limits>
 
-#include "SubsetMap.h"
+#include "ChuffedSubsetMap.h"
 #include "string_utils.h"
 #include "path_utils.h"
 
@@ -18,6 +18,8 @@ namespace HierMUS {
 
   ChuffedSubsetProblem::ChuffedSubsetProblem(SubProblem* prob, MUSEnumOptions& mo)
     : SubsetMap{prob, mo}, leaves_top{0}, branches_top{0}, obj{NULL}, consistent{true} {
+      FlatZinc::s = NULL;
+
       double build_start = wallClockTime();
       const MapNode& tree = prob->getTree();
       counts nc = tree.getCounts();

@@ -2,6 +2,7 @@
 #include <string>
 
 #include "MusEnumerator.h"
+#include "ChuffedSubsetMap.h"
 
 namespace HierMUS {
   using std::string;

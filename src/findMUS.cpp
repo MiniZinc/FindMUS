@@ -1,19 +1,16 @@
-#include <chuffed/core/options.h>
-#include <chuffed/core/engine.h>
-#include <chuffed/flatzinc/flatzinc.h>
-#include <chuffed/vars/modelling.h>
-
 #include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <iomanip>
-//#include <unistd.h>
 
 #include "HierMUSEnumer.h"
 
-#include "DemoSubProblems.h"
 #include "FznSubProblem.h"
 #include "Options.h"
+
+#ifdef BUILD_FINDMUS_EXAMPLES
+#include "DemoSubProblems.h"
+#endif
 
 using namespace HierMUS;
 using std::string;
@@ -39,11 +36,13 @@ void printHelp() {
     << "\n"
     << " Driver Options:\n"
     << "  --nmuses <n>\n"
-    << "    Number of MUSes to find\n"
-    << "  --demo <demo>\n"
+    << "    Number of MUSes to find\n";
+#ifdef BUILD_FINDMUS_EXAMPLES
+  std::cout << "  --demo <demo>\n"
     << "    Use demo model and tree. <string> must be one of:\n"
-    << "      hm5, hm5_2\n"
-    << "  --timeout <s>\n"
+    << "      hm5, hm5_2\n";
+#endif
+  std::cout << "  --timeout <s>\n"
     << "    Stop after <s> seconds. Default: 1800 seconds\n"
     << "  --frequent-stats\n"
     << "    Output high-level stats after each MUS (for logging)\n"
@@ -65,8 +64,6 @@ void printHelp() {
     << "      fzn: the program level constraints (decomposition)\n"
     << "      <n>: integer, a custom depth\n"
     << "\n"
-    //<< "  --output-minizinc\n"
-    //<< "    Prints map and blocking clauses to stdout prepended with \'mzn:\'"
     << " Subproblem options\n"
     << "  --solver <s>\n"
     << "    Use solver <s> for SAT checking. Default: \"fzn-gecode\"\n"
@@ -82,7 +79,7 @@ void printHelp() {
     << "      gen:    Remove instance specific structure\n"
     << "      normal: No change\n"
     << "      mix:    Apply 'gen' before 'normal'\n"
-    << "  --binarize normal,binary-leaves,binary-everywhere\n"
+    << "  --binarize normal,leaves,all\n"
     << "    Add additional structure: (Default: normal)\n"
     << "      normal: no change\n"
     << "      leaves: introduce structure at the leaves\n"
@@ -126,15 +123,16 @@ void printHelp() {
 }
 
 int main(int argc, char **argv) {
-  FlatZinc::s = NULL;
   string fznpath;
   string pathpath;
   int maxmuses = 0;
   bool frequent_stats = false;
-  string demo_name;
   string dump_dot_path;
   char filter_sep = ',';
   bool ignore_unsafisfiable_background = false;
+#ifdef BUILD_FINDMUS_EXAMPLES
+  string demo_name;
+#endif
 
   bool isPipe = !isatty(fileno(stdout));
 
@@ -237,10 +235,15 @@ int main(int argc, char **argv) {
       mo.subproblem_output_format = OUT_HTML;
     } else if(strcmp(argv[i], "--output-brief") == 0) {
       mo.subproblem_output_format = OUT_DEBUG;
+#ifdef BUILD_FINDMUS_EXAMPLES
     } else if(strcmp(argv[i], "--demo") == 0) {
       demo_name = argv[++i];
+#endif
     } else {
-      if(fznpath.empty()) {
+      if(argv[i][0] == '-') {
+        std::cerr << "Unknown argument: " << argv[i] << "\n";
+        printHelp();
+      } else if(fznpath.empty()) {
         fznpath = argv[i];
       } else if(pathpath.empty()) {
         pathpath = argv[i];
@@ -251,11 +254,13 @@ int main(int argc, char **argv) {
     }
   }
 
+#ifdef BUILD_FINDMUS_EXAMPLES
   if(!demo_name.empty()) {
     if(demo_name == "hm5") problem = new HM5(mo);
     else if(demo_name == "hm5_2") problem = new HM5_2(mo);
     else if(demo_name == "fflat") problem = new FFLAT(mo);
   }
+#endif
 
   if(!problem) {
     if(fznpath.empty()) {
