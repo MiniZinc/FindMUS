@@ -18,6 +18,7 @@ using std::string;
 void help_short(int exit_code = EXIT_SUCCESS) {
   std::cout << "findMUS: Explain an unsatisfiable model\n"
     << "  usage: findMUS <flatzinc file> [paths file]\n"
+    << "                 [--ignore-unsat-background]\n"
     << "                 [--structure {normal, flat, gen, mix}]\n"
     << "                 [--binarize {none, leaves, all}]\n"
     << "                 [--depth {mzn, fzn, i}\n"
@@ -40,7 +41,9 @@ void help_long() {
     << "  --nmuses <n>\n"
     << "    Number of MUSes to find\n"
     << "  --stdlib-dir <path>\n"
-    << "    Set path to MiniZinc standard library\n";
+    << "    Set path to MiniZinc standard library\n"
+    << "   --ignore-unsat-background\n"
+    << "     Skip unsatisfiable background check\n";
 #ifdef BUILD_FINDMUS_EXAMPLES
   std::cout << "  --demo <demo>\n"
     << "    Use demo model and tree. <string> must be one of:\n"
@@ -77,8 +80,6 @@ void help_long() {
     << "  --solver-timelimit <ms>\n"
     << "    Hard time limit for solver in milliseconds. Default: 1100\n"
     << "  Subproblem filtering options:\n"
-    << "   --ignore-unsat-background\n"
-    << "     Skip unsatisfiable background check\n"
     << "   --soft-defines\n"
     << "     Consider functional constraints as part of MUSes\n"
     << "   --named-only\n"
@@ -141,6 +142,8 @@ int main(int argc, char **argv) {
       mo.map_enumeration_alg = ALG_REMUS;
     } else if(strcmp(argv[i], "--qx") == 0) {
       mo.map_shrink_alg = SH_QX;
+    } else if(strcmp(argv[i], "--stdlib-dir") == 0) {
+      mo.mzn_stdlib_dir = argv[++i];
     } else if(strcmp(argv[i], "--structure") == 0) {
       std::string type = argv[++i];
       if(type == "flat")        mo.subproblem_structure = STR_FLAT;
