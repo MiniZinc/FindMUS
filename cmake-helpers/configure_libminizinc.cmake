@@ -8,11 +8,8 @@ if(NOT libminizinc_FOUND)
   add_subdirectory(${LIBMINIZINC_SOURCE_DIR} EXCLUDE_FROM_ALL)
   set(libminizinc_INCLUDE_DIRS 
     ${CMAKE_BINARY_DIR}/submodules/libminizinc_develop/include
-    ${LIBMINIZINC_SOURCE_DIR}/include)
-  find_program(BISON_EXEC bison)
-  if(NOT BISON_EXEC)
-    set(libminizinc_INCLUDE_DIRS ${libminizinc_INCLUDE_DIRS} ${LIBMINIZINC_SOURCE_DIR}/lib/cached/)
-  endif()
+    ${LIBMINIZINC_SOURCE_DIR}/include
+    ${LIBMINIZINC_SOURCE_DIR}/lib/cached/) # Include the cached directory last
   set(libminizinc_FOUND true)
 else()
   message("System MiniZinc library found at ${libminizinc_INCLUDE_DIRS}!")
