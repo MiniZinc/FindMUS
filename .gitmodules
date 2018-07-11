@@ -2,3 +2,7 @@
 	path = submodules/chuffed_assump
   url = https://github.com/gkgange/chuffed.git
   branch = feature/assump
+[submodule "submodules/libminizinc_develop"]
+	path = submodules/libminizinc_develop
+  url = https://github.com/MiniZinc/libminizinc.git
+  branch = develop
