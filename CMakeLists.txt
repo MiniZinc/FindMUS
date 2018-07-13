@@ -49,6 +49,7 @@ add_library(hiermus
   include/FznSubProblem.h
   include/Types.h
   include/ChuffedSubsetMap.h
+  include/Options.h
 )
 
 if(libminizinc_FOUND)
