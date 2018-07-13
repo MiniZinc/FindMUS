@@ -50,7 +50,7 @@ build:osx:
     - cmake
     - cpp
 
-build:win32:
+.build:win32: #DISABLED
   <<: *build_definition
   variables:
     MZNARCH: "win32"
