@@ -72,16 +72,18 @@ namespace HierMUS {
         MiniZinc::Expression* e = MiniZinc::getAnnotation(ci.e()->ann(), ann_str);
         if(e) {
           string name = e->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
-          if(mopts.subproblem_name_filters_excludes.find(name) != mopts.subproblem_name_filters_excludes.end())
-            return true;
+          for(const string& exclude_string: mopts.subproblem_name_filters_excludes) {
+            if(name.find(exclude_string) != -1) return true;
+          }
         }
       }
       for(const string& ann_str : ann_strs) {
         MiniZinc::Expression* e = MiniZinc::getAnnotation(ci.e()->ann(), ann_str);
         if(e) {
           string name = e->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
-          if(mopts.subproblem_name_filters.find(name) != mopts.subproblem_name_filters.end())
-            return false;
+          for(const string& exclude_string: mopts.subproblem_name_filters) {
+            if(name.find(exclude_string) != -1) return false;
+          }
         }
       }
       return !mopts.subproblem_name_filters.empty();
