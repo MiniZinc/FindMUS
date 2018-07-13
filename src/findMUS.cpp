@@ -18,6 +18,7 @@ using std::string;
 void help_short(int exit_code = EXIT_SUCCESS) {
   std::cout << "findMUS: Explain an unsatisfiable model\n"
     << "  usage: findMUS <flatzinc file> [paths file]\n"
+    << "                 [-a] [-n <n>]\n"
     << "                 [--ignore-unsat-background]\n"
     << "                 [--structure {normal, flat, gen, mix}]\n"
     << "                 [--binarize {none, leaves, all}]\n"
@@ -38,8 +39,10 @@ void help_long() {
     << "    Symbol table for unsatisfiable flatzinc model\n"
     << "\n"
     << " Driver Options:\n"
-    << "  --nmuses <n>\n"
+    << "  -n <n>   --nmuses <n>\n"
     << "    Number of MUSes to find\n"
+    << "  -a\n"
+    << "    Find all MUSes\n"
     << "  --stdlib-dir <path>\n"
     << "    Set path to MiniZinc standard library\n"
     << "   --ignore-unsat-background\n"
@@ -119,7 +122,7 @@ void help_long() {
 int main(int argc, char **argv) {
   string fznpath;
   string pathpath;
-  int maxmuses = 0;
+  int maxmuses = 1; // Start in focus_mode
   bool frequent_stats = false;
   string dump_dot_path;
   char filter_sep = ',';
@@ -165,11 +168,14 @@ int main(int argc, char **argv) {
       }
     } else if(strcmp(argv[i], "--ignore-unsat-background") == 0) {
       ignore_unsafisfiable_background = true;
-    } else if(strcmp(argv[i], "--nmuses") == 0) {
+    } else if(strcmp(argv[i], "--nmuses") == 0 || strcmp(argv[i], "-n") == 0) {
       maxmuses = atoi(argv[++i]);
-      if(maxmuses == 1) {
-        mo.map_enum_focus_mode = true;
+      if(maxmuses != 1) { // Disable focus mode
+        mo.map_enum_focus_mode = false;
       }
+    } else if(strcmp(argv[i], "-a") == 0) {
+      maxmuses = 0; // Find all MUSes
+      mo.map_enum_focus_mode = false; // Don't use focus mode
     } else if(strcmp(argv[i], "--timeout") == 0) {
       mo.timeout = atof(argv[++i]);
     } else if(strcmp(argv[i], "--solver") == 0) {

@@ -10,7 +10,17 @@
     "needsStdlibDir": true,
     "needsPathsFile": true,
     "needsMznExecutable": false,
-    "stdFlags": ["--output-html", "-v", "-s"],
-    "extraFlags": [ ["--stdlib-dir", "Location of MiniZinc stdlib directory.", "string"],
-                    ["--paths", "Location of paths file.", "string"] ]
+    "stdFlags": ["--output-html", "-v", "-s", "-a", "-n"],
+    "extraFlags": [
+      ["--soft-defines", "Consider functional constraints as part of MUSes.", "bool"],
+      ["--structure", "Alters initial structure {flat, gen, normal, mix}", "string"],
+      ["--binarize", "Inject arbitrary structure {none, leaves, all}", "string"],
+      ["--depth", "Selects the abstraction level of the MUSes {mzn, fzn, <number>}", "string"],
+      ["--verbose", "Verbose output", "bool"],
+      ["--verbose-subsolve", "Verbosity level for subsolving (useful for debugging and gauging progress).", "int"],
+      ["--stdlib-dir", "Location of MiniZinc stdlib directory.", "string"],
+      ["--paths", "Location of paths file.", "string"],
+      ["--dump-dot", "Write tree to GraphViz file", "string"]
+      ["--help", "Extra help information", "bool"],
+    ]
 }

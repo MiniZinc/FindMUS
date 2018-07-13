@@ -38,7 +38,7 @@ namespace HierMUS {
 
       MusAlg map_enumeration_alg = ALG_STACKMUS;
       ShrinkAlg map_shrink_alg = SH_LIN;
-      bool map_enum_focus_mode = false;
+      bool map_enum_focus_mode = true;
 
       MUSEnumOptions& operator=(const MUSEnumOptions& mo) =  delete;
 
