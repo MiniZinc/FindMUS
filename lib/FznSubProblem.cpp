@@ -235,10 +235,18 @@ namespace HierMUS {
   }
 
   string getExplanation(const MiniZinc::ConstraintI* ci) {
-    MiniZinc::Expression* e = MiniZinc::getAnnotation(ci->e()->ann(), "expression_name");
-    if(!e) return "";
-    MiniZinc::Call* c = e->cast<MiniZinc::Call>();
-    return c->arg(0)->cast<MiniZinc::StringLit>()->v().str();
+    std::stringstream explain;
+    MiniZinc::Expression* en = MiniZinc::getAnnotation(ci->e()->ann(), "mzn_expression_name");
+    if(en) {
+      MiniZinc::Call* c = en->cast<MiniZinc::Call>();
+      explain << c->arg(0)->cast<MiniZinc::StringLit>()->v().str();
+    }
+    MiniZinc::Expression* cn = MiniZinc::getAnnotation(ci->e()->ann(), "mzn_constraint_name");
+    if(cn) {
+      MiniZinc::Call* c = cn->cast<MiniZinc::Call>();
+      explain << "@" << c->arg(0)->cast<MiniZinc::StringLit>()->v().str();
+    }
+    return explain.str();
   }
 
   unordered_map<string, vector<NaA> > FznSubProblem::getEntries(set<string>& names) {
@@ -383,10 +391,9 @@ namespace HierMUS {
     for(auto& ps : entries) {
       for(auto& n : ps.second) {
         stringstream ss;
-        if(n.explain.empty()) {
-          ss << n.name;
-        } else {
-          ss << "{" << (esc ? escape(n.explain) : n.explain) << "}";
+        ss << n.name;
+        if(!n.explain.empty()) {
+          ss << "@{" << (esc ? escape(n.explain) : n.explain) << "}";
         }
         ss << ":(" << n.assigns << ")";
 

@@ -66,7 +66,7 @@ void help_long() {
     << "    Use ReMUS algorithm as sub-enumerator\n"
     << "  --qx\n"
     << "    Use quickXplain with MARCO or ReMUS (not used by HierMUS)\n"
-    << "  --depth mzn,fzn,<n>\tdefault: mzn\n"
+    << "  --depth mzn,fzn,<n>\tdefault: 1\n"
     << "    Enumerate MUSes at the level of:\n"
     << "      mzn: the user's model\n"
     << "      fzn: the program level constraints (decomposition)\n"

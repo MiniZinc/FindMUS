@@ -33,8 +33,8 @@ namespace HierMUS {
       SubProblemOutputFormat subproblem_output_format = OUT_NORMAL;
 
       // SubsetMap
-      MapDepth map_depth = DEPTH_INSTANCE;
-      int map_depth_max = 0;
+      MapDepth map_depth = DEPTH_CUSTOM; // DEPTH_INSTANCE should probably be the default in future
+      int map_depth_max = 1;
 
       MusAlg map_enumeration_alg = ALG_STACKMUS;
       ShrinkAlg map_shrink_alg = SH_LIN;
