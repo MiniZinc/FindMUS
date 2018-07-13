@@ -1,12 +1,16 @@
 {
     "executable": "findMUS",
-    "id": "org.minizinc.findMUS",
+    "id": "org.minizinc.findmus",
     "isGUIApplication": false,
-    "mznlib": "",
+    "mznlib": "-Ggecode",
     "name": "findMUS",
     "supportsMzn": false,
     "version": "0.1.0",
+    "needsSolns2Out": false,
     "needsStdlibDir": true,
+    "needsPathsFile": true,
     "needsMznExecutable": false,
-    "stdFlags": ["--output-html", "--paths"]
+    "stdFlags": ["--output-html", "-v", "-s"],
+    "extraFlags": [ ["--stdlib-dir", "Location of MiniZinc stdlib directory.", "string"],
+                    ["--paths", "Location of paths file.", "string"] ]
 }
