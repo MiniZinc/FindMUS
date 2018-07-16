@@ -59,9 +59,9 @@ void help_long() {
     << "    Stop after <s> seconds. Default: 1800 seconds\n"
     << "  --frequent-stats\n"
     << "    Output high-level stats after each MUS (for logging)\n"
-    << "  --progress\n"
-    << "    Output progress directive for IDE showing progress towards\n"
-    << "    finding target number of MUSes. Requires non-zero target.\n"
+    << "  --no-progress\n"
+    << "    Do not output progress directive for IDE showing progress towards\n"
+    << "    finding target number of MUSes.\n"
     << "  --output-{html, brief}\n"
     << "    Output modes, html for use with MiniZincIDE, brief for testing\n"
     << "\n"
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
   string pathpath;
   int maxmuses = 1; // Start in focus_mode
   bool frequent_stats = false;
-  bool output_progress = false;
+  bool output_progress = true;
   string dump_dot_path;
   char filter_sep = ',';
   bool ignore_unsafisfiable_background = false;
@@ -153,8 +153,8 @@ int main(int argc, char **argv) {
       mo.map_shrink_alg = SH_QX;
     } else if(strcmp(argv[i], "--stdlib-dir") == 0) {
       mo.mzn_stdlib_dir = argv[++i];
-    } else if(strcmp(argv[i], "--progress") == 0) {
-      output_progress = true;
+    } else if(strcmp(argv[i], "--no-progress") == 0) {
+      output_progress = false;
     } else if(strcmp(argv[i], "--structure") == 0) {
       std::string type = argv[++i];
       if(type == "flat")        mo.subproblem_structure = STR_FLAT;
