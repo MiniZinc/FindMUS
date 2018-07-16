@@ -20,6 +20,9 @@
       ["--verbose-subsolve", "Verbosity level for subsolving (useful for debugging and gauging progress).", "int"],
       ["--stdlib-dir", "Location of MiniZinc stdlib directory.", "string"],
       ["--paths", "Location of paths file.", "string"],
+      ["--progress", "Output mzn-progress directive for IDE\n"],
+      ["--filter-path", "Filter constraints based on comma separated substrings of path", "string"],
+      ["--filter-name", "Filter constraints based on comma separated substrings of expression and constraint names", "string"],
       ["--dump-dot", "Write tree to GraphViz file", "string"]
       ["--help", "Extra help information", "bool"],
     ]

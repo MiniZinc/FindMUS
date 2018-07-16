@@ -59,6 +59,9 @@ void help_long() {
     << "    Stop after <s> seconds. Default: 1800 seconds\n"
     << "  --frequent-stats\n"
     << "    Output high-level stats after each MUS (for logging)\n"
+    << "  --progress\n"
+    << "    Output progress directive for IDE showing progress towards\n"
+    << "    finding target number of MUSes. Requires non-zero target.\n"
     << "  --output-{html, brief}\n"
     << "    Output modes, html for use with MiniZincIDE, brief for testing\n"
     << "\n"
@@ -124,14 +127,15 @@ int main(int argc, char **argv) {
   string pathpath;
   int maxmuses = 1; // Start in focus_mode
   bool frequent_stats = false;
+  bool output_progress = false;
   string dump_dot_path;
   char filter_sep = ',';
   bool ignore_unsafisfiable_background = false;
+  bool colour = false;
 #ifdef BUILD_FINDMUS_EXAMPLES
   string demo_name;
 #endif
 
-  bool isPipe = !isatty(fileno(stdout));
 
   MUSEnumOptions mo;
 
@@ -139,6 +143,8 @@ int main(int argc, char **argv) {
   for(int i=1; i<argc; i++) {
     if(strcmp(argv[i], "--help") == 0) {
       help_long();
+    } else if(strcmp(argv[i], "--colour") == 0) {
+      colour = true;
     } else if(strcmp(argv[i], "--marco") == 0) {
       mo.map_enumeration_alg = ALG_MARCO;
     } else if(strcmp(argv[i], "--remus") == 0) {
@@ -147,6 +153,8 @@ int main(int argc, char **argv) {
       mo.map_shrink_alg = SH_QX;
     } else if(strcmp(argv[i], "--stdlib-dir") == 0) {
       mo.mzn_stdlib_dir = argv[++i];
+    } else if(strcmp(argv[i], "--progress") == 0) {
+      output_progress = true;
     } else if(strcmp(argv[i], "--structure") == 0) {
       std::string type = argv[++i];
       if(type == "flat")        mo.subproblem_structure = STR_FLAT;
@@ -340,30 +348,31 @@ int main(int argc, char **argv) {
   double start_time = wallClockTime();
   int nmuses = 0;
   bool html_output = mo.subproblem_output_format == OUT_HTML;
-  if(html_output) {
-    std::cout << "%%%mzn-html-start\n";
-  }
+  if(output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
   while(!mo.timedOut(stats) && me.search()) {
     if(html_output) {
+      std::cout << "%%%mzn-html-start\n";
       std::cout << "Mus: " << nmuses << " :";
       me.printMUS();
       std::cout << "<br/>" << std::endl;
+      std::cout << "%%%mzn-html-end\n";
     } else {
-      if(!isPipe) std::cout << "\033[1;31m";
+      if(colour) std::cout << "\033[1;31m";
       std::cout << "MUS: ";
       me.printMUS();
       std::cout << std::endl;
-      if(!isPipe) std::cout << "\033[0m";
+      if(colour) std::cout << "\033[0m";
     }
     nmuses++;
-    if(maxmuses > 0 && nmuses >= maxmuses) break;
+    if(maxmuses > 0) {
+      if(output_progress) { std::cout << "%%%mzn-progress " << (static_cast<float>(nmuses) / maxmuses * 100.0) << std::endl; }
+      if(nmuses >= maxmuses) break;
+    }
     if(frequent_stats)
       std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time 
                 << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
   }
-  if(html_output) {
-    std::cout << "%%%mzn-html-end\n";
-  }
+  if(output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
   std::cout << "Total Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time 
             << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
 }
