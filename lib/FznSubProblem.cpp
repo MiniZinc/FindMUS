@@ -385,7 +385,7 @@ namespace HierMUS {
     set<string> leaves = getLeaves(b);
     unordered_map<string, vector<NaA> > entries = getEntries(leaves);
 
-    vector<string> names;
+    std::unordered_set<string> names;
     for(auto& ps : entries) {
       for(auto& n : ps.second) {
         stringstream ss;
@@ -395,16 +395,17 @@ namespace HierMUS {
         }
         ss << ":(" << n.assigns << ")";
 
-        names.push_back(ss.str());
+        names.insert(ss.str());
       }
     }
+    std::vector<string> names_vec(names.begin(), names.end());
 
-    std::sort(names.begin(), names.end());
+    std::sort(names_vec.begin(), names_vec.end());
     vector<string> leaves_vec(leaves.begin(), leaves.end());
     stringstream shortSol;
 
     shortSol << utils::join(leaves_vec, " ") << "\n";
-    shortSol << "Brief: " << utils::join(names, sep) << "\n";
+    shortSol << "Brief: " << utils::join(names_vec, sep) << "\n";
     return shortSol.str();
   }
 
