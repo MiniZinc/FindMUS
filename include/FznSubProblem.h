@@ -49,7 +49,7 @@ namespace HierMUS {
       vector<string> getAllAssigns(const string& path) const;
 
       std::unordered_map<std::string, std::vector<NaA> > getEntries(std::set<std::string>& names);
-      static std::string generalizeLabel(std::string& path_el, bool mix);
+      static std::string generalizeLabel(const std::string& path_el, bool mix);
       bool isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name);
 
     public:

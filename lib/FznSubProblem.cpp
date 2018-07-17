@@ -43,7 +43,7 @@ namespace HierMUS {
 
   std::regex FznSubProblem::generalize_regex {"=" reg_number};
 
-  string FznSubProblem::generalizeLabel(string& path_el, bool mix) {
+  string FznSubProblem::generalizeLabel(const string& path_el, bool mix) {
     stringstream new_label;
     new_label << std::regex_replace(path_el, generalize_regex, "=$$");
     if(mix)
@@ -289,14 +289,12 @@ namespace HierMUS {
     args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
     args.push_back("--solver");
     args.push_back(mopts.subproblem_solver);
-    if(mopts.subproblem_solver == "org.minizinc.mzn-fzn") {
-        args.push_back("--fzn-time-limit");
-        args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
-    }
+    args.push_back("--fzn-time-limit");
+    args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
     vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
     args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
 
-    switch (solver.processOptions(args)) {
+    switch (solver.processOptions(std::vector<string>(args))) {
       case 0:
         break;
       default:
@@ -414,10 +412,13 @@ namespace HierMUS {
     set<string> leaves = getLeaves(b);
     unordered_map<string, vector<NaA> > entries = getEntries(leaves);
 
-    vector<string> paths;
-    for(auto& ps : entries) paths.push_back(ps.first);
+    std::unordered_set<string> paths;
+    for(auto& ps : entries) {
+      paths.insert(generalizeLabel(ps.first, false));
+    }
+    std::vector<string> path_vec(paths.begin(), paths.end());
 
-    std::cout << "<div class=\"explanation\" style=\"border:1px solid black\"><a href=\"highlight:?" << utils::join(paths, "&") << "\">";
+    std::cout << "<div class=\"explanation\" style=\"border:1px solid black\"><a href=\"highlight:?" << utils::join(path_vec, "&") << "\">";
     std::cout << getShortSol(b, "<br/>", true);
     std::cout << "</a></div>\n";
   }
