@@ -31,6 +31,8 @@ namespace HierMUS {
       virtual void printMUS();
       virtual Statistics& getStatistics();
       virtual const Selection& getCurrentMUS();
+      Selection getRootSelector();
+      Selection getLeavesSelector();
 
       static void updateIncludeExclude(Selection& s);
       static void shrink(SubProblem* prob, Selection& model,

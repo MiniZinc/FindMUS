@@ -146,4 +146,8 @@ namespace HierMUS {
   }
 
   const Selection& MusEnumerator::getCurrentMUS(void) { return current_mus; }
+
+  Selection MusEnumerator::getRootSelector(void) { return subsetMap->getRootSelector(); }
+  Selection MusEnumerator::getLeavesSelector(void) { return subsetMap->getLeavesSelector(); }
+
 }

@@ -130,6 +130,7 @@ int main(int argc, char **argv) {
   bool output_progress = true;
   string dump_dot_path;
   char filter_sep = ',';
+  bool ignore_sat_model = false;
   bool ignore_unsafisfiable_background = false;
   bool colour = false;
 #ifdef BUILD_FINDMUS_EXAMPLES
@@ -174,6 +175,8 @@ int main(int argc, char **argv) {
         std::cout << "Incorrect binarize option. Available options are {<none>, leaves, all}\n";
         help_short(EXIT_FAILURE);
       }
+    } else if(strcmp(argv[i], "--ignore-sat-model") == 0) {
+      ignore_sat_model = true;
     } else if(strcmp(argv[i], "--ignore-unsat-background") == 0) {
       ignore_unsafisfiable_background = true;
     } else if(strcmp(argv[i], "--nmuses") == 0 || strcmp(argv[i], "-n") == 0) {
@@ -337,12 +340,18 @@ int main(int argc, char **argv) {
     std::cout << "Warning: Using ReMUS as HierMUS's sub-MUS-enumerator is not currently supported."
               << "Use --structure flat for accurate MUSes.\n";
   }
+  HierMUS::HierMUSEnumer me(*problem, mo);
+  // Is the model unsat to begin with?
+  if(!ignore_sat_model && problem->check(me.getRootSelector())) {
+    std::cout << "Error: Cannot prove UNSAT within solver timelimit. Set a larger timeout with the\n"
+              << "'--solver-timelimit' argument or use '--ignore-sat-model' flag to run MUS enumeration anyway.\n";
+    return EXIT_FAILURE;
+  }
   // Is the background satisfiable:
   if(!ignore_unsafisfiable_background && !problem->check(Selection())) {
     std::cout << "Background is not satisfiable, exiting." << std::endl;
     return EXIT_FAILURE;
   }
-  HierMUS::HierMUSEnumer me(*problem, mo);
   Statistics& stats = me.getStatistics();
 
   double start_time = wallClockTime();
