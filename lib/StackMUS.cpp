@@ -41,7 +41,13 @@ namespace HierMUS {
             shrink_stack.pop_back();
             return true;
           }
-          if(unsat_callback) unsat_callback(shrink_stack.back());
+          if(unsat_callback) {
+            unsat_callback(shrink_stack.back());
+            if(mopts.map_enum_focus_mode) {
+              // Pretend that we have exhausted this frontier;
+              return false;
+            }
+          }
         }
       }
       shrink_stack.pop_back();

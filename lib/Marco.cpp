@@ -43,7 +43,13 @@ namespace HierMUS {
           current_mus = s;
           return true;
         }
-        if(unsat_callback) unsat_callback(s);
+        if(unsat_callback) {
+          unsat_callback(s);
+          if(mopts.map_enum_focus_mode) {
+            // Pretend that we have exhausted this frontier
+            return false;
+          }
+        }
       } else {
         subsetMap->blockSubsets(s);
       }

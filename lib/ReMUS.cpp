@@ -77,6 +77,10 @@ namespace HierMUS {
         if(unsat_callback) {
           s_mus.is_min = true;
           unsat_callback(s_mus);
+          if(mopts.map_enum_focus_mode) {
+            // Pretend we have exhausted this frontier
+            return false;
+          }
         }
       } else {
         subsetMap->blockSubsets(s_max);
