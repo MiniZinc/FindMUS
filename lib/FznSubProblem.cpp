@@ -294,7 +294,8 @@ namespace HierMUS {
     vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
     args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
 
-    switch (solver.processOptions(std::vector<string>(args))) {
+    std::vector<string> args_vec(args);
+    switch (solver.processOptions(args_vec)) {
       case 0:
         break;
       default:
