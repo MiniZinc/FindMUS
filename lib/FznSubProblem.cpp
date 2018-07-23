@@ -16,6 +16,9 @@
 #define reg_mzn_ident "[A-Za-z_][A-Za-z0-9_]*"
 #define reg_number "[0-9]*"
 
+#ifdef _MSC_VER
+#undef ERROR
+#endif
 
 namespace HierMUS {
   using std::string;
