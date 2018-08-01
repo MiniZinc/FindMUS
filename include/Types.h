@@ -1,8 +1,6 @@
 #ifndef __HIERMUS_TYPES_H_
 #define __HIERMUS_TYPES_H_
 
-#include <chuffed/vars/modelling.h>
-
 #include <set>
 #include <string>
 

@@ -292,7 +292,7 @@ namespace HierMUS {
     args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
     args.push_back("--solver");
     args.push_back(mopts.subproblem_solver);
-    args.push_back("--fzn-time-limit");
+    args.push_back("--time-limit");
     args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
     vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
     args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
@@ -303,6 +303,7 @@ namespace HierMUS {
         break;
       default:
         std::cerr << "FznSubProblem:\tError creating solver with args:\t" << utils::join(args, " ") << std::endl;
+        std::cerr << "\t" << log.str() << "\n";
         exit(EXIT_FAILURE);
     }
     MiniZinc::SolverFactory* sf = solver.getSF();
@@ -310,13 +311,21 @@ namespace HierMUS {
     si->setSolns2Out(&s2o);
     si->processFlatZinc();
 
-    MiniZinc::SolverInstance::Status s = si->solve();
+    MiniZinc::SolverInstance::Status s = MiniZinc::SolverInstance::ERROR;
+    try {
+      s = si->solve();
+    } catch (const MiniZinc::InternalError& err) {
+      std::cerr << "FznSubproblem:\tException during sub-solving: "
+                << err.msg() << ": " << err.what() << std::endl;
+      exit(EXIT_FAILURE);
+    }
 
     sf->destroySI(si);
     std::string error_log = log.str();
     if(!error_log.empty()) {
       std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << "\n";
       log.clear();
+      exit(EXIT_FAILURE);
     }
 
     string res;
