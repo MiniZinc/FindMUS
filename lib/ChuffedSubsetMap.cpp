@@ -259,6 +259,7 @@ namespace HierMUS {
   }
 
   Selection ChuffedSubsetProblem::getSelection(const Selection& selection) {
+
     if(!consistent) return {};  // Return empty Selection
     solution_template = selection;
 
@@ -279,7 +280,7 @@ namespace HierMUS {
     engine.set_assumptions(all_assumptions);
 
     solution_set = {};
-    so.time_out = 1800;
+    so.time_out = std::numeric_limits<int>::max();
     engine.best_sol = -1;
     double start_time = wallClockTime();
     engine.solve(this, "hierMUS");

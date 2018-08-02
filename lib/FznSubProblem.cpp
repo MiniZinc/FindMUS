@@ -292,7 +292,7 @@ namespace HierMUS {
     args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
     args.push_back("--solver");
     args.push_back(mopts.subproblem_solver);
-    args.push_back("--time-limit");
+    args.push_back("--solver-time-limit");
     args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
     vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
     args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
