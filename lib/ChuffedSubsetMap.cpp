@@ -69,7 +69,7 @@ namespace HierMUS {
       engine.next_simp_db = 0;
       engine.output_stream = &null_stream;
 
-      so.time_out = std::numeric_limits<int>::max();
+      so.time_out = 86400;
       so.branch_random = true;
       so.print_sol = true;
       engine.problem = this;
@@ -280,7 +280,7 @@ namespace HierMUS {
     engine.set_assumptions(all_assumptions);
 
     solution_set = {};
-    so.time_out = std::numeric_limits<int>::max();
+    so.time_out = 86400;
     engine.best_sol = -1;
     double start_time = wallClockTime();
     engine.solve(this, "hierMUS");
