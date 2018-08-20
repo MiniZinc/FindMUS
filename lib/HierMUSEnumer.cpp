@@ -51,6 +51,7 @@ namespace HierMUS {
   }
 
   bool HierMUSEnumer::search() {
+    current_mus = empty_selection;
     while(!mopts.timedOut(stats) && true) {
       if(inner_enum->search()) {
         if(frontier_idx != -1) {
@@ -64,6 +65,22 @@ namespace HierMUS {
       loadNextCandidate();
     }
     return false;
+  }
+
+  void HierMUSEnumer::printMUS(void) {
+    if(mopts.timedOut(stats)) {
+      std::cout << "FindMUS finishing early: ";
+      if(candidates.empty()) {
+        std::cout << "No remaining candidates.\n";
+      } else {
+        std::cout << "Last (non-minimal) candidate:\n";
+        subProblem.printSol(candidates.back());
+      }
+      return;
+    }
+    if(!current_mus.selected.empty()) {
+      subProblem.printSol(current_mus);
+    }
   }
 
   Statistics& HierMUSEnumer::getStatistics(void) {

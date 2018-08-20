@@ -81,6 +81,8 @@ namespace HierMUS {
     Selection() : is_min(true) {}
   };
 
+  static const Selection empty_selection;
+
   std::set<std::string> getLeaves(const Selection& b);
   bool isLeaves(const Selection& s);
 

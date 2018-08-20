@@ -369,8 +369,7 @@ namespace HierMUS {
       std::cout << path << "\n";
     }
 
-    std::cout << string(20, '=') << "\n";
-
+    std::cout << string(20, '=') << "\n\n";
   }
 
   string escape(string orig) {
@@ -417,8 +416,8 @@ namespace HierMUS {
     vector<string> leaves_vec(leaves.begin(), leaves.end());
     stringstream shortSol;
 
-    shortSol << utils::join(leaves_vec, " ") << "\n";
-    shortSol << "Brief: " << utils::join(names_vec, sep) << "\n";
+    shortSol << "MUS: " << utils::join(leaves_vec, " ") << "\n"
+             << "Brief: " << utils::join(names_vec, sep) << "\n";
     return shortSol.str();
   }
 
@@ -432,9 +431,12 @@ namespace HierMUS {
     }
     std::vector<string> path_vec(paths.begin(), paths.end());
 
-    std::cout << "<div class=\"explanation\" style=\"border:1px solid black\"><a href=\"highlight:?" << utils::join(path_vec, "&") << "\">";
-    std::cout << getShortSol(b, "<br/>", true);
-    std::cout << "</a></div>\n";
+    std::cout << "%%%mzn-html-start\n"
+              << "<div class=\"explanation\" style=\"border:1px solid black\">"
+              << "<a href=\"highlight:?" << utils::join(path_vec, "&") << "\">"
+              << getShortSol(b, "<br/>", true)
+              << "</a></div>\n"
+              << "%%%mzn-html-end\n\n";
   }
 
   void FznSubProblem::printSol(const Selection& b) {

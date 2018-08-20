@@ -359,19 +359,10 @@ int main(int argc, char **argv) {
   bool html_output = mo.subproblem_output_format == OUT_HTML;
   if(output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
   while(!mo.timedOut(stats) && me.search()) {
-    if(html_output) {
-      std::cout << "%%%mzn-html-start\n";
-      std::cout << "Mus: " << nmuses << " :";
-      me.printMUS();
-      std::cout << "<br/>" << std::endl;
-      std::cout << "%%%mzn-html-end\n";
-    } else {
-      if(colour) std::cout << "\033[1;31m";
-      std::cout << "MUS: ";
-      me.printMUS();
-      std::cout << std::endl;
-      if(colour) std::cout << "\033[0m";
-    }
+    if(colour) std::cout << "\033[1;31m";
+    me.printMUS();
+    std::cout << std::flush;
+    if(colour) std::cout << "\033[0m";
     nmuses++;
     if(maxmuses > 0) {
       if(output_progress) { std::cout << "%%%mzn-progress " << (static_cast<float>(nmuses) / maxmuses * 100.0) << std::endl; }

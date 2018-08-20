@@ -19,7 +19,8 @@ namespace HierMUS {
       ~HierMUSEnumer();
 
       void setFrontier(const Selection& f);
-      bool search();
+      bool search(void);
+      void printMUS(void);
       Statistics& getStatistics(void);
   };
 }
