@@ -35,6 +35,7 @@ add_library(hiermus
   lib/FznSubProblem.cpp
   lib/Types.cpp
   lib/ChuffedSubsetMap.cpp
+  lib/Options.cpp
 
   include/SubProblem.h
   include/Node.h
