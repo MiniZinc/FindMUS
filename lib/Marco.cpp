@@ -21,9 +21,9 @@ namespace HierMUS {
   }
 
   bool Marco::search() {
-    if(mopts.timedOut(stats)) return false;
+    if(mopts.timedOut()) return false;
     while(true) {
-      if(mopts.timedOut(stats)) return false;
+      if(mopts.timedOut()) return false;
       stats.map_calls++;
       Selection s = subsetMap->getSelection(frontier);
 

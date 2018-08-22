@@ -22,6 +22,8 @@ public:
 #ifdef BUILD_FINDMUS_EXAMPLES
   string demo_name;
 #endif
+  bool list_solvers = false;
+  bool list_solvers_json = false;
 };
 
 class MUSEnumOptions {
@@ -31,7 +33,7 @@ public:
   unsigned int verbose_enum = 0;
   unsigned int verbose_subsolve = 0;
 
-  double timeout = 1800.0;
+  double timelimit = -1;
 
   // FznSubProblem
   string mzn_stdlib_dir;
@@ -57,11 +59,25 @@ public:
   ShrinkAlg map_shrink_alg = SH_LIN;
   bool map_enum_focus_mode = true;
 
+  Statistics& stats;
+
+  MUSEnumOptions(Statistics& s) : stats(s) {}
   MUSEnumOptions& operator=(const MUSEnumOptions& mo) =  delete;
 
-  bool timedOut(Statistics& s) {
-    s.last_time = wallClockTime();
-    return (s.last_time - s.start_time > timeout);
+  bool timedOut() {
+    if(timelimit < 0) return false;
+    stats.last_time = wallClockTime();
+    return (stats.last_time - stats.start_time > (timelimit / 1000));
+  }
+
+  void adjustSolverTimeout() {
+    double time = wallClockTime();
+    double elapsedTime = time - stats.start_time;
+    double remainingTime = timelimit - elapsedTime;
+    if(remainingTime < (subproblem_solver_time_limit)) {
+      std::cerr << "Options: Tightening timeout to: " << (remainingTime) << " (ms)" << std::endl;
+      subproblem_solver_time_limit = remainingTime;
+    }
   }
 };
 

@@ -21,9 +21,9 @@ namespace HierMUS {
   }
 
   bool ReMUS::search() {
-    if(mopts.timedOut(stats)) return false;
+    if(mopts.timedOut()) return false;
     while(!remus_stack.empty()) {
-      if(mopts.timedOut(stats)) return false;
+      if(mopts.timedOut()) return false;
 
       // state.S = selected might be anything, include will be accurate, exclude will be accurate.
       ReMUSState& state = remus_stack.back();

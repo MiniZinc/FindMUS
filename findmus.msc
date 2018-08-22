@@ -10,7 +10,7 @@
     "needsStdlibDir": true,
     "needsPathsFile": true,
     "needsMznExecutable": false,
-    "stdFlags": ["--output-html", "-v", "-s", "-a", "-n"],
+    "stdFlags": ["--output-html", "-v", "-s", "-a", "-n", "-t"],
     "extraFlags": [
       ["--soft-defines", "Consider functional constraints as part of MUSes.", "bool"],
       ["--structure", "Alters initial structure {flat, gen, normal, mix}", "string"],

@@ -2,6 +2,7 @@
 #include <cstring>
 #include <iostream>
 #include <iomanip>
+#include <csignal>
 
 #include "HierMUSEnumer.h"
 
@@ -16,7 +17,7 @@ using namespace HierMUS;
 using std::string;
 
 SubProblem* createProblem(DriverOptions& dro,
-                             MUSEnumOptions& mo) {
+                          MUSEnumOptions& mo) {
   SubProblem* problem = nullptr;
 #ifdef BUILD_FINDMUS_EXAMPLES
   if(!dro.demo_name.empty()) {
@@ -62,11 +63,90 @@ void writeDotFile(const DriverOptions& dro, SubProblem* problem){
   dw.print();
 }
 
+namespace FindMUSState {
+static bool sigint = false;
+static void regHandler();
+
+#ifdef WIN32
+
+static BOOL handlesig(DWORD sig) {
+  if (sig != CTRL_C_EVENT) return false;
+  sigint = true;
+  regHandler();
+  return true;
+}
+
+#else
+
+static void handlesig(int sig) {
+  sigint = true;
+  regHandler();
+}
+
+#endif
+
+static void regHandler() {
+#ifdef WIN32
+  if(!sigint)
+    SetConsoleCtrlHandler( (PHANDLER_ROUTINE) handlesig, true);
+#else
+  if(!sigint)
+    std::signal(SIGINT, handlesig);
+#endif
+}
+
+static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
+  regHandler();
+  double start_time = wallClockTime();
+  int nmuses = 0;
+  if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
+  while(!sigint && !mo.timedOut() && me.search()) {
+
+    if(dro.colour) std::cout << "\033[1;31m";
+
+    me.printMUS();
+
+    std::cout << std::flush;
+    if(dro.colour) std::cout << "\033[0m";
+
+    nmuses++;
+
+    if(dro.maxmuses > 0) {
+      if(dro.output_progress) { std::cout << "%%%mzn-progress " << (static_cast<float>(nmuses) / dro.maxmuses * 100.0f) << std::endl; }
+      if(nmuses >= dro.maxmuses) break;
+    }
+    if(dro.frequent_stats)
+      std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
+                << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
+  }
+
+  if(sigint || mo.timedOut()) {
+    me.printMUS();
+  }
+
+  if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
+  std::cout << "Total Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
+            << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
+}
+}
+
 int main(int argc, char **argv) {
+  Statistics s;
   DriverOptions dro;
-  MUSEnumOptions mo;
+  MUSEnumOptions mo(s);
   OptionsHelper::parse(dro, mo, argc, argv);
 
+  if(dro.list_solvers || dro.list_solvers_json) {
+    std::fstream nullstream;
+    MiniZinc::MznSolver solver(nullstream, std::cout);
+    vector<string> args (1);
+    if(dro.list_solvers) args.push_back("--solvers");
+    if(dro.list_solvers_json) args.push_back("--solvers-json");
+    solver.run(args);
+    exit(EXIT_SUCCESS);
+  }
+
+  // Create SubProblem
   HierMUS::SubProblem* problem = createProblem(dro, mo);
 
   if(!dro.dump_dot_path.empty()) {
@@ -80,39 +160,22 @@ int main(int argc, char **argv) {
     std::cout << "Warning: Using ReMUS as HierMUS's sub-MUS-enumerator is not currently supported."
               << "Use --structure flat for accurate MUSes.\n";
   }
-  HierMUS::HierMUSEnumer me(*problem, mo);
+
+  // Create MUS Enumerator
+  HierMUSEnumer me(*problem, mo);
+
   // Is the model unsat to begin with?
   if(!dro.ignore_sat_model && problem->check(me.getRootSelector())) {
     std::cout << "Error: Cannot prove UNSAT within solver timelimit. Set a larger timeout with the\n"
               << "'--solver-timelimit' argument or use '--ignore-sat-model' flag to run MUS enumeration anyway.\n";
     return EXIT_FAILURE;
   }
+
   // Is the background satisfiable:
   if(!dro.ignore_unsatisfiable_background && !problem->check(Selection())) {
     std::cout << "Background is not satisfiable, exiting." << std::endl;
     return EXIT_FAILURE;
   }
 
-  Statistics& stats = me.getStatistics();
-  double start_time = wallClockTime();
-  int nmuses = 0;
-  if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
-  while(!mo.timedOut(stats) && me.search()) {
-    if(dro.colour) std::cout << "\033[1;31m";
-    me.printMUS();
-    std::cout << std::flush;
-    if(dro.colour) std::cout << "\033[0m";
-    nmuses++;
-    if(dro.maxmuses > 0) {
-      if(dro.output_progress) { std::cout << "%%%mzn-progress " << (static_cast<float>(nmuses) / dro.maxmuses * 100.0) << std::endl; }
-      if(nmuses >= dro.maxmuses) break;
-    }
-    if(dro.frequent_stats)
-      std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time 
-                << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
-  }
-  if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
-  std::cout << "Total Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time 
-            << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
-
+  FindMUSState::run(dro, mo, me);
 }

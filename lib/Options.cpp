@@ -45,8 +45,8 @@ void help_long(void) {
   std::cout
       << "  --paths <path>\n"
       << "    Explicit path to paths file\n"
-      << "  --timeout <s>\n"
-      << "    Stop after <s> seconds. Default: 1800 seconds\n"
+      << "  -t <ms>\n"
+      << "    Stop after <ms> seconds. Default: -1 (no timelimit)\n"
       << "  --frequent-stats\n"
       << "    Output high-level stats after each MUS (for logging)\n"
       << "  --no-progress\n"
@@ -159,8 +159,12 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
     } else if(strcmp(argv[i], "-a") == 0) {
       dro.maxmuses = 0; // Find all MUSes
       mo.map_enum_focus_mode = false; // Don't use focus mode
-    } else if(strcmp(argv[i], "--timeout") == 0) {
-      mo.timeout = atof(argv[++i]);
+    } else if(strcmp(argv[i], "-t") == 0) {
+      mo.timelimit = atof(argv[++i]);
+    } else if(strcmp(argv[i], "--solvers") == 0) {
+      dro.list_solvers = true;
+    } else if(strcmp(argv[i], "--solvers-json") == 0) {
+      dro.list_solvers_json = true;
     } else if(strcmp(argv[i], "--solver") == 0) {
       mo.subproblem_solver = argv[++i];
     } else if(strcmp(argv[i], "--solver-flags") == 0) {
@@ -202,7 +206,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       }
     } else if(strcmp(argv[i], "--dump-dot") == 0) {
       dro.dump_dot_path = argv[++i];
-    } else if(strcmp(argv[i], "--verbose") == 0) {
+    } else if(strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
       mo.verbose_final_stats = true;
       mo.verbose_enum = 1;
       mo.verbose_map = 1;

@@ -292,6 +292,8 @@ namespace HierMUS {
     args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
     args.push_back("--solver");
     args.push_back(mopts.subproblem_solver);
+
+    mopts.adjustSolverTimeout();
     args.push_back("--solver-time-limit");
     args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
     vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
@@ -416,7 +418,7 @@ namespace HierMUS {
     vector<string> leaves_vec(leaves.begin(), leaves.end());
     stringstream shortSol;
 
-    shortSol << "MUS: " << utils::join(leaves_vec, " ") << "\n"
+    shortSol << "MUS: " << utils::join(leaves_vec, " ") << sep
              << "Brief: " << utils::join(names_vec, sep) << "\n";
     return shortSol.str();
   }

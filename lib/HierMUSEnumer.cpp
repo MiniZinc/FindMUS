@@ -52,7 +52,7 @@ namespace HierMUS {
 
   bool HierMUSEnumer::search() {
     current_mus = empty_selection;
-    while(!mopts.timedOut(stats) && true) {
+    while(!mopts.timedOut() && true) {
       if(inner_enum->search()) {
         if(frontier_idx != -1) {
           if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx] << "\n"; }
@@ -68,7 +68,7 @@ namespace HierMUS {
   }
 
   void HierMUSEnumer::printMUS(void) {
-    if(mopts.timedOut(stats)) {
+    if(mopts.timedOut()) {
       std::cout << "FindMUS finishing early: ";
       if(candidates.empty()) {
         std::cout << "No remaining candidates.\n";

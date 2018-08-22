@@ -15,10 +15,10 @@ namespace HierMUS {
   }
 
   bool StackMUS::search() {
-    if(mopts.timedOut(stats)) return false;
+    if(mopts.timedOut()) return false;
     while(!shrink_stack.empty()) {
       while(true) {
-        if(mopts.timedOut(stats)) return false;
+        if(mopts.timedOut()) return false;
         stats.map_calls++;
         Selection s = subsetMap->getSelection(shrink_stack.back());
 
