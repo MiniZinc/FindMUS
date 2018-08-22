@@ -71,9 +71,11 @@ public:
   }
 
   void adjustSolverTimeout() {
+    if(timelimit < 0) return;
     double time = wallClockTime();
     double elapsedTime = time - stats.start_time;
     double remainingTime = timelimit - elapsedTime;
+
     if(remainingTime < (subproblem_solver_time_limit)) {
       std::cerr << "Options: Tightening timeout to: " << (remainingTime) << " (ms)" << std::endl;
       subproblem_solver_time_limit = remainingTime;
