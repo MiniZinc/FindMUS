@@ -1,13 +1,40 @@
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include "string_utils.h"
 #include "path_utils.h"
 
+namespace utils {
+
 using std::vector;
 using std::string;
+using std::stringstream;
 
-namespace utils {
+
+vector<string> getAllAssigns(const string& path) {
+  static std::regex assignment_regex {reg_mzn_ident "=" reg_number};
+  vector<string> assigns;
+  auto assignment_begin = std::sregex_iterator(path.begin(), path.end(), assignment_regex);
+  auto assignment_end = std::sregex_iterator();
+
+  for(std::sregex_iterator i = assignment_begin; i != assignment_end; i++) {
+    std::smatch match = *i;
+    assigns.push_back(match.str());
+  }
+
+  return assigns;
+}
+
+string generalizeLabel(const string& path_el, bool mix) {
+  static std::regex generalize_regex {"=" reg_number};
+  std::stringstream new_label;
+  new_label << std::regex_replace(path_el, generalize_regex, "=$$");
+  if(mix)
+    new_label << path_el;
+
+  return new_label.str();
+}
 
 vector<string> getPathHead(const string& path,
                            bool leaveModel,
@@ -15,7 +42,7 @@ vector<string> getPathHead(const string& path,
   vector<string> pathSplit = utils::split(path, major_sep);
 
   if(!includeTrail && leaveModel)
-      return {pathSplit.back()};
+    return {pathSplit.back()};
 
   string mzn_file;
   vector<string> previousHead;

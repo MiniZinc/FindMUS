@@ -24,6 +24,26 @@ public:
 #endif
   bool list_solvers = false;
   bool list_solvers_json = false;
+
+  void toJSON(std::ostream& ss) {
+    ss << "\"driver_options\": {\n"
+       << "\t\"fznpath\": \"" << fznpath << "\",\n"
+       << "\t\"fznpath\": \"" << fznpath << "\",\n"
+       << "\t\"maxmuses\": " << maxmuses << ",\n"
+       << "\t\"frequent_stats\": " << frequent_stats << ",\n"
+       << "\t\"output_progress\": " << output_progress << ",\n"
+       << "\t\"dump_dot_path\": \"" << dump_dot_path << "\",\n"
+       << "\t\"filter_sep\": \"" << filter_sep << "\",\n"
+       << "\t\"ignore_sat_model\": " << ignore_sat_model << ",\n"
+       << "\t\"ignore_unsatisfiable_background\": " << ignore_unsatisfiable_background << ",\n"
+       << "\t\"colour\": " << colour << ",\n"
+#ifdef BUILD_FINDMUS_EXAMPLES
+       << "\t\"demo_name\": \"" << demo_name << "\",\n"
+#endif
+       << "\t\"list_solvers\": " << list_solvers << ",\n"
+       << "\t\"list_solvers_json\": " << list_solvers_json << ",\n"
+       << "}";
+  }
 };
 
 class MUSEnumOptions {

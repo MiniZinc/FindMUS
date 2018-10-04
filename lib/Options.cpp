@@ -52,8 +52,9 @@ void help_long(void) {
       << "  --no-progress\n"
       << "    Do not output progress directive for IDE showing progress towards\n"
       << "    finding target number of MUSes.\n"
-      << "  --output-{html, brief}\n"
-      << "    Output modes, html for use with MiniZincIDE, brief for testing\n"
+      << "  --output-{html, json, brief}\n"
+      << "    Output modes, html for use with MiniZincIDE, brief for testing, json\n"
+      << "    for easier to parse output.\n"
       << "\n"
       << " Enumeration Options:\n"
       << "  --marco\n"
@@ -219,6 +220,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.verbose_subsolve = static_cast<unsigned int>(atoi(argv[++i]));
     } else if(strcmp(argv[i], "--frequent-stats") == 0) {
       dro.frequent_stats = true;
+    } else if(strcmp(argv[i], "--output-json") == 0) {
+      mo.subproblem_output_format = OUT_JSON;
     } else if(strcmp(argv[i], "--output-html") == 0) {
       mo.subproblem_output_format = OUT_HTML;
     } else if(strcmp(argv[i], "--output-brief") == 0) {

@@ -3,8 +3,11 @@
 
 #include <set>
 #include <string>
+#include <unordered_map>
 
 #include "Node.h"
+
+#include <minizinc/model.hh>
 
 namespace HierMUS {
 
@@ -22,7 +25,8 @@ namespace HierMUS {
   enum SubProblemOutputFormat {
     OUT_DEBUG,
     OUT_NORMAL,
-    OUT_HTML
+    OUT_HTML,
+    OUT_JSON
   };
 
   enum MusAlg { ALG_STACKMUS, ALG_MARCO, ALG_REMUS };
@@ -94,6 +98,44 @@ namespace HierMUS {
 
   void debugPrint(HierMUS::Selection& s);
 
+  struct UnsatSet {
+    struct Constraint {
+      std::vector<int> indices;
+      std::vector<std::string> paths;
+      std::vector<std::string> constraint_names;
+      std::vector<std::string> expression_names;
+    };
+    std::vector<Constraint> constraints;
+
+  };
+
+
+  struct ConstraintInfo {
+    std::string leaf_name;
+    std::string name;
+    std::string assigns;
+    std::string path;
+    std::string expression_name;
+    std::string constraint_name;
+
+    void setAnnotatedNamesFrom(const MiniZinc::ConstraintI* ci);
+  };
+
+  class ConstraintSet {
+  public:
+    std::unordered_map<std::string, std::vector<ConstraintInfo> > constraints;
+
+    ConstraintSet();
+    void addConstraintInfo(const std::string& path, const ConstraintInfo& ci);
+
+    std::string getSummary(SubProblemOutputFormat format);
+
+  private:
+    std::string getLongSummary(void);
+    std::string getShortSummary(const std::string& sep = "\n");
+    std::string getJSONSummary(void);
+    std::string getHTMLSummary(void);
+  };
 
 }
 #endif

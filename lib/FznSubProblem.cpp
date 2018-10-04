@@ -3,7 +3,6 @@
 #include <sstream>
 #include <iomanip>
 #include <set>
-#include <regex>
 
 #include <minizinc/file_utils.hh>
 #include <minizinc/solver.hh>
@@ -12,9 +11,6 @@
 #include "Types.h"
 #include "string_utils.h"
 #include "path_utils.h"
-
-#define reg_mzn_ident "[A-Za-z_][A-Za-z0-9_]*"
-#define reg_number "[0-9]*"
 
 #ifdef _MSC_VER
 #undef ERROR
@@ -28,32 +24,6 @@ namespace HierMUS {
   using std::ofstream;
   using std::set;
   using std::unordered_map;
-
-  std::regex FznSubProblem::assignment_regex {reg_mzn_ident "=" reg_number};
-
-  vector<string> FznSubProblem::getAllAssigns(const string& path) const {
-    vector<string> assigns;
-    auto assignment_begin = std::sregex_iterator(path.begin(), path.end(), assignment_regex);
-    auto assignment_end = std::sregex_iterator();
-
-    for(std::sregex_iterator i = assignment_begin; i != assignment_end; i++) {
-      std::smatch match = *i;
-      assigns.push_back(match.str());
-    }
-
-    return assigns;
-  }
-
-  std::regex FznSubProblem::generalize_regex {"=" reg_number};
-
-  string FznSubProblem::generalizeLabel(const string& path_el, bool mix) {
-    stringstream new_label;
-    new_label << std::regex_replace(path_el, generalize_regex, "=$$");
-    if(mix)
-      new_label << path_el;
-
-    return new_label.str();
-  }
 
   NullSolns2Out::NullSolns2Out() : Solns2Out(nullstream, nullstream, "") {}
   NullSolns2Out::~NullSolns2Out() {}
@@ -187,8 +157,7 @@ namespace HierMUS {
         } else {
           string path;
           if(mopts.subproblem_structure != STR_NORMAL) { // Not STR_FLAT and not STR_NORMAL
-            path = generalizeLabel(nameToPath[name], mopts.subproblem_structure == STR_GEN_MIX);
-            //nameToPath[name] = path;
+            path = utils::generalizeLabel(nameToPath[name], mopts.subproblem_structure == STR_GEN_MIX);
           } else {
             path = nameToPath[name];
           }
@@ -237,27 +206,13 @@ namespace HierMUS {
     //}
   }
 
-  string getExplanation(const MiniZinc::ConstraintI* ci) {
-    std::stringstream explain;
-    MiniZinc::Expression* en = MiniZinc::getAnnotation(ci->e()->ann(), "mzn_expression_name");
-    if(en) {
-      MiniZinc::Call* c = en->cast<MiniZinc::Call>();
-      explain << c->arg(0)->cast<MiniZinc::StringLit>()->v().str();
-    }
-    MiniZinc::Expression* cn = MiniZinc::getAnnotation(ci->e()->ann(), "mzn_constraint_name");
-    if(cn) {
-      MiniZinc::Call* c = cn->cast<MiniZinc::Call>();
-      explain << "@" << c->arg(0)->cast<MiniZinc::StringLit>()->v().str();
-    }
-    return explain.str();
-  }
-
-  unordered_map<string, vector<NaA> > FznSubProblem::getEntries(set<string>& names) {
-    unordered_map<string, vector<NaA> > entries;
+  ConstraintSet FznSubProblem::getConstraintSet(const set<string>& names) {
+    ConstraintSet entries;
     for(const string& leaf_name : names) {
       string path = nameToPath[leaf_name];
-      NaA n;
-      n.explain = getExplanation(constraints[leaf_name]);
+      ConstraintInfo n;
+      n.leaf_name = leaf_name;
+      n.setAnnotatedNamesFrom(constraints[leaf_name]);
 
       vector<string> split_all = utils::split(path, MINOR_SEP);
       n.name = split_all.back();
@@ -271,8 +226,9 @@ namespace HierMUS {
         path = utils::join(splitPath, string(1, MAJOR_SEP));
       }
 
-      n.assigns = utils::join(getAllAssigns(path), ",");
-      entries[path].push_back(n);
+      n.path = path;
+      n.assigns = utils::join(utils::getAllAssigns(path), ",");
+      entries.addConstraintInfo(path, n);
     }
     return entries;
   }
@@ -356,24 +312,6 @@ namespace HierMUS {
     return is_sat;
   }
 
-  void FznSubProblem::printLongSol(const Selection& b) {
-    std::cout << getShortSol(b);
-    std::cout << "\nTraces:\n";
-
-    set<string> leaves = getLeaves(b);
-    unordered_map<string, vector<NaA> > entries = getEntries(leaves);
-    for(auto& ps : entries) {
-      string path = ps.first;
-      //vector<string> split_path = utils::split(path, MAJOR_SEP);
-      //string trace = utils::join(split_path, '\n');
-
-      //std::cout << trace << "\n\n";
-      std::cout << path << "\n";
-    }
-
-    std::cout << string(20, '=') << "\n\n";
-  }
-
   string escape(string orig) {
     string repchars = "&\"\'<>";
     vector<string> repstrs = { "&amp;", "&quot;", "&apos;", "&lt;", "&gt;" };
@@ -382,7 +320,7 @@ namespace HierMUS {
     size_t found = orig.find_first_of(repchars);
     while(found != string::npos) {
       html << orig.substr(last, found - last);
-      for(int i=0; i<repchars.size(); i++) {
+      for(size_t i=0; i<repchars.size(); i++) {
         if(orig[found] == repchars[i]) {
           html << repstrs[i];
           break;
@@ -395,59 +333,28 @@ namespace HierMUS {
     return html.str();
   }
 
-  string FznSubProblem::getShortSol(const Selection& b, const string& sep, bool esc) {
+  void FznSubProblem::saveFzn(const Selection& b, const string& filename) {
+    std::cout << "FznSubProblem: dumping fzn as: " << filename << "\n";
     set<string> leaves = getLeaves(b);
-    unordered_map<string, vector<NaA> > entries = getEntries(leaves);
+    // Mark all constraints as removed;
+    for(auto& kv : constraints) { kv.second->remove(); }
+    // Activate the selected constraints
+    for(const string& l : leaves) { constraints[l]->unremove(); }
 
-    std::unordered_set<string> names;
-    for(auto& ps : entries) {
-      for(auto& n : ps.second) {
-        stringstream ss;
-        ss << n.name;
-        if(!n.explain.empty()) {
-          ss << "@{" << (esc ? escape(n.explain) : n.explain) << "}";
-        }
-        ss << ":(" << n.assigns << ")";
-
-        names.insert(ss.str());
-      }
+    std::ofstream f;
+    f.open(filename);
+    if(f.is_open()) {
+      MiniZinc::Printer p(f, 0, true, &fzn_env.envi());
+      p.print(fzn_model);
+      f.close();
+    } else {
+      std::cout << "FAILED\n";
     }
-    std::vector<string> names_vec(names.begin(), names.end());
-
-    std::sort(names_vec.begin(), names_vec.end());
-    vector<string> leaves_vec(leaves.begin(), leaves.end());
-    stringstream shortSol;
-
-    shortSol << "MUS: " << utils::join(leaves_vec, " ") << sep
-             << "Brief: " << utils::join(names_vec, sep) << "\n";
-    return shortSol.str();
-  }
-
-  void FznSubProblem::printHtml(const Selection& b) {
-    set<string> leaves = getLeaves(b);
-    unordered_map<string, vector<NaA> > entries = getEntries(leaves);
-
-    std::unordered_set<string> paths;
-    for(auto& ps : entries) {
-      paths.insert(generalizeLabel(ps.first, false));
-    }
-    std::vector<string> path_vec(paths.begin(), paths.end());
-
-    std::cout << "%%%mzn-html-start\n"
-              << "<div class=\"explanation\" style=\"border:1px solid black\">"
-              << "<a href=\"highlight:?" << utils::join(path_vec, "&") << "\">"
-              << getShortSol(b, "<br/>", true)
-              << "</a></div>\n"
-              << "%%%mzn-html-end\n\n";
   }
 
   void FznSubProblem::printSol(const Selection& b) {
-    if(mopts.subproblem_output_format == OUT_NORMAL) {
-      printLongSol(b);
-    } else if(mopts.subproblem_output_format == OUT_DEBUG) {
-      std::cout << getShortSol(b);
-    } else if(mopts.subproblem_output_format == OUT_HTML) {
-      printHtml(b);
-    }
+    set<string> leaves = getLeaves(b);
+    ConstraintSet cs = getConstraintSet(leaves);
+    std::cout << cs.getSummary(mopts.subproblem_output_format);
   }
 }
