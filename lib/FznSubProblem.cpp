@@ -102,7 +102,7 @@ namespace HierMUS {
 
     includes.push_back(mo.mzn_stdlib_dir + "/std/");
 
-    fzn_model = MiniZinc::parse(fzn_env, {fznpath}, {}, includes, false, false, false, std::cerr);
+    fzn_model = MiniZinc::parse(fzn_env, {fznpath}, {}, "", "", includes, false, false, false, std::cerr);
     MiniZinc::SolveI* si = fzn_model->solveItem();
     si->st(MiniZinc::SolveI::ST_SAT);
     si->e(NULL);
