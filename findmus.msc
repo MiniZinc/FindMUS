@@ -5,7 +5,7 @@
     "mznlib": "-Ggecode",
     "name": "findMUS",
     "supportsMzn": false,
-    "version": "0.1.0",
+    "version": "0.1.1",
     "needsSolns2Out": false,
     "needsStdlibDir": true,
     "needsPathsFile": true,

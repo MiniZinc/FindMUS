@@ -1,0 +1,12 @@
+======================
+# findMUS Changelog #
+======================
+
+
+Version 0.1.1
+=============
+
+Changes:
+  - Added --output-json option
+
+
