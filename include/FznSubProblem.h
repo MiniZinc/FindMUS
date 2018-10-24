@@ -38,7 +38,7 @@ namespace HierMUS {
       std::unordered_map<std::string, std::string> nameToPath;
       std::string fzn_file;
 
-      ConstraintSet getConstraintSet(const std::set<std::string>& names);
+      ConstraintSet getConstraintSet(const Selection& b);
       bool isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name);
       void saveFzn(const Selection& b, const string& filename);
 

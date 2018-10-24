@@ -206,9 +206,10 @@ namespace HierMUS {
     //}
   }
 
-  ConstraintSet FznSubProblem::getConstraintSet(const set<string>& names) {
+  ConstraintSet FznSubProblem::getConstraintSet(const Selection& b) {
+    set<string> leaf_names = getLeaves(b);
     ConstraintSet entries;
-    for(const string& leaf_name : names) {
+    for(const string& leaf_name : leaf_names) {
       string path = nameToPath[leaf_name];
       ConstraintInfo n;
       n.leaf_name = leaf_name;
@@ -353,8 +354,7 @@ namespace HierMUS {
   }
 
   void FznSubProblem::printSol(const Selection& b) {
-    set<string> leaves = getLeaves(b);
-    ConstraintSet cs = getConstraintSet(leaves);
+    ConstraintSet cs = getConstraintSet(b);
     std::cout << cs.getSummary(mopts.subproblem_output_format);
   }
 }
