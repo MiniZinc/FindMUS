@@ -22,10 +22,6 @@ stages:
   artifacts:
     paths:
       - findMUS/
-  cache:
-    key: "${MZNARCH}_${CI_COMMIT_REF_SLUG}"
-    paths:
-      - build/
 
 
 build:linux:
