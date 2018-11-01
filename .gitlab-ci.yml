@@ -11,7 +11,7 @@ stages:
     - unzip -q minizinc.zip
     - git submodule update --init submodules/chuffed_assump
     - git checkout CMakeLists.txt
-    - (echo 'link_directories(${CMAKE_SOURCE_DIR}/vendor/gecode/lib ${CMAKE_SOURCE_DIR}/vendor/CBC/lib)'; cat CMakeLists.txt) > CMakeLists_link.txt
+    - (echo 'link_directories(${CMAKE_SOURCE_DIR}/vendor/gecode/lib ${CMAKE_SOURCE_DIR}/vendor/cbc/lib)'; cat CMakeLists.txt) > CMakeLists_link.txt
     - mv CMakeLists_link.txt CMakeLists.txt
     - rm -rf build
     - mkdir -p build
