@@ -1,6 +1,6 @@
 stages:
   - build
-  - test
+  - trigger
 
 .build_template: &build_definition
   stage: build
@@ -95,3 +95,14 @@ build:win64:
     - win64
     - cmake
     - cpp
+
+# ----------- Trigger MiniZincIDE pipeline -----------
+
+trigger:ide:
+  stage: trigger
+  image: dekker1/minibuild:package
+  script:
+  - "curl --request POST --form token=$TRIGGER --form ref=develop https://gitlab.com/api/v4/projects/minizinc%2Fide/trigger/pipeline"
+  dependencies: []
+  tags: [linux, docker]
+  only: [master]
