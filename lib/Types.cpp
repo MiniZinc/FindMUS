@@ -213,11 +213,11 @@ namespace HierMUS {
       for(const ConstraintInfo& ci : pcs.second) {
         json << "{\n";
         json << "\t\"leaf_name\": " << "\"" << ci.leaf_name << "\",\n";
-        json << "\t\"name\": " << "\"" << ci.name << "\",\n";
-        json << "\t\"path\": " << "\"" << ci.path << "\",\n";
-        json << "\t\"assigns\": " << "\"" << ci.assigns << "\",\n";
-        json << "\t\"constraint_name\": " << "\"" << ci.constraint_name << "\",\n";
-        json << "\t\"expression_name\": " << "\"" << ci.expression_name << "\"\n";
+        json << "\t\"name\": " << "\""            << utils::escape(ci.name, false) << "\",\n";
+        json << "\t\"path\": " << "\""            << utils::escape(ci.path, false) << "\",\n";
+        json << "\t\"assigns\": " << "\""         << utils::escape(ci.assigns, false) << "\",\n";
+        json << "\t\"constraint_name\": " << "\"" << utils::escape(ci.constraint_name, false) << "\",\n";
+        json << "\t\"expression_name\": " << "\"" << utils::escape(ci.expression_name, false) << "\"\n";
         json << "}";
         if(--remain_inner) json << ",\n";
       }

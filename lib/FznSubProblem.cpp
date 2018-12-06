@@ -313,27 +313,6 @@ namespace HierMUS {
     return is_sat;
   }
 
-  string escape(string orig) {
-    string repchars = "&\"\'<>";
-    vector<string> repstrs = { "&amp;", "&quot;", "&apos;", "&lt;", "&gt;" };
-    stringstream html;
-    size_t last = 0;
-    size_t found = orig.find_first_of(repchars);
-    while(found != string::npos) {
-      html << orig.substr(last, found - last);
-      for(size_t i=0; i<repchars.size(); i++) {
-        if(orig[found] == repchars[i]) {
-          html << repstrs[i];
-          break;
-        }
-      }
-      last = found + 1;
-      found = orig.find_first_of(repchars, found+1);
-    }
-    html << orig.substr(last);
-    return html.str();
-  }
-
   void FznSubProblem::saveFzn(const Selection& b, const string& filename) {
     std::cout << "FznSubProblem: dumping fzn as: " << filename << "\n";
     set<string> leaves = getLeaves(b);
