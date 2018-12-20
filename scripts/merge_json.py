@@ -21,4 +21,4 @@ with open(sys.argv[1]) as f:
         else:
             raw_lines.append(line)
 
-print all_parts
+print json.dumps(all_parts)
