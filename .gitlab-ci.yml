@@ -33,22 +33,17 @@ build:linux:
   image: dekker1/minibuild:cpp
   variables:
     MZNARCH: "linux"
-    CMAKE_ARCH: "Unix Makefiles"
+    CMAKE_ARCH: "Ninja"
     CMAKEDIR: "lib/cmake"
-  tags:
-    - linux
-    - docker
+  tags: [linux, docker]
 
 build:osx:
   <<: *build_definition
   variables:
     MZNARCH: "osx"
-    CMAKE_ARCH: "Xcode"
+    CMAKE_ARCH: "Ninja"
     CMAKEDIR: "lib/cmake"
-  tags:
-    - osx
-    - cmake
-    - cpp
+  tags: [osx, cmake, cpp]
 
 build:win64:
   <<: *build_definition
@@ -67,10 +62,7 @@ build:win64:
     - cmake -G"%CMAKE_ARCH%" .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%"  -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"
     - cmake --build .  --config Release
     - cmake --build .  --config Release --target install
-  tags:
-    - win64
-    - cmake
-    - cpp
+  tags: [win64, cmake, cpp]
 
 # ----------- Trigger MiniZincIDE pipeline -----------
 
