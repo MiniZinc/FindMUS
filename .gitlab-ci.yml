@@ -2,6 +2,13 @@ stages:
   - build
   - trigger
 
+variables:
+  # Vendor solver locations
+  GECODE_ROOT: "$CI_PROJECT_DIR/vendor/gecode"
+  GUROBI_ROOT: "$CI_PROJECT_DIR/vendor/gurobi"
+  CPLEX_ROOT: "$CI_PROJECT_DIR/vendor/CPLEX_Studio"
+  OSICBC_ROOT: "$CI_PROJECT_DIR/vendor/cbc"
+
 .build_template: &build_definition
   stage: build
   script:
@@ -10,9 +17,6 @@ stages:
     - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:$ACCESS_TOKEN" "https://gitlab.com/api/v4/projects/minizinc%2Fminizinc/jobs/artifacts/develop/download?job=build:$MZNARCH"
     - unzip -q minizinc.zip
     - git submodule update --init submodules/chuffed_assump
-    - git checkout CMakeLists.txt
-    - (echo 'link_directories(${CMAKE_SOURCE_DIR}/vendor/gecode/lib ${CMAKE_SOURCE_DIR}/vendor/cbc/lib)'; cat CMakeLists.txt) > CMakeLists_link.txt
-    - mv CMakeLists_link.txt CMakeLists.txt
     - rm -rf build
     - mkdir -p build
     - cd build
@@ -29,47 +33,17 @@ build:linux:
   image: dekker1/minibuild:cpp
   variables:
     MZNARCH: "linux"
-    CMAKE_ARCH: "Unix Makefiles"
+    CMAKE_ARCH: "Ninja"
     CMAKEDIR: "lib/cmake"
-  tags:
-    - linux
-    - docker
+  tags: [linux, docker]
 
 build:osx:
   <<: *build_definition
   variables:
     MZNARCH: "osx"
-    CMAKE_ARCH: "Xcode"
+    CMAKE_ARCH: "Ninja"
     CMAKEDIR: "lib/cmake"
-  tags:
-    - osx
-    - cmake
-    - cpp
-
-.build:win32: #DISABLED
-  <<: *build_definition
-  variables:
-    MZNARCH: "win32"
-    CMAKE_ARCH: "Visual Studio 14 2015"
-    CMAKEDIR: "CMake"
-  script:
-    - curl --silent -o vendor.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fvendor/jobs/artifacts/master/download?job=solvers:%MZNARCH%"
-    - unzip -q vendor.zip
-    - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fminizinc/jobs/artifacts/develop/download?job=build:%MZNARCH%"
-    - unzip -q minizinc.zip
-    - git submodule update --init submodules/chuffed_assump
-    - "@echo link_directories(${CMAKE_SOURCE_DIR}/vendor/gecode/lib ${CMAKE_SOURCE_DIR}/vendor/CBC/lib) > CMakeLists_link.txt"
-    - type CMakeLists.txt >> CMakeLists_link.txt
-    - mv CMakeLists_link.txt CMakeLists.txt
-    - if not exist "build" mkdir build
-    - cd build
-    - cmake -G"%CMAKE_ARCH%" .. -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%"  -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"
-    - cmake --build .  --config Release
-    - cmake --build .  --config Release --target install
-  tags:
-    - win32
-    - cmake
-    - cpp
+  tags: [osx, cmake, cpp]
 
 build:win64:
   <<: *build_definition
@@ -83,18 +57,12 @@ build:win64:
     - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fminizinc/jobs/artifacts/develop/download?job=build:%MZNARCH%"
     - unzip -q minizinc.zip
     - git submodule update --init submodules/chuffed_assump
-    - "@echo link_directories(${CMAKE_SOURCE_DIR}/vendor/gecode/lib ${CMAKE_SOURCE_DIR}/vendor/CBC/lib) > CMakeLists_link.txt"
-    - type CMakeLists.txt >> CMakeLists_link.txt
-    - mv CMakeLists_link.txt CMakeLists.txt
     - if not exist "build" mkdir build
     - cd build
     - cmake -G"%CMAKE_ARCH%" .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%"  -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"
     - cmake --build .  --config Release
     - cmake --build .  --config Release --target install
-  tags:
-    - win64
-    - cmake
-    - cpp
+  tags: [win64, cmake, cpp]
 
 # ----------- Trigger MiniZincIDE pipeline -----------
 
