@@ -20,7 +20,7 @@ include_directories("include" ${CMAKE_BINARY_DIR})
 # The version number.
 set (findMUS_VERSION_MAJOR 0)
 set (findMUS_VERSION_MINOR 1)
-set (findMUS_VERSION_PATCH 0)
+set (findMUS_VERSION_PATCH 1)
 
 add_library(hiermus
   lib/SubProblem.cpp
@@ -63,6 +63,7 @@ if(libminizinc_FOUND)
         examples/cpp/DemoSubProblems.cpp
         examples/cpp/DemoSubProblems.h
       )
+      target_compile_definitions(hiermus PRIVATE BUILD_FINDMUS_EXAMPLES)
       target_compile_definitions(findMUS PRIVATE BUILD_FINDMUS_EXAMPLES)
       target_link_libraries(findMUS findmus_examples)
     endif()

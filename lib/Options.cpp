@@ -228,7 +228,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.subproblem_output_format = OUT_DEBUG;
 #ifdef BUILD_FINDMUS_EXAMPLES
     } else if(strcmp(argv[i], "--demo") == 0) {
-      demo_name = argv[++i];
+      dro.demo_name = argv[++i];
 #endif
     } else if(strcmp(argv[i], "--paths") == 0) {
       dro.pathpath = argv[++i];
