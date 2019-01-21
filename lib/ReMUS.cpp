@@ -47,11 +47,13 @@ namespace HierMUS {
       if(!subProblem.check(s_max)) {
         frontier.is_min = false;
         Selection s_mus = s_max; // Copy of s with maximal s
+        bool shrink_complete = false;
         if(mopts.map_shrink_alg == SH_LIN) {
-          shrink(&subProblem, s_mus, state.criticals, stats);
+          shrink_complete = shrink(mopts, &subProblem, s_mus, state.criticals, stats);
         } else {
-          qx(&subProblem, s_mus, state.criticals, stats);
+          shrink_complete = qx(mopts, &subProblem, s_mus, state.criticals, stats);
         }
+        if(!shrink_complete) return false;
         subsetMap->blockSupersets(s_mus);
         subsetMap->blockSubsets(s_mus);
         if(s_mus.selected.size() < floor(0.9 * s_max.selected.size())) {

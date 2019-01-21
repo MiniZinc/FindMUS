@@ -22,11 +22,13 @@ namespace HierMUS {
     }
   }
 
-  void MusEnumerator::shrink(SubProblem* prob, Selection& model,
+  bool MusEnumerator::shrink(MUSEnumOptions& mopts,
+                             SubProblem* prob, Selection& model,
                              const set<MapNode*>& criticals, Statistics& stats) {
     set<MapNode*> selected_copy = model.selected;
     for(MapNode* mn : selected_copy) {
       if(model.selected.size() == 1) break;
+      if(mopts.timedOut()) return false;
       if(criticals.find(mn) != criticals.end()) continue;
       model.selected.erase(mn);
       if(prob->check(model)) {
@@ -35,6 +37,7 @@ namespace HierMUS {
       stats.sat_calls++;
     }
     updateIncludeExclude(model);
+    return true;
   }
 
   inline
@@ -89,8 +92,36 @@ namespace HierMUS {
     return true;
   }
 
-  Selection qx_back(SubProblem* prob, Selection B, Selection D, Selection C,
-                    const set<MapNode*>& criticals, Statistics& stats) {
+  struct OptionalSelection {
+    Selection v;
+    bool has_v;
+
+    OptionalSelection(void) : has_v{false} {}
+
+    OptionalSelection(const OptionalSelection& o) {
+      has_v = o.has_value();
+      if(has_v) v = o.v;
+    }
+    OptionalSelection(const Selection& s) {
+      has_v = true;
+      v = s;
+    }
+
+    OptionalSelection& operator=(const OptionalSelection& o) {
+      v = o.v;
+      has_v = o.has_v;
+      return *this;
+    }
+
+    Selection& get(void) { return v; }
+    bool has_value(void) const { return has_v; }
+  };
+
+  OptionalSelection qx_back(MUSEnumOptions& mopts,
+      SubProblem* prob, Selection B, Selection D, Selection C,
+      const set<MapNode*>& criticals, Statistics& stats) {
+    if(mopts.timedOut()) return {};
+
     if(!D.selected.empty())  {
       if(!B.selected.empty()) {
         stats.sat_calls++;
@@ -104,28 +135,34 @@ namespace HierMUS {
     sel_split(C, C1, C2);
 
     Selection B1 = sel_union(B, C1);
-    Selection D2;
+    OptionalSelection D2;
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
       D2 = C2;
     } else {
-      D2 = qx_back(prob, B1, C1, C2, criticals, stats);
+      D2 = qx_back(mopts, prob, B1, C1, C2, criticals, stats);
+      if(!D2.has_value()) return {};
     }
-    Selection B2 = sel_union(B, D2);
-    Selection D1;
+    Selection B2 = sel_union(B, D2.get());
+    OptionalSelection D1;
     if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
       D1 = C1;
     } else {
-      D1 = qx_back(prob, B2, D2, C1, criticals, stats);
+      D1 = qx_back(mopts, prob, B2, D2.get(), C1, criticals, stats);
+      if(!D1.has_value()) return {};
     }
 
-    return sel_union(D1,D2);
+    return sel_union(D1.get(),D2.get());
   }
 
-  void MusEnumerator::qx(SubProblem* prob, Selection& model,
+  bool MusEnumerator::qx(MUSEnumOptions& mopts,
+                         SubProblem* prob, Selection& model,
                          const set<MapNode*>& criticals, Statistics& stats) {
     Selection B;
-    model = qx_back(prob, B, B, model, criticals, stats);
+    OptionalSelection res = qx_back(mopts, prob, B, B, model, criticals, stats);
+    if(!res.has_value()) { return false; }
+
     updateIncludeExclude(model);
+    return true;
   }
 
   MusEnumerator::MusEnumerator(SubProblem& prob, MUSEnumOptions& mo, SubsetMap* m) :

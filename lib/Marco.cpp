@@ -32,11 +32,13 @@ namespace HierMUS {
       stats.sat_calls++;
       if(!subProblem.check(s)) {
         std::set<MapNode*> empty_crits;
+        bool shrink_completed = true;
         if(mopts.map_shrink_alg == SH_LIN) {
-          shrink(&subProblem, s, empty_crits, stats);
+          shrink_completed = shrink(mopts, &subProblem, s, empty_crits, stats);
         } else {
-          qx(&subProblem, s, empty_crits, stats);
+          shrink_completed = qx(mopts, &subProblem, s, empty_crits, stats);
         }
+        if(!shrink_completed) return false;
         frontier.is_min = false;
         subsetMap->blockSupersets(s);
         if(isLeaves(s)) {
