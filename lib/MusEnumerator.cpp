@@ -117,38 +117,34 @@ namespace HierMUS {
     bool has_value(void) const { return has_v; }
   };
 
+
   OptionalSelection qx_back(MUSEnumOptions& mopts,
       SubProblem* prob, Selection B, Selection D, Selection C,
       const set<MapNode*>& criticals, Statistics& stats) {
-    if(mopts.timedOut()) return {};
+    if(mopts.timedOut()) return OptionalSelection();
 
-    if(!D.selected.empty())  {
-      if(!B.selected.empty()) {
-        stats.sat_calls++;
-        if(!prob->check(B)) return empty_sel(C);
-      }
+    if(!D.selected.empty() && !B.selected.empty()) {
+      stats.sat_calls++;
+      if(!prob->check(B)) return empty_sel(C);
     }
     if(C.selected.size() == 1) return C;
 
-    Selection C1;
-    Selection C2;
+    Selection C1, C2;
     sel_split(C, C1, C2);
 
-    Selection B1 = sel_union(B, C1);
-    OptionalSelection D2;
+    OptionalSelection D2, D1;
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
       D2 = C2;
     } else {
-      D2 = qx_back(mopts, prob, B1, C1, C2, criticals, stats);
-      if(!D2.has_value()) return {};
+      D2 = qx_back(mopts, prob, sel_union(B, C1), C1, C2, criticals, stats);
+      if(!D2.has_value()) return OptionalSelection();
     }
-    Selection B2 = sel_union(B, D2.get());
-    OptionalSelection D1;
+
     if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
       D1 = C1;
     } else {
-      D1 = qx_back(mopts, prob, B2, D2.get(), C1, criticals, stats);
-      if(!D1.has_value()) return {};
+      D1 = qx_back(mopts, prob, sel_union(B, D2.get()), D2.get(), C1, criticals, stats);
+      if(!D1.has_value()) return OptionalSelection();
     }
 
     return sel_union(D1.get(),D2.get());
@@ -160,6 +156,7 @@ namespace HierMUS {
     Selection B;
     OptionalSelection res = qx_back(mopts, prob, B, B, model, criticals, stats);
     if(!res.has_value()) { return false; }
+    model = res.get();
 
     updateIncludeExclude(model);
     return true;
