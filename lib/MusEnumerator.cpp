@@ -49,7 +49,7 @@ namespace HierMUS {
       un.include.insert(ExpandedNode(mn));
       un.exclude.erase(mn);
     }
-    return std::move(un);
+    return un;
   }
 
   inline
@@ -58,7 +58,7 @@ namespace HierMUS {
 
     set<MapNode*>::iterator it = C.selected.begin();
     c1.exclude.insert(C.exclude.begin(), C.exclude.end());
-    for(int i=0; i<mid; i++) {
+    for(size_t i=0; i<mid; i++) {
       c1.selected.insert(*it);
       c1.include.insert(ExpandedNode(*it));
       c2.exclude.insert(*it);
@@ -78,7 +78,7 @@ namespace HierMUS {
     Selection e;
     e.exclude.insert(C.selected.begin(), C.selected.end());
     e.exclude.insert(C.exclude.begin(), C.exclude.end());
-    return std::move(e);
+    return e;
   }
 
 

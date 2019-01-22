@@ -49,7 +49,10 @@ namespace HierMUS {
       if(leaf == "b6") b[5] = true;
     }
 
-    bool sol = !((b[0] && b[1]) || (b[0] && b[2]) ||  (b[4] && b[5]) || (b[1] && b[2] && b[5]));
+    bool sol = !((b[0] && b[1]) ||
+                 (b[0] && b[2]) ||
+                 (b[4] && b[5]) ||
+                 (b[1] && b[2] && b[5]));
     //sol = !(b[0] &&b[1] &&b[2] &&b[3] &&b[4] &&b[5]);
 
     if(mopts.verbose_subsolve)

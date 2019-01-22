@@ -47,7 +47,7 @@ namespace HierMUS {
       if(!subProblem.check(s_max)) {
         frontier.is_min = false;
         Selection s_mus = s_max; // Copy of s with maximal s
-        bool shrink_complete = false;
+        bool shrink_complete = true;
         if(mopts.map_shrink_alg == SH_LIN) {
           shrink_complete = shrink(mopts, &subProblem, s_mus, state.criticals, stats);
         } else {
