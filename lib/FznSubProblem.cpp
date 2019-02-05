@@ -109,7 +109,11 @@ namespace HierMUS {
     fzn_env.model(fzn_model);
 
     vector<MiniZinc::TypeError> typeErrors;
-    MiniZinc::typecheck(fzn_env, fzn_model, typeErrors, true, true, true);
+    try {
+      MiniZinc::typecheck(fzn_env, fzn_model, typeErrors, true, true, true);
+    } catch (MiniZinc::TypeError& e) {
+      typeErrors.push_back(e);
+    }
     if(typeErrors.size() > 0) {
       for(unsigned int i=0; i<typeErrors.size(); i++) {
         std::cerr << typeErrors[i].loc() << ":" << std::endl;
