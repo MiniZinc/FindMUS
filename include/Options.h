@@ -58,6 +58,7 @@ public:
   // FznSubProblem
   string mzn_stdlib_dir;
   bool subproblem_hard_functional_constraints = true;
+  bool subproblem_hard_domain_constraints = false; // This should be false until context-find is implemented!
   bool subproblem_named_only = false;
   std::set<string> subproblem_name_filters;
   std::set<string> subproblem_name_filters_excludes;

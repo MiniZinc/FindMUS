@@ -79,6 +79,8 @@ void help_long(void) {
       << "  Subproblem filtering options:\n"
       << "   --soft-defines\n"
       << "     Consider functional constraints as part of MUSes\n"
+      << "   --hard-domains\n"
+      << "     Consider domain constraints as part of the background\n"
       << "   --named-only\n"
       << "     Only consider constraints annotated with string annotations\n"
       << "   --filter-named <names>    --filter-named-exclude <names>\n"
@@ -188,6 +190,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       }
     } else if(strcmp(argv[i], "--soft-defines") == 0) {
       mo.subproblem_hard_functional_constraints = false;
+    } else if(strcmp(argv[i], "--hard-domains") == 0) {
+      mo.subproblem_hard_domain_constraints = true;
     } else if(strcmp(argv[i], "--named-only") == 0) {
       mo.subproblem_named_only = true;
     } else if(strcmp(argv[i], "--filter-sep") == 0) {

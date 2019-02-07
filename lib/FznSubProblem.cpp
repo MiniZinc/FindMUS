@@ -31,7 +31,12 @@ namespace HierMUS {
 
   bool FznSubProblem::isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name) {
     if(nameToPath.at(name) == "NOPATH") return true;
-    if(mopts.subproblem_hard_functional_constraints && ci.e()->ann().containsCall(MiniZinc::constants().ann.defines_var)) return true;
+    if(mopts.subproblem_hard_functional_constraints &&
+       ci.e()->ann().containsCall(MiniZinc::constants().ann.defines_var))
+       return true;
+    if(mopts.subproblem_hard_domain_constraints &&
+       ci.e()->ann().contains(MiniZinc::constants().ann.domain_change_constraint))
+       return true;
     static const vector<string> ann_strs = {"mzn_expression_name", "mzn_constraint_name"};
     if(mopts.subproblem_named_only) {
       for(const string& ann_str : ann_strs) {
