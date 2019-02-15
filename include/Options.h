@@ -74,7 +74,7 @@ public:
 
   // SubsetMap
   MapDepth map_depth = DEPTH_CUSTOM; // DEPTH_INSTANCE should probably be the default in future
-  int map_depth_max = 1;
+  unsigned int map_depth_max = 1;
 
   MusAlg map_enumeration_alg = ALG_STACKMUS;
   ShrinkAlg map_shrink_alg = SH_LIN;

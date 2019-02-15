@@ -51,7 +51,7 @@ namespace HierMUS {
         if(e) {
           string name = e->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
           for(const string& exclude_string: mopts.subproblem_name_filters_excludes) {
-            if(name.find(exclude_string) != -1) return true;
+            if(name.find(exclude_string) != string::npos) return true;
           }
         }
       }
@@ -60,7 +60,7 @@ namespace HierMUS {
         if(e) {
           string name = e->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
           for(const string& exclude_string: mopts.subproblem_name_filters) {
-            if(name.find(exclude_string) != -1) return false;
+            if(name.find(exclude_string) != string::npos) return false;
           }
         }
       }
@@ -70,11 +70,11 @@ namespace HierMUS {
       const string& path = nameToPath.at(name);
       // excludes
       for(const string& exfil : mopts.subproblem_path_filters_excludes) {
-        if(path.find(exfil) != -1) return true;
+        if(path.find(exfil) != string::npos) return true;
       }
       // includes
       for(const string& fil : mopts.subproblem_path_filters) {
-        if(path.find(fil) != -1) return false;
+        if(path.find(fil) != string::npos) return false;
       }
       return !mopts.subproblem_path_filters.empty();
     } else {
@@ -110,7 +110,7 @@ namespace HierMUS {
     fzn_model = MiniZinc::parse(fzn_env, {fznpath}, {}, "", "", includes, false, false, false, std::cerr);
     MiniZinc::SolveI* si = fzn_model->solveItem();
     si->st(MiniZinc::SolveI::ST_SAT);
-    si->e(NULL);
+    si->e(nullptr);
     fzn_env.model(fzn_model);
 
     vector<MiniZinc::TypeError> typeErrors;
@@ -145,10 +145,9 @@ namespace HierMUS {
     }
     fzn_model->compact();
 
-    int con_id = 0;
-    int hard_cons = 0;
-    int soft_cons = 0;
-
+    size_t con_id = 0;
+    unsigned int hard_cons = 0;
+    unsigned int soft_cons = 0;
 
     for(auto cit = fzn_model->begin_constraints(); cit != fzn_model->end_constraints(); ++cit) {
       MiniZinc::ConstraintI& ci = *cit;
