@@ -34,9 +34,9 @@ namespace HierMUS {
         std::set<MapNode*> empty_crits;
         bool shrink_complete = true;
         if(mopts.map_shrink_alg == SH_LIN) {
-          shrink_complete = shrink(mopts, &subProblem, s, empty_crits, stats);
+          shrink_complete = shrink(s, empty_crits);
         } else {
-          shrink_complete = qx(mopts, &subProblem, s, empty_crits, stats);
+          shrink_complete = qx(s, empty_crits);
         }
         if(!shrink_complete) return false;
         frontier.is_min = false;

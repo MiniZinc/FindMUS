@@ -35,10 +35,8 @@ namespace HierMUS {
       Selection getLeavesSelector();
 
       static void updateIncludeExclude(Selection& s);
-      static bool shrink(MUSEnumOptions& mopts, SubProblem* prob, Selection& model,
-                         const std::set<MapNode*>& criticals, Statistics& stats);
-      static bool qx(MUSEnumOptions& mopts, SubProblem* prob, Selection& model,
-                     const std::set<MapNode*>& criticals, Statistics& stats);
+      bool shrink(Selection& model, const std::set<MapNode*>& criticals);
+      bool qx(Selection& model, const std::set<MapNode*>& criticals);
   };
 }
 

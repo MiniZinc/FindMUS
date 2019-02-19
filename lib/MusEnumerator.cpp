@@ -22,16 +22,14 @@ namespace HierMUS {
     }
   }
 
-  bool MusEnumerator::shrink(MUSEnumOptions& mopts,
-                             SubProblem* prob, Selection& model,
-                             const set<MapNode*>& criticals, Statistics& stats) {
+  bool MusEnumerator::shrink(Selection& model, const set<MapNode*>& criticals) { 
     set<MapNode*> selected_copy = model.selected;
     for(MapNode* mn : selected_copy) {
       if(model.selected.size() == 1) break;
       if(mopts.timedOut()) return false;
       if(criticals.find(mn) != criticals.end()) continue;
       model.selected.erase(mn);
-      if(prob->check(model)) {
+      if(subProblem.check(model)) {
         model.selected.insert(mn);
       }
       stats.sat_calls++;
@@ -150,11 +148,9 @@ namespace HierMUS {
     return sel_union(D1.get(),D2.get());
   }
 
-  bool MusEnumerator::qx(MUSEnumOptions& mopts,
-                         SubProblem* prob, Selection& model,
-                         const set<MapNode*>& criticals, Statistics& stats) {
+  bool MusEnumerator::qx(Selection& model, const set<MapNode*>& criticals) {
     Selection B;
-    OptionalSelection res = qx_back(mopts, prob, B, B, model, criticals, stats);
+    OptionalSelection res = qx_back(mopts, &subProblem, B, B, model, criticals, stats);
     if(!res.has_value()) { return false; }
     model = res.get();
 

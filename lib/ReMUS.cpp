@@ -49,9 +49,9 @@ namespace HierMUS {
         Selection s_mus = s_max; // Copy of s with maximal s
         bool shrink_complete = true;
         if(mopts.map_shrink_alg == SH_LIN) {
-          shrink_complete = shrink(mopts, &subProblem, s_mus, state.criticals, stats);
+          shrink_complete = shrink(s_mus, state.criticals);
         } else {
-          shrink_complete = qx(mopts, &subProblem, s_mus, state.criticals, stats);
+          shrink_complete = qx(s_mus, state.criticals);
         }
         if(!shrink_complete) return false;
         subsetMap->blockSupersets(s_mus);

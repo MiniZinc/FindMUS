@@ -99,7 +99,7 @@ public:
 
     if(remainingTime < (subproblem_solver_time_limit)) {
       std::cerr << "Options: Tightening timeout to: " << (remainingTime) << " (ms)" << std::endl;
-      subproblem_solver_time_limit = remainingTime;
+      subproblem_solver_time_limit = int(std::ceil(remainingTime));
     }
   }
 };
