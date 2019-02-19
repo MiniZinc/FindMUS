@@ -114,7 +114,7 @@ namespace HierMUS {
     void print() {
       os << "digraph Paths {\n";
 
-      for(int i=0; i<names.size(); i++) {
+      for(size_t i=0; i<names.size(); i++) {
         os << "  a" << i << "[label=\"" << simplify(names[i]) << "\"];\n";
       }
 

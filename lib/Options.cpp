@@ -190,7 +190,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       std::string a = argv[++i];
       if(isdigit(a[0])) {
         mo.map_depth = DEPTH_CUSTOM;
-        mo.map_depth_max = atoi(a.c_str());
+        mo.map_depth_max = static_cast<unsigned int>(atoi(a.c_str()));
       } else {
         mo.map_depth_max = 0;
         if(a == "mzn") mo.map_depth = DEPTH_INSTANCE;

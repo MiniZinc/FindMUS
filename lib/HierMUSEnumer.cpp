@@ -34,7 +34,7 @@ namespace HierMUS {
   }
   HierMUSEnumer::~HierMUSEnumer() { delete subsetMap; }
 
-  void HierMUSEnumer::setFrontier(const Selection& f) { }
+  void HierMUSEnumer::setFrontier(const Selection&) { }
 
   void HierMUSEnumer::loadNextCandidate() {
     Selection top = candidates.back();

@@ -40,7 +40,7 @@ namespace HierMUS {
       std::fstream null_stream;
 
     private:
-      MapNode addConnections(const MapNode& node, int depth = 0);
+      MapNode addConnections(const MapNode& node, unsigned int depth = 0);
       void addObjective();
 
     public:

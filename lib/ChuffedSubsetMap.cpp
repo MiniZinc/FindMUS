@@ -109,7 +109,7 @@ namespace HierMUS {
     return true;
   }
 
-  MapNode ChuffedSubsetProblem::addConnections(const MapNode& node, int depth) {
+  MapNode ChuffedSubsetProblem::addConnections(const MapNode& node, unsigned int depth) {
     if( (mopts.map_depth == DEPTH_INSTANCE && isBoundary(node)) ||
         (mopts.map_depth == DEPTH_CUSTOM   && mopts.map_depth_max == depth)) {
       BoolView* var = &leaves[leaves_top];
@@ -240,7 +240,7 @@ namespace HierMUS {
     block(blockClause);
   }
 
-  void ChuffedSubsetProblem::print(std::ostream& os) {
+  void ChuffedSubsetProblem::print(std::ostream&) {
     solution_set = {};
     solution_set.exclude = solution_template.exclude;
 
@@ -260,7 +260,7 @@ namespace HierMUS {
 
   Selection ChuffedSubsetProblem::getLeavesSelector() {
     Selection s_temp;
-    for(int i=0; i<leafNodes.size(); i++)
+    for(size_t i=0; i<leafNodes.size(); i++)
       s_temp.include.insert(ExpandedNode(&leafNodes[i]));  // which nodes to get solutions for
     return s_temp;
   }

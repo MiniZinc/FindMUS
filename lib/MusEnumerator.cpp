@@ -29,6 +29,8 @@ namespace HierMUS {
       case SH_QX:      return qx(m, c);
       case SH_MAP_QX:  return qx_with_map(m, c);
     }
+    assert(false);
+    return false;
   }
 
   bool MusEnumerator::linear_shrink(Selection& model, const set<MapNode*>& criticals) { 
@@ -47,7 +49,7 @@ namespace HierMUS {
     return true;
   }
 
-  bool MusEnumerator::linear_shrink_with_map(Selection& model, const set<MapNode*>& criticals) {
+  bool MusEnumerator::linear_shrink_with_map(Selection& model, const set<MapNode*>&) {
     Selection u = model;
     do {
       subsetMap->blockSupersets(u);
