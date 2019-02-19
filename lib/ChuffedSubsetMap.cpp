@@ -196,29 +196,7 @@ namespace HierMUS {
     return newSel;
   }
 
-  void ChuffedSubsetProblem::block(const Selection& selection, bool polarity) {
-    vec<Lit> blockClause;
-
-    if(mopts.verbose_map) std::cout << "SubsetMap:\t" << (polarity ? "Superset " : "Subset ") << "block: ";
-
-    if(polarity) {
-      for(const MapNode* node : selection.selected) {
-        blockClause.push( node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.conj->getLit(true)  );
-      }
-      if(mopts.verbose_map) {
-        streamMapNodeSet(std::cout, selection.selected, false, "c_");
-        std::cout << "\n";
-      }
-    } else {
-      for(const MapNode* node : selection.exclude) {
-        blockClause.push( node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.disj->getLit(true)  );
-      }
-      if(mopts.verbose_map) {
-        streamMapNodeSet(std::cout, selection.exclude, true, "d_");
-        std::cout << "\n";
-      }
-    }
-
+  void ChuffedSubsetProblem::block(vec<Lit>& blockClause) {
     if(simplifyVecLit(blockClause)) {
       sat.addClause(blockClause);
     } else {
@@ -226,8 +204,41 @@ namespace HierMUS {
     }
   }
 
-  void ChuffedSubsetProblem::blockSupersets(const Selection& selection) { return block(selection, true); }
-  void ChuffedSubsetProblem::blockSubsets  (const Selection& selection) { return block(selection, false); }
+  void ChuffedSubsetProblem::blockSupersets(const Selection& selection) {
+    vec<Lit> blockClause;
+    if(mopts.verbose_map) std::cout << "SubsetMap:\tSuperset block: ";
+
+    for(const MapNode* node : selection.selected) {
+      blockClause.push( node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.conj->getLit(true)  );
+    }
+    if(mopts.verbose_map) {
+      streamMapNodeSet(std::cout, selection.selected, false, "c_");
+      std::cout << "\n";
+    }
+
+    block(blockClause);
+  }
+
+  void ChuffedSubsetProblem::blockSubsets  (const Selection& selection) {
+    vec<Lit> blockClause;
+    if(mopts.verbose_map) std::cout << "SubsetMap:\tSubset block: ";
+
+    for(const ExpandedNode& enode : selection.include) {
+      const MapNode* node = enode.child;
+      blockClause.push( node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.disj->getLit(true)  );
+    }
+    for(const MapNode* node : selection.exclude) {
+      blockClause.push( node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.disj->getLit(true)  );
+    }
+    if(mopts.verbose_map) {
+      streamExpandedNodeSet(std::cout, selection.include, false, "d_");
+      std::cout << " + ";
+      streamMapNodeSet(std::cout, selection.exclude, true, "d_");
+      std::cout << "\n";
+    }
+
+    block(blockClause);
+  }
 
   void ChuffedSubsetProblem::print(std::ostream& os) {
     solution_set = {};

@@ -33,6 +33,19 @@ namespace HierMUS {
     return ss.str();
   }
 
+  std::ostream& streamExpandedNodeSet(std::ostream& os, std::set<ExpandedNode> const& mns, bool pol, std::string prefix) {
+    bool first = true;
+    os << "{";
+    for(const ExpandedNode& emn : mns) {
+      const MapNode* mn = emn.child;
+      if(!first) os << ", ";
+      os << printMapNode(pol, prefix, mn);
+      first = false;
+    }
+    os << "}";
+    return os;
+  }
+
   std::ostream& streamMapNodeSet(std::ostream& os, std::set<MapNode*> const& mns, bool pol, std::string prefix) {
     bool first = true;
     os << "{";

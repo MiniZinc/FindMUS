@@ -54,7 +54,7 @@ namespace HierMUS {
       Selection getRootSelector();
       Selection getLeavesSelector();
 
-      void block(const Selection& selection, bool polarity);
+      void block(vec<Lit>& blockClause);
       void blockSupersets(const Selection& selection);
       void blockSubsets(const Selection& selection);
   };

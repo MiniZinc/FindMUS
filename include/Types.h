@@ -31,7 +31,7 @@ namespace HierMUS {
 
   enum MusAlg { ALG_STACKMUS, ALG_MARCO, ALG_REMUS };
 
-  enum ShrinkAlg { SH_LIN, SH_QX };
+  enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_MAP_QX };
 
   enum InitialStructure {
     STR_FLAT,   // Remove all structure
@@ -95,6 +95,7 @@ namespace HierMUS {
   std::ostream& operator<<(std::ostream& os, std::set<ExpandedNode> const& inc);
   std::string printMapNode(bool pol, const std::string& prefix, const MapNode* mn);
   std::ostream& streamMapNodeSet(std::ostream& os, std::set<MapNode*> const& mns, bool pol, std::string prefix);
+  std::ostream& streamExpandedNodeSet(std::ostream& os, std::set<ExpandedNode> const& emns, bool pol, std::string prefix);
 
   void debugPrint(HierMUS::Selection& s);
 

@@ -61,8 +61,12 @@ void help_long(void) {
       << "    Use MARCO algorithm as sub-enumerator\n"
       << "  --remus\n"
       << "    Use ReMUS algorithm as sub-enumerator\n"
-      << "  --qx\n"
-      << "    Use quickXplain with MARCO or ReMUS (not used by HierMUS)\n"
+      << "  --shrink-alg lin,map_lin,qx,map_qx\tdefault: lin\n"
+      << "    Shrink algorithm to use:\n"
+      << "      lin:     linear shrink\n"
+      << "      map_lin: linear shrink recording intermediate results in map\n"
+      << "      qx:      use QuickXplain for shrink\n"
+      << "      map_qx:  use advanced map driven QuickXplain\n"
       << "  --depth mzn,fzn,<n>\tdefault: 1\n"
       << "    Enumerate MUSes at the level of:\n"
       << "      mzn: the user's model\n"
@@ -125,8 +129,16 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.map_enumeration_alg = ALG_MARCO;
     } else if(strcmp(argv[i], "--remus") == 0) {
       mo.map_enumeration_alg = ALG_REMUS;
-    } else if(strcmp(argv[i], "--qx") == 0) {
-      mo.map_shrink_alg = SH_QX;
+    } else if(strcmp(argv[i], "--shrink-alg") == 0) {
+      std::string alg = argv[++i];
+      if(alg == "lin")          mo.map_shrink_alg = SH_LIN;
+      else if(alg == "map_lin") mo.map_shrink_alg = SH_MAP_LIN;
+      else if(alg == "qx")      mo.map_shrink_alg = SH_QX;
+      else if(alg == "map_qx")  mo.map_shrink_alg = SH_MAP_QX;
+      else {
+        std::cout << "Incorrect shrink option. Available options are {<lin>, map_lin, qx, map_qx}\n";
+        help_short(EXIT_FAILURE);
+      }
     } else if(strcmp(argv[i], "--stdlib-dir") == 0) {
       mo.mzn_stdlib_dir = argv[++i];
     } else if(strcmp(argv[i], "--no-progress") == 0) {
