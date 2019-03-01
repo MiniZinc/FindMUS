@@ -134,7 +134,8 @@ namespace HierMUS {
     s2o.initFromEnv(&fzn_env);
 
     for(auto it = fzn_model->begin(); it != fzn_model->end(); ++it) {
-      if((*it)->isa<MiniZinc::IncludeI>() || (*it)->isa<MiniZinc::FunctionI>()) { (*it)->remove(); }
+      //if((*it)->isa<MiniZinc::IncludeI>() || (*it)->isa<MiniZinc::FunctionI>()) { (*it)->remove(); }
+      if((*it)->isa<MiniZinc::IncludeI>()) { (*it)->remove(); }
       if((*it)->isa<MiniZinc::VarDeclI>()) {
         MiniZinc::VarDeclI* vdi = (*it)->cast<MiniZinc::VarDeclI>();
         MiniZinc::VarDecl* vd = vdi->e();

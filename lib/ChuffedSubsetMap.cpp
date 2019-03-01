@@ -38,6 +38,10 @@ namespace HierMUS {
         eqs  .shrink(branches_top - 1);
       }
 
+      // Add sat brancher
+      so.vsids = true;
+      engine.branching->add(&sat);
+
       // Change this to adjustable brancher later
       vec<Branching*> va;
       if(mopts.map_enumeration_alg == ALG_STACKMUS) {
@@ -51,10 +55,6 @@ namespace HierMUS {
         output_var( &leaves[i]);
       }
       branch(va, VAR_INORDER, VAL_MAX);
-
-      // Add sat brancher
-      // so.vsids = true;
-      // engine.branching->add(&sat);
 
       addObjective();
 
@@ -223,10 +223,10 @@ namespace HierMUS {
     vec<Lit> blockClause;
     if(mopts.verbose_map) std::cout << "SubsetMap:\tSubset block: ";
 
-    for(const ExpandedNode& enode : selection.include) {
-      const MapNode* node = enode.child;
-      blockClause.push( node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.disj->getLit(true)  );
-    }
+    //for(const ExpandedNode& enode : selection.include) {
+    //  const MapNode* node = enode.child;
+    //  blockClause.push( node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.disj->getLit(true)  );
+    //}
     for(const MapNode* node : selection.exclude) {
       blockClause.push( node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.disj->getLit(true)  );
     }
