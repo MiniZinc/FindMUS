@@ -144,18 +144,9 @@ namespace HierMUS {
                                            const set<MapNode*>& criticals) {
     if(mopts.timedOut()) return OptionalSelection();
 
-    //if(!D.selected.empty() && !B.selected.empty()) {
-    //  stats.sat_calls++;
-    //  if(!subProblem.check(B)) return empty_sel(C);
-    //}
     if(!D.selected.empty() && !B.selected.empty()) {
       stats.sat_calls++;
-      if(subProblem.check(B)) {
-        subsetMap->blockSubsets(B);
-      } else {
-        subsetMap->blockSupersets(B);
-        return empty_sel(C);
-      }
+      if(!subProblem.check(B)) return empty_sel(C);
     }
     if(C.selected.size() == 1) return C;
 
