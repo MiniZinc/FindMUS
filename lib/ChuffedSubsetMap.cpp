@@ -16,9 +16,24 @@ namespace HierMUS {
   using std::vector;
   using std::string;
 
+  void ChuffedSubsetProblem::setMaximal(bool max_mode) {
+    if(max_mode) {
+      engine.opt_var = obj;
+      for(int i=0; i<sat.polarity.size(); i++) {
+        sat.polarity[i] = true;
+      }
+    } else {
+      engine.opt_var = nullptr;
+      for(int i=0; i<sat.polarity.size(); i++) {
+        sat.polarity[i] = rand() % 100 > 50;
+      }
+    }
+  }
+
   ChuffedSubsetProblem::ChuffedSubsetProblem(SubProblem* prob, MUSEnumOptions& mo)
-    : SubsetMap{prob, mo}, leaves_top{0}, branches_top{0}, obj{NULL}, consistent{true} {
-      FlatZinc::s = NULL;
+    : SubsetMap{prob, mo}, leaves_top{0}, branches_top{0}, obj{nullptr}, consistent{true} {
+      // This is required for chuffed to work since FlatZinc::s is a static space
+      FlatZinc::s = nullptr;
 
       double build_start = wallClockTime();
       const MapNode& tree = prob->getTree();
@@ -47,13 +62,12 @@ namespace HierMUS {
       if(mopts.map_enumeration_alg == ALG_STACKMUS) {
         for(int i=0; i<branches_top; i++) {
           va.push(new BoolView(conjs[i]));
-          output_var( &conjs[i]);
         }
       }
       for(int i=0; i<leaves_top; i++) {
         va.push(new BoolView(leaves[i]));
-        output_var( &leaves[i]);
       }
+      output_vars(va);
       branch(va, VAR_INORDER, VAL_MAX);
 
       addObjective();
@@ -219,20 +233,24 @@ namespace HierMUS {
     block(blockClause);
   }
 
-  void ChuffedSubsetProblem::blockSubsets  (const Selection& selection) {
+  void ChuffedSubsetProblem::blockSubsets  (const Selection& selection, bool weak_block) {
     vec<Lit> blockClause;
     if(mopts.verbose_map) std::cout << "SubsetMap:\tSubset block: ";
 
-    //for(const ExpandedNode& enode : selection.include) {
-    //  const MapNode* node = enode.child;
-    //  blockClause.push( node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.disj->getLit(true)  );
-    //}
+    if(!weak_block) {
+      for(const ExpandedNode& enode : selection.include) {
+        const MapNode* node = enode.child;
+        blockClause.push( node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.disj->getLit(true)  );
+      }
+    }
     for(const MapNode* node : selection.exclude) {
       blockClause.push( node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.disj->getLit(true)  );
     }
     if(mopts.verbose_map) {
-      streamExpandedNodeSet(std::cout, selection.include, false, "d_");
-      std::cout << " + ";
+      if(!weak_block) {
+        streamExpandedNodeSet(std::cout, selection.include, false, "d_");
+        std::cout << " + ";
+      }
       streamMapNodeSet(std::cout, selection.exclude, true, "d_");
       std::cout << "\n";
     }
@@ -274,7 +292,7 @@ namespace HierMUS {
     if(!consistent) return {};  // Return empty Selection
     solution_template = selection;
 
-    if(mopts.verbose_map) std::cout << "SubsetMap:\tgetSelection("<< selection <<")\twith assumptions: {";
+    if(mopts.verbose_map) std::cout << "SubsetMap:\tgetSelection("<< selection <<")\t{" << (engine.opt_var ? "maximal" : "any") <<"}\twith assumptions: {";
     vec<BoolView> all_assumptions;
     for(const ExpandedNode& enode : selection.include) {
       if(!enode.child->var.isLeaf) {  // Don't force leaves to be active
@@ -292,8 +310,10 @@ namespace HierMUS {
 
     solution_set = {};
     so.time_out = 86400;
+    so.nof_solutions = 1;
     engine.best_sol = -1;
     double start_time = wallClockTime();
+    engine.solutions = 0;
     engine.solve(this, "hierMUS");
     sat.btToLevel(0);
     sat.simplifyDB();

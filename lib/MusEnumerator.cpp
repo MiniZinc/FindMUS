@@ -59,7 +59,7 @@ namespace HierMUS {
 
       stats.sat_calls++;
       if(subProblem.check(m)) {
-        subsetMap->blockSubsets(m);
+        subsetMap->blockSubsets(m, false); // Use weak blocks
       } else {
         u = m;
       }
@@ -111,7 +111,6 @@ namespace HierMUS {
     return e;
   }
 
-
   inline
   bool is_subset(const Selection& C, const set<MapNode*>& crits) {
     if(C.selected.size() > crits.size()) return false;
@@ -122,13 +121,41 @@ namespace HierMUS {
     return true;
   }
 
+  inline
+  Selection sel_complement(const Selection& original, const Selection& subset) {
+    Selection co = original;
+
+    co.include.clear();
+    co.selected.clear();
+
+    for(MapNode* mn : original.selected) {
+      if(subset.selected.find(mn) == subset.selected.end()) {
+        co.selected.insert(mn);
+        co.include.insert(ExpandedNode(mn));
+        co.exclude.erase(mn);
+      } else {
+        co.exclude.insert(mn);
+      }
+    }
+    return co;
+  }
+
   OptionalSelection MusEnumerator::qx_back(Selection B, Selection D, Selection C,
                                            const set<MapNode*>& criticals) {
     if(mopts.timedOut()) return OptionalSelection();
 
+    //if(!D.selected.empty() && !B.selected.empty()) {
+    //  stats.sat_calls++;
+    //  if(!subProblem.check(B)) return empty_sel(C);
+    //}
     if(!D.selected.empty() && !B.selected.empty()) {
       stats.sat_calls++;
-      if(!subProblem.check(B)) return empty_sel(C);
+      if(subProblem.check(B)) {
+        subsetMap->blockSubsets(B);
+      } else {
+        subsetMap->blockSupersets(B);
+        return empty_sel(C);
+      }
     }
     if(C.selected.size() == 1) return C;
 
@@ -169,25 +196,41 @@ namespace HierMUS {
 
     if(!D.selected.empty() && !B.selected.empty()) {
       stats.sat_calls++;
-      if(!subProblem.check(B)) return empty_sel(C);
+      if(subProblem.check(B)) {
+        subsetMap->blockSubsets(B, false);
+      } else {
+        subsetMap->blockSupersets(B);
+        return empty_sel(C);
+      }
     }
     if(C.selected.size() == 1) return C;
 
+    std::cout << "|C| :" << C.selected.size() << "\n";
     Selection C1, C2;
-    sel_split(C, C1, C2);
+    // Get random selection
+    subsetMap->setMaximal(false);
+    C1 = subsetMap->getSelection(C);
+    subsetMap->setMaximal(true);
+
+    std::cout << "|C1|:" << C1.selected.size() << "\n";
+    // Sanity check
+    if(C1.selected.size() == 0) { return C; };
+    // Build complement
+    C2 = sel_complement(C, C1);
+    std::cout << "|C2|:" << C2.selected.size() << "\n";
 
     OptionalSelection D2, D1;
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
       D2 = C2;
     } else {
-      D2 = qx_back(sel_union(B, C1), C1, C2, criticals);
+      D2 = qx_back_with_map(sel_union(B, C1), C1, C2, criticals);
       if(!D2.has_value()) return OptionalSelection();
     }
 
     if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
       D1 = C1;
     } else {
-      D1 = qx_back(sel_union(B, D2.get()), D2.get(), C1, criticals);
+      D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get(), C1, criticals);
       if(!D1.has_value()) return OptionalSelection();
     }
 
@@ -197,6 +240,7 @@ namespace HierMUS {
   bool MusEnumerator::qx_with_map(Selection& model, const set<MapNode*>& criticals) {
     Selection B;
     OptionalSelection res = qx_back_with_map(B, B, model, criticals);
+
     if(!res.has_value()) { return false; }
     model = res.get();
 

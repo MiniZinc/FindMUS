@@ -25,12 +25,13 @@ namespace HierMUS {
       SubsetMap(SubProblem* prob, MUSEnumOptions& mo) : mopts(mo), problem(prob) {}
       virtual ~SubsetMap() {}
       virtual Selection expand(const Selection& selection) = 0;
+      virtual void setMaximal(bool max_mode) = 0;
       virtual Selection getSelection(const Selection& selection) = 0;
       virtual Selection getSelection() = 0;
       virtual Selection getRootSelector() = 0;
       virtual Selection getLeavesSelector() = 0;
       virtual void blockSupersets(const Selection& selection) = 0;
-      virtual void blockSubsets(const Selection& selection) = 0;
+      virtual void blockSubsets(const Selection& selection, bool weak_block = true) = 0;
   };
 }
 

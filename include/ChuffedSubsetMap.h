@@ -48,6 +48,7 @@ namespace HierMUS {
       ~ChuffedSubsetProblem() { delete obj; }
 
       void print(std::ostream&);
+      void setMaximal(bool max_mode);
       Selection expand(const Selection& selection);
       Selection getSelection(const Selection& selection);
       Selection getSelection();
@@ -56,7 +57,7 @@ namespace HierMUS {
 
       void block(vec<Lit>& blockClause);
       void blockSupersets(const Selection& selection);
-      void blockSubsets(const Selection& selection);
+      void blockSubsets(const Selection& selection, bool weak_block = true);
   };
 
 }
