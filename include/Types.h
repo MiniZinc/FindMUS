@@ -69,19 +69,20 @@ namespace HierMUS {
   };
 
   struct Selection {
-    std::set<MapNode*> selected;
-    std::set<ExpandedNode> include;
-    std::set<MapNode*> exclude;
+    std::set<MapNode*> selected;     // previously selected
+    std::set<ExpandedNode> include;  // candidates to select from
+    std::set<MapNode*> exclude;      // nodes that should be assumed false
     bool is_min;
 
     Selection(const std::set<MapNode*>& s,
-              const std::set<ExpandedNode>& i,
-              const std::set<MapNode*>& e,
-              bool m = true) 
+        const std::set<ExpandedNode>& i,
+        const std::set<MapNode*>& e,
+        bool m = true)
       : selected(s),
-        include(i),
-        exclude(e),
-        is_min(m) {}
+      include(i),
+      exclude(e),
+      is_min(m) {}
+
     Selection() : is_min(true) {}
   };
 

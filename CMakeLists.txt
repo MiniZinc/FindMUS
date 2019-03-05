@@ -34,6 +34,7 @@ add_library(hiermus
   lib/HierMUSEnumer.cpp
   lib/FznSubProblem.cpp
   lib/Types.cpp
+  lib/SubsetMap.cpp
   lib/ChuffedSubsetMap.cpp
   lib/Options.cpp
 

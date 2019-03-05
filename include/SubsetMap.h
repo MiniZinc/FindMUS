@@ -1,10 +1,7 @@
 #ifndef __HIERMUS_SUBSETMAP_H_
 #define __HIERMUS_SUBSETMAP_H_
 
-#include <vector>
-#include <memory>
-#include <unordered_map>
-#include <fstream>
+#include <set>
 
 #include "Types.h"
 #include "SubProblem.h"
@@ -21,11 +18,18 @@ namespace HierMUS {
     protected:
       MUSEnumOptions& mopts;
       SubProblem* problem;
+      std::set<MapNode*> forceInclude;
+
     public:
       SubsetMap(SubProblem* prob, MUSEnumOptions& mo) : mopts(mo), problem(prob) {}
       virtual ~SubsetMap() {}
+
+      void setForceInclude(const Selection& selection);
+      void clearForceInclude(void);
+
       virtual Selection expand(const Selection& selection) = 0;
       virtual void setMaximal(bool max_mode) = 0;
+      virtual Selection getRandomSelection(const Selection& selection, const Selection& finc);
       virtual Selection getSelection(const Selection& selection) = 0;
       virtual Selection getSelection() = 0;
       virtual Selection getRootSelector() = 0;

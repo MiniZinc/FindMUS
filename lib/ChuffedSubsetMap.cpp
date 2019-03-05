@@ -223,7 +223,7 @@ namespace HierMUS {
     if(mopts.verbose_map) std::cout << "SubsetMap:\tSuperset block: ";
 
     for(const MapNode* node : selection.selected) {
-      blockClause.push( node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.conj->getLit(true)  );
+      blockClause.push(node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.conj->getLit(true));
     }
     if(mopts.verbose_map) {
       streamMapNodeSet(std::cout, selection.selected, false, "c_");
@@ -233,24 +233,14 @@ namespace HierMUS {
     block(blockClause);
   }
 
-  void ChuffedSubsetProblem::blockSubsets  (const Selection& selection, bool weak_block) {
+  void ChuffedSubsetProblem::blockSubsets(const Selection& selection, bool weak_block) {
     vec<Lit> blockClause;
     if(mopts.verbose_map) std::cout << "SubsetMap:\tSubset block: ";
 
-    if(!weak_block) {
-      for(const ExpandedNode& enode : selection.include) {
-        const MapNode* node = enode.child;
-        blockClause.push( node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.disj->getLit(true)  );
-      }
-    }
     for(const MapNode* node : selection.exclude) {
       blockClause.push( node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.disj->getLit(true)  );
     }
     if(mopts.verbose_map) {
-      if(!weak_block) {
-        streamExpandedNodeSet(std::cout, selection.include, false, "d_");
-        std::cout << " + ";
-      }
       streamMapNodeSet(std::cout, selection.exclude, true, "d_");
       std::cout << "\n";
     }
@@ -265,6 +255,7 @@ namespace HierMUS {
     for(const ExpandedNode& en : solution_template.include) {
       if ((en.child->var.isLeaf && en.child->var.leaf->getVal()) || en.child->var.conj->getVal()) {
         solution_set.selected.insert(en.child);
+        solution_set.exclude.erase(en.child);
         solution_set.include.insert(ExpandedNode(en.child));  // New Selection so parent can be discarded
       } else {
         solution_set.exclude.insert(en.child);
@@ -288,7 +279,6 @@ namespace HierMUS {
   }
 
   Selection ChuffedSubsetProblem::getSelection(const Selection& selection) {
-
     if(!consistent) return {};  // Return empty Selection
     solution_template = selection;
 
@@ -301,10 +291,17 @@ namespace HierMUS {
       }
     }
 
-    for(const MapNode* node : selection.exclude) {
+    for(MapNode* node : forceInclude) {
+      solution_template.exclude.erase(node);
+      all_assumptions.push(node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.conj->getLit(true));
+      if(mopts.verbose_map) std::cout << (node->var.isLeaf ? " " :  " c") << node->path;
+    }
+
+    for(MapNode* node : solution_template.exclude) {
       all_assumptions.push(node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.disj->getLit(true));
       if(mopts.verbose_map) std::cout << (node->var.isLeaf ? " ~" :  " ~d") << node->path;
     }
+
     if(mopts.verbose_map) std::cout << " }\n";
     engine.set_assumptions(all_assumptions);
 

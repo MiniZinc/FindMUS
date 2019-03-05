@@ -181,11 +181,11 @@ namespace HierMUS {
     return true;
   }
 
-  OptionalSelection MusEnumerator::qx_back_with_map(Selection B, Selection D, Selection C,
+  OptionalSelection MusEnumerator::qx_back_with_map(Selection B, int D, Selection C,
                                                     const set<MapNode*>& criticals) {
     if(mopts.timedOut()) return OptionalSelection();
 
-    if(!D.selected.empty() && !B.selected.empty()) {
+    if(D>0 && !B.selected.empty()) {
       stats.sat_calls++;
       if(subProblem.check(B)) {
         subsetMap->blockSubsets(B, false);
@@ -198,10 +198,9 @@ namespace HierMUS {
 
     std::cout << "|C| :" << C.selected.size() << "\n";
     Selection C1, C2;
+
     // Get random selection
-    subsetMap->setMaximal(false);
-    C1 = subsetMap->getSelection(C);
-    subsetMap->setMaximal(true);
+    C1 = subsetMap->getRandomSelection(C, B);
 
     std::cout << "|C1|:" << C1.selected.size() << "\n";
     // Sanity check
@@ -214,14 +213,14 @@ namespace HierMUS {
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
       D2 = C2;
     } else {
-      D2 = qx_back_with_map(sel_union(B, C1), C1, C2, criticals);
+      D2 = qx_back_with_map(sel_union(B, C1), C1.selected.size(), C2, criticals);
       if(!D2.has_value()) return OptionalSelection();
     }
 
     if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
       D1 = C1;
     } else {
-      D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get(), C1, criticals);
+      D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
       if(!D1.has_value()) return OptionalSelection();
     }
 
@@ -230,7 +229,7 @@ namespace HierMUS {
 
   bool MusEnumerator::qx_with_map(Selection& model, const set<MapNode*>& criticals) {
     Selection B;
-    OptionalSelection res = qx_back_with_map(B, B, model, criticals);
+    OptionalSelection res = qx_back_with_map(B, 0, model, criticals);
 
     if(!res.has_value()) { return false; }
     model = res.get();
