@@ -56,6 +56,7 @@ namespace HierMUS {
       stats.map_calls++;
       Selection m = subsetMap->getSelection(u);
       if(m.selected.empty()) break;
+      if(mopts.timedOut()) return false;
 
       stats.sat_calls++;
       if(subProblem.check(m)) {
