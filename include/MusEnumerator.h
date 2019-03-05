@@ -69,9 +69,9 @@ namespace HierMUS {
       bool qx(Selection& model, const std::set<MapNode*>& criticals);
       bool qx_with_map(Selection& model, const std::set<MapNode*>& criticals);
 
-      OptionalSelection qx_back(Selection B, Selection D, Selection C,
+      OptionalSelection qx_back(Selection B, size_t D, Selection C,
                                 const std::set<MapNode*>& criticals);
-      OptionalSelection qx_back_with_map(Selection B, int D, Selection C,
+      OptionalSelection qx_back_with_map(Selection B, size_t D, Selection C,
                                          const std::set<MapNode*>& criticals);
   };
 }

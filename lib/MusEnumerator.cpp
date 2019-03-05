@@ -113,7 +113,7 @@ namespace HierMUS {
 
   inline
   bool is_subset(const Selection& C, const set<MapNode*>& crits) {
-    if(C.selected.size() > crits.size()) return false;
+    if(crits.empty() || C.selected.size() > crits.size()) return false;
     for(MapNode* mn : C.selected) {
       if(crits.find(mn) == crits.end())
         return false;
@@ -140,11 +140,11 @@ namespace HierMUS {
     return co;
   }
 
-  OptionalSelection MusEnumerator::qx_back(Selection B, Selection D, Selection C,
+  OptionalSelection MusEnumerator::qx_back(Selection B, size_t D, Selection C,
                                            const set<MapNode*>& criticals) {
     if(mopts.timedOut()) return OptionalSelection();
 
-    if(!D.selected.empty() && !B.selected.empty()) {
+    if(D>0 && !B.selected.empty()) {
       stats.sat_calls++;
       if(!subProblem.check(B)) return empty_sel(C);
     }
@@ -157,14 +157,14 @@ namespace HierMUS {
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
       D2 = C2;
     } else {
-      D2 = qx_back(sel_union(B, C1), C1, C2, criticals);
+      D2 = qx_back(sel_union(B, C1), C1.selected.size(), C2, criticals);
       if(!D2.has_value()) return OptionalSelection();
     }
 
     if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
       D1 = C1;
     } else {
-      D1 = qx_back(sel_union(B, D2.get()), D2.get(), C1, criticals);
+      D1 = qx_back(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
       if(!D1.has_value()) return OptionalSelection();
     }
 
@@ -173,7 +173,7 @@ namespace HierMUS {
 
   bool MusEnumerator::qx(Selection& model, const set<MapNode*>& criticals) {
     Selection B;
-    OptionalSelection res = qx_back(B, B, model, criticals);
+    OptionalSelection res = qx_back(B, 0, model, criticals);
     if(!res.has_value()) { return false; }
     model = res.get();
 
@@ -181,7 +181,7 @@ namespace HierMUS {
     return true;
   }
 
-  OptionalSelection MusEnumerator::qx_back_with_map(Selection B, int D, Selection C,
+  OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
                                                     const set<MapNode*>& criticals) {
     if(mopts.timedOut()) return OptionalSelection();
 
@@ -196,18 +196,10 @@ namespace HierMUS {
     }
     if(C.selected.size() == 1) return C;
 
-    std::cout << "|C| :" << C.selected.size() << "\n";
     Selection C1, C2;
-
-    // Get random selection
     C1 = subsetMap->getRandomSelection(C, B);
-
-    std::cout << "|C1|:" << C1.selected.size() << "\n";
-    // Sanity check
-    if(C1.selected.size() == 0) { return C; };
-    // Build complement
+    if(C1.selected.empty()) return C;
     C2 = sel_complement(C, C1);
-    std::cout << "|C2|:" << C2.selected.size() << "\n";
 
     OptionalSelection D2, D1;
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
