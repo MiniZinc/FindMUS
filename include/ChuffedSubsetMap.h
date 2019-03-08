@@ -23,6 +23,8 @@ namespace HierMUS {
       std::vector<MapNode> leafNodes;
       std::vector<MapNode> branchNodes;
 
+      std::vector<Lit> tempStack;
+
       MapNode root;
 
       vec<Branching*> branching_vars;
@@ -54,6 +56,9 @@ namespace HierMUS {
       Selection getSelection();
       Selection getRootSelector();
       Selection getLeavesSelector();
+
+      void pushTemporarySubsetBlock(const Selection& selection);
+      void popTemporarySubsetBlock(void);
 
       void block(vec<Lit>& blockClause);
       void blockSupersets(const Selection& selection);

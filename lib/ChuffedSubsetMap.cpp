@@ -30,6 +30,29 @@ namespace HierMUS {
     }
   }
 
+  void ChuffedSubsetProblem::pushTemporarySubsetBlock(const Selection& selection) {
+      vec<Lit> cl;
+      int control = sat.newVar();
+      Lit conLit = Lit(control, true);
+      tempStack.push_back(conLit);
+      sat.polarity[control] = false;
+      cl.push(~conLit);
+      for(MapNode* node : selection.selected) {
+        cl.push(node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.conj->getLit(true));
+        //if(mopts.verbose_map) std::cout << (node->var.isLeaf ? " ~" :  " ~c") << node->path;
+      }
+      sat.addClause(cl);
+  }
+
+  void ChuffedSubsetProblem::popTemporarySubsetBlock() {
+    if(!tempStack.empty()) {
+      vec<Lit> cl;
+      cl.push(~tempStack.back());
+      tempStack.pop_back();
+      sat.addClause(cl);
+    }
+  }
+
   ChuffedSubsetProblem::ChuffedSubsetProblem(SubProblem* prob, MUSEnumOptions& mo)
     : SubsetMap{prob, mo}, leaves_top{0}, branches_top{0}, obj{nullptr}, consistent{true} {
       // This is required for chuffed to work since FlatZinc::s is a static space
@@ -295,6 +318,10 @@ namespace HierMUS {
       solution_template.exclude.erase(node);
       all_assumptions.push(node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.conj->getLit(true));
       if(mopts.verbose_map) std::cout << (node->var.isLeaf ? " " :  " c") << node->path;
+    }
+
+    for(Lit& l : tempStack) {
+      all_assumptions.push(l);
     }
 
     for(MapNode* node : solution_template.exclude) {
