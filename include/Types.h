@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "Node.h"
+#include "Selection.h"
 
 #include <minizinc/model.hh>
 
@@ -52,54 +53,6 @@ namespace HierMUS {
     DEPTH_CUSTOM    // Search to a user-specified depth
   };
 
-  struct ExpandedNode {
-    MapNode* parent;
-    MapNode* child;
-
-    explicit ExpandedNode(MapNode* p, MapNode* c) : parent(p), child(c) {}
-    explicit ExpandedNode(MapNode* c) : parent(c), child(c) {}
-    ~ExpandedNode() {}
-
-    bool operator<(const ExpandedNode& other) const {
-      return parent < other.parent || (parent == other.parent && child < other.child);
-    }
-    bool operator==(const ExpandedNode& other) const {
-      return parent == other.parent && child == other.child;
-    }
-  };
-
-  struct Selection {
-    std::set<MapNode*> selected;     // previously selected
-    std::set<ExpandedNode> include;  // candidates to select from
-    std::set<MapNode*> exclude;      // nodes that should be assumed false
-    bool is_min;
-
-    Selection(const std::set<MapNode*>& s,
-        const std::set<ExpandedNode>& i,
-        const std::set<MapNode*>& e,
-        bool m = true)
-      : selected(s),
-      include(i),
-      exclude(e),
-      is_min(m) {}
-
-    Selection() : is_min(true) {}
-  };
-
-  static const Selection empty_selection;
-
-  std::set<std::string> getLeaves(const Selection& b);
-  bool isLeaves(const Selection& s);
-
-  std::ostream& operator<<(std::ostream& os, std::set<MapNode*> const& mns);
-  std::ostream& operator<<(std::ostream& os, Selection const& a);
-  std::ostream& operator<<(std::ostream& os, std::set<ExpandedNode> const& inc);
-  std::string printMapNode(bool pol, const std::string& prefix, const MapNode* mn);
-  std::ostream& streamMapNodeSet(std::ostream& os, std::set<MapNode*> const& mns, bool pol, std::string prefix);
-  std::ostream& streamExpandedNodeSet(std::ostream& os, std::set<ExpandedNode> const& emns, bool pol, std::string prefix);
-
-  void debugPrint(HierMUS::Selection& s);
-
   struct UnsatSet {
     struct Constraint {
       std::vector<int> indices;
@@ -110,7 +63,6 @@ namespace HierMUS {
     std::vector<Constraint> constraints;
 
   };
-
 
   struct ConstraintInfo {
     std::string leaf_name;

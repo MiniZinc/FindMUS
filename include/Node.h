@@ -68,6 +68,29 @@ namespace HierMUS {
     void makeBinary(std::function<bool(const MapNode&)> cond);
   };
 
+  void getLeaves(const MapNode& node, std::set<std::string>& leaves);
+  std::ostream& operator<<(std::ostream& os, std::set<MapNode*> const& mns);
+  std::string printMapNode(bool pol, const std::string& prefix, const MapNode* mn);
+  std::ostream& streamMapNodeSet(std::ostream& os, std::set<MapNode*> const& mns, bool pol, std::string prefix);
+
+  struct ExpandedNode {
+    MapNode* parent;
+    MapNode* child;
+
+    explicit ExpandedNode(MapNode* p, MapNode* c) : parent(p), child(c) {}
+    explicit ExpandedNode(MapNode* c) : parent(c), child(c) {}
+    ~ExpandedNode() {}
+
+    bool operator<(const ExpandedNode& other) const {
+      return parent < other.parent || (parent == other.parent && child < other.child);
+    }
+    bool operator==(const ExpandedNode& other) const {
+      return parent == other.parent && child == other.child;
+    }
+  };
+
+  std::ostream& operator<<(std::ostream& os, std::set<ExpandedNode> const& inc);
+  std::ostream& streamExpandedNodeSet(std::ostream& os, std::set<ExpandedNode> const& mns, bool pol, std::string prefix);
 
   class DotWriter {
     std::ostream& os;

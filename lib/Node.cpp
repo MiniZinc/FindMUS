@@ -112,4 +112,65 @@ namespace HierMUS {
       child.makeBinary(cond);
     }
   }
+
+  void getLeaves(const MapNode& node, std::set<std::string>& leaves) {
+    if(!node.children.empty()) {
+      for(const MapNode& child : node.children)
+        getLeaves(child, leaves);
+    } else {
+      vector<string> split_leaves = utils::split(node.con_id, '#', false);
+      for(const string& l : split_leaves)
+        leaves.insert(l);
+    }
+  }
+
+  std::ostream& operator<<(std::ostream& os, std::set<MapNode*> const& mns) {
+    return streamMapNodeSet(os, mns, true, "c_");
+  }
+
+  std::ostream& operator<<(std::ostream& os, std::set<ExpandedNode> const& inc) {
+    bool first = true;
+    os << "{";
+    for(const ExpandedNode& en : inc) {
+      if(!first) os << ", ";
+      os << printMapNode(true, "e_", en.child);
+      first = false;
+    }
+    os << "}";
+    return os;
+  }
+
+  inline
+  std::string printMapNode(bool pol, const std::string& prefix, const MapNode* mn) {
+    std::stringstream ss;
+    if(!pol) ss << "~";
+    if(!mn->var.isLeaf) ss << prefix;
+    ss << mn->path;
+    return ss.str();
+  }
+
+  std::ostream& streamExpandedNodeSet(std::ostream& os, std::set<ExpandedNode> const& mns, bool pol, std::string prefix) {
+    bool first = true;
+    os << "{";
+    for(const ExpandedNode& emn : mns) {
+      const MapNode* mn = emn.child;
+      if(!first) os << ", ";
+      os << printMapNode(pol, prefix, mn);
+      first = false;
+    }
+    os << "}";
+    return os;
+  }
+
+  std::ostream& streamMapNodeSet(std::ostream& os, std::set<MapNode*> const& mns, bool pol, std::string prefix) {
+    bool first = true;
+    os << "{";
+    for(const MapNode* mn : mns) {
+      if(!first) os << ", ";
+      os << printMapNode(pol, prefix, mn);
+      first = false;
+    }
+    os << "}";
+    return os;
+  }
 }

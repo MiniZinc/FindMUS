@@ -1,0 +1,118 @@
+#include <iostream>
+
+#include "Selection.h"
+#include "path_utils.h"
+
+namespace HierMUS {
+
+  std::set<std::string> getLeaves(const Selection& b) {
+    std::set<std::string> leaves;
+    for(const MapNode* node : b.selected) {
+      getLeaves(*node, leaves);
+    }
+    return leaves;
+  }
+
+  inline
+  Selection sel_union(const Selection& c1, const Selection& c2) {
+    Selection un = c1;
+    un.exclude.insert(c2.exclude.begin(), c2.exclude.end());
+    for(MapNode* mn: c2.selected) {
+      un.selected.insert(mn);
+      un.include.insert(ExpandedNode(mn));
+      un.exclude.erase(mn);
+    }
+    return un;
+  }
+
+  inline
+  void sel_split(const Selection& C, Selection& c1, Selection& c2) {
+    size_t mid = C.selected.size() / 2;
+
+    std::set<MapNode*>::iterator it = C.selected.begin();
+    c1.exclude.insert(C.exclude.begin(), C.exclude.end());
+    for(size_t i=0; i<mid; i++) {
+      c1.selected.insert(*it);
+      c1.include.insert(ExpandedNode(*it));
+      c2.exclude.insert(*it);
+      ++it;
+    }
+    c2.exclude.insert(C.exclude.begin(), C.exclude.end());
+    for(size_t i=mid; i<C.selected.size(); i++) {
+      c2.selected.insert(*it);
+      c2.include.insert(ExpandedNode(*it));
+      c1.exclude.insert(*it);
+      ++it;
+    }
+  }
+
+  inline
+  Selection empty_sel(const Selection& C) {
+    Selection e;
+    e.exclude.insert(C.selected.begin(), C.selected.end());
+    e.exclude.insert(C.exclude.begin(), C.exclude.end());
+    return e;
+  }
+
+  inline
+  bool is_subset(const Selection& C, const std::set<MapNode*>& crits) {
+    if(crits.empty() || C.selected.size() > crits.size()) return false;
+    for(MapNode* mn : C.selected) {
+      if(crits.find(mn) == crits.end())
+        return false;
+    }
+    return true;
+  }
+
+  inline
+  Selection sel_complement(const Selection& original, const Selection& subset) {
+    Selection co = original;
+
+    co.include.clear();
+    co.selected.clear();
+
+    for(MapNode* mn : original.selected) {
+      if(subset.selected.find(mn) == subset.selected.end()) {
+        co.selected.insert(mn);
+        co.include.insert(ExpandedNode(mn));
+        co.exclude.erase(mn);
+      } else {
+        co.exclude.insert(mn);
+      }
+    }
+    return co;
+  }
+
+  static bool output_leaves_for_selections = false;
+  static bool output_details_for_selections = true;
+
+  std::ostream& operator<<(std::ostream& os, Selection const& a) {
+    bool first = true;
+    if(a.selected.empty()) {
+      os << "empty";
+      return os;
+    }
+    if (output_leaves_for_selections)  {
+      std::set<std::string> leaves = getLeaves(a);
+      for(const string& leaf : leaves) {
+        os << (first ? " " : ", ") << leaf;
+        first = false;
+      }
+      return os;
+    }
+    os << a.selected;
+    if(output_details_for_selections) {
+      os << " inc: " << a.include;
+      os << " exc: ";
+      streamMapNodeSet(os, a.exclude, false, "d_");
+    }
+    return os;
+  }
+
+  bool isLeaves(const Selection& s) {
+    for(const ExpandedNode& en : s.include) if(!en.child->var.isLeaf) return false;
+    return true;
+  }
+
+}
+
