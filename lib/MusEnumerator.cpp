@@ -61,7 +61,7 @@ namespace HierMUS {
 
       stats.sat_calls++;
       if(subProblem.check(m)) {
-        subsetMap->blockSubsets(m, false); // Use weak blocks
+        subsetMap->blockSubsets(m);
       } else {
         u = m;
       }
@@ -142,9 +142,11 @@ namespace HierMUS {
     return co;
   }
 
+#define QXTimeOut OptionalSelection()
+
   OptionalSelection MusEnumerator::qx_back(Selection B, size_t D, Selection C,
                                            const set<MapNode*>& criticals) {
-    if(mopts.timedOut()) return OptionalSelection();
+    if(mopts.timedOut()) return QXTimeOut;
 
     if(D>0 && !B.selected.empty()) {
       stats.sat_calls++;
@@ -160,14 +162,14 @@ namespace HierMUS {
       D2 = C2;
     } else {
       D2 = qx_back(sel_union(B, C1), C1.selected.size(), C2, criticals);
-      if(!D2.has_value()) return OptionalSelection();
+      if(!D2.has_value()) return QXTimeOut;
     }
 
     if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
       D1 = C1;
     } else {
       D1 = qx_back(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
-      if(!D1.has_value()) return OptionalSelection();
+      if(!D1.has_value()) return QXTimeOut;
     }
 
     return sel_union(D1.get(),D2.get());
@@ -185,12 +187,12 @@ namespace HierMUS {
 
   OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
                                                     const set<MapNode*>& criticals) {
-    if(mopts.timedOut()) return OptionalSelection();
+    if(mopts.timedOut()) return QXTimeOut;
 
     if(D>0 && !B.selected.empty()) {
       stats.sat_calls++;
       if(subProblem.check(B)) {
-        subsetMap->blockSubsets(B, false);
+        subsetMap->blockSubsets(B);
       } else {
         subsetMap->blockSupersets(B);
         return empty_sel(C);
@@ -208,14 +210,14 @@ namespace HierMUS {
       D2 = C2;
     } else {
       D2 = qx_back_with_map(sel_union(B, C1), C1.selected.size(), C2, criticals);
-      if(!D2.has_value()) return OptionalSelection();
+      if(!D2.has_value()) return QXTimeOut;
     }
 
     if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
       D1 = C1;
     } else {
       D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
-      if(!D1.has_value()) return OptionalSelection();
+      if(!D1.has_value()) return QXTimeOut;
     }
 
     return sel_union(D1.get(),D2.get());

@@ -62,7 +62,7 @@ namespace HierMUS {
 
       void block(vec<Lit>& blockClause);
       void blockSupersets(const Selection& selection);
-      void blockSubsets(const Selection& selection, bool weak_block = true);
+      void blockSubsets(const Selection& selection);
   };
 
 }

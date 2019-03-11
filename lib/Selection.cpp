@@ -26,6 +26,36 @@ namespace HierMUS {
   }
 
   inline
+  Selection sel_difference(const Selection& c1, const Selection& c2) {
+    Selection di = c1;
+    for(MapNode* mn : c2.selected) {
+      di.selected.erase(mn);
+      di.include.erase(ExpandedNode(mn));
+      di.exclude.insert(mn);
+    }
+    return di;
+  }
+
+  inline
+  Selection sel_complement(const Selection& U, const Selection& S) {
+    Selection co = U;
+
+    co.include.clear();
+    co.selected.clear();
+
+    for(MapNode* mn : U.selected) {
+      if(S.selected.find(mn) == S.selected.end()) {
+        co.selected.insert(mn);
+        co.include.insert(ExpandedNode(mn));
+        co.exclude.erase(mn);
+      } else {
+        co.exclude.insert(mn);
+      }
+    }
+    return co;
+  }
+
+  inline
   void sel_split(const Selection& C, Selection& c1, Selection& c2) {
     size_t mid = C.selected.size() / 2;
 
@@ -64,24 +94,6 @@ namespace HierMUS {
     return true;
   }
 
-  inline
-  Selection sel_complement(const Selection& original, const Selection& subset) {
-    Selection co = original;
-
-    co.include.clear();
-    co.selected.clear();
-
-    for(MapNode* mn : original.selected) {
-      if(subset.selected.find(mn) == subset.selected.end()) {
-        co.selected.insert(mn);
-        co.include.insert(ExpandedNode(mn));
-        co.exclude.erase(mn);
-      } else {
-        co.exclude.insert(mn);
-      }
-    }
-    return co;
-  }
 
   static bool output_leaves_for_selections = false;
   static bool output_details_for_selections = true;

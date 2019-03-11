@@ -5,9 +5,6 @@
 
 namespace HierMUS {
 
-  static bool output_leaves_for_selections = false;
-  static bool output_details_for_selections = true;
-
   std::ostream& operator<<(std::ostream& os, Statistics const& s) {
     os << "map: " << s.map_calls;
     os << "\tsat: " << s.sat_calls;

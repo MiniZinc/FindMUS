@@ -38,7 +38,7 @@ namespace HierMUS {
       virtual Selection getRootSelector() = 0;
       virtual Selection getLeavesSelector() = 0;
       virtual void blockSupersets(const Selection& selection) = 0;
-      virtual void blockSubsets(const Selection& selection, bool weak_block = true) = 0;
+      virtual void blockSubsets(const Selection& selection) = 0;
   };
 }
 

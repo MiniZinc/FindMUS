@@ -19,11 +19,13 @@ namespace HierMUS {
   void ChuffedSubsetProblem::setMaximal(bool max_mode) {
     if(max_mode) {
       engine.opt_var = obj;
-      for(int i=0; i<sat.polarity.size(); i++) {
-        sat.polarity[i] = true;
-      }
+      so.nof_solutions = 1000000;
+      //for(int i=0; i<sat.polarity.size(); i++) {
+      //  sat.polarity[i] = true;
+      //}
     } else {
       engine.opt_var = nullptr;
+      so.nof_solutions = 1;
       for(int i=0; i<sat.polarity.size(); i++) {
         sat.polarity[i] = rand() % 100 > 50;
       }
@@ -110,6 +112,8 @@ namespace HierMUS {
       so.branch_random = true;
       so.print_sol = true;
       engine.problem = this;
+
+      setMaximal(true);
 
       if(mopts.verbose_map) {
         std::cout << "SubsetMap:\tmap loaded:\ttime:\t" << std::fixed <<  std::setprecision(5) << wallClockTime() - build_start << "\n";
@@ -201,8 +205,12 @@ namespace HierMUS {
   bool simplifyVecLit(vec<Lit>& ps) {
     int i, j;
     for (i = j = 0; i < ps.size(); i++) {
-      if (sat.value(ps[i]) == l_True) return false;
-      if (sat.value(ps[i]) == l_Undef) ps[j++] = ps[i];
+      if (sat.value(ps[i]) == l_True) {
+        return false;
+      }
+      if (sat.value(ps[i]) == l_Undef) {
+        ps[j++] = ps[i];
+      }
     }
     ps.resize(j);
     return ps.size() > 0;
@@ -237,7 +245,9 @@ namespace HierMUS {
     if(simplifyVecLit(blockClause)) {
       sat.addClause(blockClause);
     } else {
-      consistent = false;
+      if(blockClause.size() == 0) {
+        consistent = false;
+      }
     }
   }
 
@@ -256,9 +266,9 @@ namespace HierMUS {
     block(blockClause);
   }
 
-  void ChuffedSubsetProblem::blockSubsets(const Selection& selection, bool weak_block) {
+  void ChuffedSubsetProblem::blockSubsets(const Selection& selection) {
     vec<Lit> blockClause;
-    if(mopts.verbose_map) std::cout << "SubsetMap:\tSubset block: ";
+    if(mopts.verbose_map) std::cout << "SubsetMap:\tSubset block:   ";
 
     for(const MapNode* node : selection.exclude) {
       blockClause.push( node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.disj->getLit(true)  );
@@ -302,7 +312,10 @@ namespace HierMUS {
   }
 
   Selection ChuffedSubsetProblem::getSelection(const Selection& selection) {
-    if(!consistent) return {};  // Return empty Selection
+    if(!consistent) {
+      if(mopts.verbose_map) { std::cout << "SubsetMap:\tInconsistent. Returning: {}. \n"; }
+      return {};  // Return empty Selection
+    }
     solution_template = selection;
 
     if(mopts.verbose_map) std::cout << "SubsetMap:\tgetSelection("<< selection <<")\t{" << (engine.opt_var ? "maximal" : "any") <<"}\twith assumptions: {";
@@ -334,7 +347,6 @@ namespace HierMUS {
 
     solution_set = {};
     so.time_out = 86400;
-    so.nof_solutions = 1;
     engine.best_sol = -1;
     double start_time = wallClockTime();
     engine.solutions = 0;
