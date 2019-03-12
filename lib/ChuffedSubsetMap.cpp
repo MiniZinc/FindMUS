@@ -74,9 +74,6 @@ namespace HierMUS {
         eqs  .resize(branches_top);
       }
 
-      // Add sat brancher
-      so.vsids = true;
-      engine.branching->add(&sat);
       // Change this to adjustable brancher later
       vec<Branching*> va;
       if(mopts.map_enumeration_alg == ALG_STACKMUS) {
@@ -84,12 +81,23 @@ namespace HierMUS {
           va.push(new BoolView(conjs[i]));
         }
       }
+
+      vec<Lit> blockRoot;
       for(int i=0; i<leaves_top; i++) {
         va.push(new BoolView(leaves[i]));
+        blockRoot.push(~leaves[i].getLit(true));
       }
       output_vars(va);
       branch(va, VAR_INORDER, VAL_MAX);
 
+      sat.addClause(blockRoot);
+
+
+
+
+      // Add sat brancher
+      so.vsids = true;
+      engine.branching->add(&sat);
 
       //addObjective();
 
