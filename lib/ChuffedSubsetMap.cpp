@@ -18,16 +18,12 @@ namespace HierMUS {
 
   void ChuffedSubsetProblem::setMaximal(bool max_mode) {
     if(max_mode) {
-      engine.opt_var = obj;
-      so.nof_solutions = 1000000;
-      //for(int i=0; i<sat.polarity.size(); i++) {
-      //  sat.polarity[i] = true;
-      //}
+      for(int i=0; i<leaves_top; i++) {
+        leaves[i].setPreferredVal(PV_MAX);
+      }
     } else {
-      engine.opt_var = nullptr;
-      so.nof_solutions = 1;
-      for(int i=0; i<sat.polarity.size(); i++) {
-        sat.polarity[i] = rand() % 100 > 50;
+      for(int i=0; i<leaves_top; i++) {
+        leaves[i].setPreferredVal(rand() % 100 > 50 ? PV_MIN : PV_MAX);
       }
     }
   }
@@ -71,17 +67,16 @@ namespace HierMUS {
 
       root = addConnections(tree);
 
-      leaves.shrink( leaves_top - 1);
+      leaves.resize( leaves_top );
       if(branches_top > 0) {
-        conjs.shrink(branches_top - 1);
-        disjs.shrink(branches_top - 1);
-        eqs  .shrink(branches_top - 1);
+        conjs.resize(branches_top);
+        disjs.resize(branches_top);
+        eqs  .resize(branches_top);
       }
 
       // Add sat brancher
       so.vsids = true;
       engine.branching->add(&sat);
-
       // Change this to adjustable brancher later
       vec<Branching*> va;
       if(mopts.map_enumeration_alg == ALG_STACKMUS) {
@@ -95,7 +90,8 @@ namespace HierMUS {
       output_vars(va);
       branch(va, VAR_INORDER, VAL_MAX);
 
-      addObjective();
+
+      //addObjective();
 
       engine.start_time = wallClockTime();
       engine.opt_time = 0;
@@ -108,6 +104,7 @@ namespace HierMUS {
       engine.next_simp_db = 0;
       engine.output_stream = &null_stream;
 
+      so.nof_solutions = 1;
       so.time_out = 86400;
       so.branch_random = true;
       so.print_sol = true;
