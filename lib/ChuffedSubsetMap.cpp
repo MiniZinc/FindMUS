@@ -28,7 +28,7 @@ namespace HierMUS {
     }
   }
 
-  void ChuffedSubsetProblem::pushTemporarySubsetBlock(const Selection& selection) {
+  void ChuffedSubsetProblem::pushTempSupersetBlock(const Selection& selection) {
       vec<Lit> cl;
       int control = sat.newVar();
       Lit conLit = Lit(control, true);
@@ -42,7 +42,7 @@ namespace HierMUS {
       sat.addClause(cl);
   }
 
-  void ChuffedSubsetProblem::popTemporarySubsetBlock() {
+  void ChuffedSubsetProblem::popTempSupersetBlock() {
     if(!tempStack.empty()) {
       vec<Lit> cl;
       cl.push(~tempStack.back());
@@ -91,9 +91,6 @@ namespace HierMUS {
       branch(va, VAR_INORDER, VAL_MAX);
 
       sat.addClause(blockRoot);
-
-
-
 
       // Add sat brancher
       so.vsids = true;
@@ -323,6 +320,8 @@ namespace HierMUS {
     }
     solution_template = selection;
 
+    vec<Lit> atLeastOne;
+
     if(mopts.verbose_map) std::cout << "SubsetMap:\tgetSelection("<< selection <<")\t{" << (engine.opt_var ? "maximal" : "any") <<"}\twith assumptions: {";
     vec<BoolView> all_assumptions;
     for(const ExpandedNode& enode : selection.include) {
@@ -330,13 +329,21 @@ namespace HierMUS {
         all_assumptions.push(enode.child->var.eq->getLit(true));
         if(mopts.verbose_map) std::cout << " e" << enode.child->path;
       }
+      atLeastOne.push(enode.child->var.isLeaf ? enode.child->var.leaf->getLit(true) : enode.child->var.eq->getLit(true));
     }
 
+    int control = sat.newVar();
+    Lit conLit = Lit(control, true);
+    sat.polarity[control] = false;
+    atLeastOne.push(~conLit);
     for(MapNode* node : forceInclude) {
       solution_template.exclude.erase(node);
       all_assumptions.push(node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.conj->getLit(true));
       if(mopts.verbose_map) std::cout << (node->var.isLeaf ? " " :  " c") << node->path;
     }
+    
+    sat.addClause(atLeastOne);
+    all_assumptions.push(conLit);
 
     for(Lit& l : tempStack) {
       all_assumptions.push(l);

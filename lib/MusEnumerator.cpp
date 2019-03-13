@@ -52,10 +52,10 @@ namespace HierMUS {
   bool MusEnumerator::linear_shrink_with_map(Selection& model, const set<MapNode*>&) {
     Selection u = model;
     do {
-      subsetMap->pushTemporarySubsetBlock(u);
+      subsetMap->pushTempSupersetBlock(u);
       stats.map_calls++;
       Selection m = subsetMap->getSelection(u);
-      subsetMap->popTemporarySubsetBlock();
+      subsetMap->popTempSupersetBlock();
       if(m.selected.empty()) break;
       if(mopts.timedOut()) return false;
 
@@ -185,8 +185,12 @@ namespace HierMUS {
     return true;
   }
 
+#define QXLOG(X) if(mopts.verbose_enum) std::cout << string(indent*2, ' ') << "QX: " << X << std::endl;
+
+static int indent=0;
   OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
                                                     const set<MapNode*>& criticals) {
+    QXLOG("START"); indent++;
     if(mopts.timedOut()) return QXTimeOut;
 
     if(D>0 && !B.selected.empty()) {
@@ -195,14 +199,22 @@ namespace HierMUS {
         subsetMap->blockSubsets(B);
       } else {
         subsetMap->blockSupersets(B);
+        QXLOG("Returning empty"); indent--;
         return empty_sel(C);
       }
     }
-    if(C.selected.size() == 1) return C;
+    if(C.selected.size() == 1) { 
+      QXLOG("returning C <- |C| == 1"); indent--;
+      return C;
+    }
 
     Selection C1, C2;
-    C1 = subsetMap->getRandomSelection(C, B);
-    if(C1.selected.empty()) return C;
+    C1 = subsetMap->getRandomSelection(C, B, true);
+    if(C1.selected.empty()) {
+      QXLOG("returning C <- |C1| == 0"); indent--;
+
+      return C;
+    }
     C2 = sel_complement(C, C1);
 
     OptionalSelection D2, D1;
@@ -220,6 +232,7 @@ namespace HierMUS {
       if(!D1.has_value()) return QXTimeOut;
     }
 
+    QXLOG("returning D1 U D2"); indent--;
     return sel_union(D1.get(),D2.get());
   }
 

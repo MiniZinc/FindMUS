@@ -57,8 +57,8 @@ namespace HierMUS {
       Selection getRootSelector();
       Selection getLeavesSelector();
 
-      void pushTemporarySubsetBlock(const Selection& selection);
-      void popTemporarySubsetBlock(void);
+      void pushTempSupersetBlock(const Selection& selection);
+      void popTempSupersetBlock(void);
 
       void block(vec<Lit>& blockClause);
       void blockSupersets(const Selection& selection);

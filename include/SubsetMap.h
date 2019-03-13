@@ -27,12 +27,12 @@ namespace HierMUS {
       void setForceInclude(const Selection& selection);
       void clearForceInclude(void);
 
-      virtual void pushTemporarySubsetBlock(const Selection& selection) = 0;
-      virtual void popTemporarySubsetBlock(void) = 0;
+      virtual void pushTempSupersetBlock(const Selection& selection) = 0;
+      virtual void popTempSupersetBlock(void) = 0;
 
       virtual Selection expand(const Selection& selection) = 0;
       virtual void setMaximal(bool max_mode) = 0;
-      virtual Selection getRandomSelection(const Selection& selection, const Selection& finc);
+      virtual Selection getRandomSelection(const Selection& selection, const Selection& finc, bool strictSubset);
       virtual Selection getSelection(const Selection& selection) = 0;
       virtual Selection getSelection() = 0;
       virtual Selection getRootSelector() = 0;
