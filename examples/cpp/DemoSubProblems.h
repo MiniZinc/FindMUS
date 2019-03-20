@@ -15,6 +15,13 @@ namespace HierMUS {
       void printSol(const Selection& b);
       bool check(const Selection& b);
   };
+
+  class GLM : public SubProblem {
+    public:
+      explicit GLM(MUSEnumOptions& mo);
+      void printSol(const Selection& b);
+      bool check(const Selection& b);
+  };
   
   class HM5_2 : public SubProblem {
     public:

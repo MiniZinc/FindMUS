@@ -52,7 +52,7 @@ namespace HierMUS {
   }
 
   ChuffedSubsetProblem::ChuffedSubsetProblem(SubProblem* prob, MUSEnumOptions& mo)
-    : SubsetMap{prob, mo}, leaves_top{0}, branches_top{0}, obj{nullptr}, consistent{true} {
+    : SubsetMap{prob, mo}, leaves_top{0}, branches_top{0}, obj{nullptr} {
       // This is required for chuffed to work since FlatZinc::s is a static space
       FlatZinc::s = nullptr;
 
@@ -96,7 +96,6 @@ namespace HierMUS {
       so.vsids = true;
       engine.branching->add(&sat);
 
-      //addObjective();
 
       engine.start_time = wallClockTime();
       engine.opt_time = 0;
@@ -123,12 +122,6 @@ namespace HierMUS {
       }
       std::cout << "SubsetMap:\tnleaves:\t" << leafNodes.size() << "\tnbranches:\t" << branchNodes.size() << "\n";
     }
-
-  void ChuffedSubsetProblem::addObjective() {
-    createVar(obj, 0, leaves.size(), true);
-    bool_linear(leaves, IRT_EQ, obj);
-    optimize(obj, OPT_MAX);
-  }
 
   inline
   string getFilenameFromNode(const MapNode& node) {
@@ -329,7 +322,7 @@ namespace HierMUS {
         all_assumptions.push(enode.child->var.eq->getLit(true));
         if(mopts.verbose_map) std::cout << " e" << enode.child->path;
       }
-      atLeastOne.push(enode.child->var.isLeaf ? enode.child->var.leaf->getLit(true) : enode.child->var.eq->getLit(true));
+      atLeastOne.push(enode.child->var.isLeaf ? enode.child->var.leaf->getLit(true) : enode.child->var.conj->getLit(true));
     }
 
     int control = sat.newVar();

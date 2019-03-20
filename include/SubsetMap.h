@@ -20,8 +20,10 @@ namespace HierMUS {
       SubProblem* problem;
       std::set<MapNode*> forceInclude;
 
+      bool consistent;
+
     public:
-      SubsetMap(SubProblem* prob, MUSEnumOptions& mo) : mopts(mo), problem(prob) {}
+      SubsetMap(SubProblem* prob, MUSEnumOptions& mo) : mopts(mo), problem(prob), consistent{true} {}
       virtual ~SubsetMap() {}
 
       void setForceInclude(const Selection& selection);
@@ -39,6 +41,8 @@ namespace HierMUS {
       virtual Selection getLeavesSelector() = 0;
       virtual void blockSupersets(const Selection& selection) = 0;
       virtual void blockSubsets(const Selection& selection) = 0;
+
+      bool isConsistent(void) const { return consistent; }
   };
 }
 

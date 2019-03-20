@@ -112,6 +112,54 @@ namespace HierMUS {
     return sol;
   }
 
+
+  // Ghoulomb (Test case for map_qx)
+  GLM::GLM(MUSEnumOptions& mo) : SubProblem(mo) {
+    MapNode ill1 {"ill1", "ill1"};
+    MapNode ill2 {"ill2", "ill2"};
+    MapNode ill3 {"ill3", "ill3"};
+    MapNode ill4 {"ill4", "ill4"};
+    MapNode ill5 {"ill5", "ill5"};
+    MapNode cumu {"cumu", "cumu"};
+
+    leaf_names = {"ill1", "ill2", "ill3", "ill4", "cumu", "ill5"};
+
+    if(mo.subproblem_structure == STR_FLAT) {
+      tree.children = {ill1,ill2,ill3,ill4,ill5,cumu};
+    } else {
+      MapNode ills {"ills", vector<MapNode>({ill1,ill2,ill3,ill4})};
+      MapNode top {"top", vector<MapNode>({ills, cumu, ill5})} ;
+
+      tree.children = {top};
+    }
+    if(mopts.subproblem_binarize != BIN_NONE) {
+      tree.makeBinary([](const MapNode& n){ 
+        return n.children.size() > 2;
+      });
+    }
+  }
+
+  void GLM::printSol(const Selection& b) {
+    set<string> leaves = getLeaves(b);
+    for(const string& leaf : leaves) {
+      std::cout << leaf << ", ";
+    }
+    std::cout << "\n";
+  }
+
+  bool GLM::check(const Selection& s) {
+
+    bool sol = true;
+    set<string> leaves = getLeaves(s);
+    for(const string& leaf : leaves) {
+      if(leaf == "cumu") sol = false;
+    }
+
+    if(mopts.verbose_subsolve)
+      std::cout << "GLM::check(" << s << ") :" << sol<<"\n";
+    return sol;
+  }
+
   // HM5_2
   HM5_2::HM5_2(MUSEnumOptions& mo) : SubProblem(mo) {
     MapNode b1 {"b1", "b1"}; MapNode b2 {"b2", "b2"}; MapNode b3 {"b3", "b3"};

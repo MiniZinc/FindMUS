@@ -23,6 +23,7 @@ SubProblem* createProblem(DriverOptions& dro,
   if(!dro.demo_name.empty()) {
     if(dro.demo_name == "hm5") problem = new HM5(mo);
     else if(dro.demo_name == "hm5_2") problem = new HM5_2(mo);
+    else if(dro.demo_name == "glm") problem = new GLM(mo);
     else if(dro.demo_name == "fflat") problem = new FFLAT(mo);
   }
 #endif

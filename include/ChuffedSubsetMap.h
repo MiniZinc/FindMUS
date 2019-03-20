@@ -37,13 +37,10 @@ namespace HierMUS {
       Selection solution_set;
       Selection solution_template;
 
-      bool consistent;
-
       std::fstream null_stream;
 
     private:
       MapNode addConnections(const MapNode& node, unsigned int depth = 0);
-      void addObjective();
 
     public:
       ChuffedSubsetProblem(SubProblem* prob, MUSEnumOptions& mo);
