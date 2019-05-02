@@ -40,7 +40,15 @@ void help_long(void) {
 #ifdef BUILD_FINDMUS_EXAMPLES
   std::cout << "  --demo <demo>\n"
             << "    Use demo model and tree. <string> must be one of:\n"
-            << "      hm5, hm5_2\n";
+            << "      hm5, hm5_2, fflat, rand\n"
+            << "  --demo-rand-seed <n>\n"
+            << "    For use with 'rand' demo, random seed\n"
+            << "  --demo-rand-cons <n>\n"
+            << "    For use with 'rand' demo, number of 'constraints'\n"
+            << "  --demo-rand-muses <n>\n"
+            << "    For use with 'rand' demo, number of MUSes\n"
+            << "  --demo-rand-mus-size <n>\n"
+            << "    For use with 'rand' demo, max constraints in a MUS\n";
 #endif
   std::cout
       << "  --paths <path>\n"
@@ -72,6 +80,8 @@ void help_long(void) {
       << "      mzn: the user's model\n"
       << "      fzn: the program level constraints (decomposition)\n"
       << "      <n>: integer, a custom depth\n"
+      << "  --seed <n>\n"
+      << "    Set random seed\n"
       << "\n"
       << " Subproblem: Solving options\n"
       << "  --solver <s>\n"
@@ -180,6 +190,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.map_enum_focus_mode = false; // Don't use focus mode
     } else if(strcmp(argv[i], "-t") == 0) {
       mo.timelimit = atof(argv[++i]);
+    } else if(strcmp(argv[i], "--seed") == 0) {
+      mo.setRandSeed(atoi(argv[++i]));
     } else if(strcmp(argv[i], "--solvers") == 0) {
       dro.list_solvers = true;
     } else if(strcmp(argv[i], "--solvers-json") == 0) {
@@ -249,6 +261,14 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
 #ifdef BUILD_FINDMUS_EXAMPLES
     } else if(strcmp(argv[i], "--demo") == 0) {
       dro.demo_name = argv[++i];
+    } else if(strcmp(argv[i], "--demo-rand-seed") == 0) {
+      dro.demo_rand_seed = atoi(argv[++i]);
+    } else if(strcmp(argv[i], "--demo-rand-cons") == 0) {
+      dro.demo_rand_cons = atoi(argv[++i]);
+    } else if(strcmp(argv[i], "--demo-rand-muses") == 0) {
+      dro.demo_rand_muses = atoi(argv[++i]);
+    } else if(strcmp(argv[i], "--demo-rand-mus-size") == 0) {
+      dro.demo_rand_mus_size = atoi(argv[++i]);
 #endif
     } else if(strcmp(argv[i], "--paths") == 0) {
       dro.pathpath = argv[++i];

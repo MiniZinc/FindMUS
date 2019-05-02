@@ -37,6 +37,19 @@ namespace HierMUS {
       bool check(const Selection& b);
   };
 
+  class RandomProblem : public SubProblem {
+    private:
+      std::set<std::set<string> > muses;
+    public:
+      explicit RandomProblem(MUSEnumOptions& mo,
+                             int seed,
+                             unsigned int ncons,
+                             unsigned int nmuses,
+                             unsigned int mussize);
+      void printSol(const Selection& b);
+      bool check(const Selection& b);
+  };
+
 }
 
 #endif

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <set>
 #include <algorithm>
+#include <random>
 
 #include "DemoSubProblems.h"
 #include "string_utils.h"
@@ -204,6 +205,74 @@ namespace HierMUS {
     return sol;
   }
 
-};
+  // RandomProblem
+  RandomProblem::RandomProblem(MUSEnumOptions& mo,
+                               int seed,
+                               unsigned int ncons, unsigned int nmuses, unsigned int mussize) : SubProblem(mo) {
+
+    std::default_random_engine rand_generator(seed);
+    std::uniform_int_distribution<int> rand_ints(0,ncons-1);
+
+    vector<MapNode> nodes;
+    for(unsigned int i=0; i<ncons; i++) {
+      leaf_names.push_back(std::to_string(i));
+      nodes.push_back(MapNode{leaf_names.back(),
+                              leaf_names.back()});
+    }
+
+    tree.children = nodes;
+    if(mo.subproblem_structure != STR_FLAT) {
+      tree.makeBinary([](const MapNode& n){ 
+        return n.children.size() > 2;
+      });
+    }
+
+    for(unsigned int i=0; i<nmuses; i++) {
+      set<string> mus;
+
+      while(mus.size() < mussize) {
+        mus.insert(leaf_names[rand_ints(rand_generator)]);
+      }
+
+      if(muses.find(mus) != muses.end()) {
+        i--;
+      } else {
+        muses.insert(mus);
+      }
+    }
+  }
+
+  void RandomProblem::printSol(const Selection& b) {
+    set<string> leaves = getLeaves(b);
+    for(const string& leaf : leaves) {
+      std::cout << leaf << ", ";
+    }
+    std::cout << "\n";
+  }
+
+  inline
+  bool is_subset(const set<string>& mus, const set<string>& sel) {
+    for(const string& s : mus) {
+      if(sel.find(s) == sel.end()) return false;
+    }
+    return true;
+  }
+
+  bool RandomProblem::check(const Selection& s) {
+    bool sol = true;
+    if(!s.selected.empty()) {
+      set<string> leaves = getLeaves(s);
+      for(const set<string>& mus : muses) {
+        if(is_subset(mus, leaves)) {
+          sol = false;
+          break;
+        }
+      }
+    }
+    if(mopts.verbose_subsolve)
+      std::cout << "RandomProblem::check(" << s << ") :" << sol<<"\n";
+    return sol;
+  }
+}
 
 

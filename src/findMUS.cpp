@@ -25,6 +25,11 @@ SubProblem* createProblem(DriverOptions& dro,
     else if(dro.demo_name == "hm5_2") problem = new HM5_2(mo);
     else if(dro.demo_name == "glm") problem = new GLM(mo);
     else if(dro.demo_name == "fflat") problem = new FFLAT(mo);
+    else if(dro.demo_name == "rand") problem = new RandomProblem(mo, 
+                                                                 dro.demo_rand_seed,
+                                                                 dro.demo_rand_cons,
+                                                                 dro.demo_rand_muses,
+                                                                 dro.demo_rand_mus_size);
   }
 #endif
   if(!problem) {

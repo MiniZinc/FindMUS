@@ -22,9 +22,19 @@ public:
   bool colour = false;
 #ifdef BUILD_FINDMUS_EXAMPLES
   string demo_name;
+  int demo_rand_seed;
+  int demo_rand_cons;
+  int demo_rand_muses;
+  int demo_rand_mus_size;
 #endif
   bool list_solvers = false;
   bool list_solvers_json = false;
+
+  DriverOptions() {
+#ifdef BUILD_FINDMUS_EXAMPLES
+    demo_rand_seed = (int)time(NULL);
+#endif
+  }
 
   void toJSON(std::ostream& ss) {
     ss << "\"driver_options\": {\n"
@@ -40,6 +50,10 @@ public:
        << "\t\"colour\": " << colour << ",\n"
 #ifdef BUILD_FINDMUS_EXAMPLES
        << "\t\"demo_name\": \"" << demo_name << "\",\n"
+       << "\t\"demo_rand_seed\": \"" << demo_rand_seed << "\",\n"
+       << "\t\"demo_rand_cons\": \"" << demo_rand_cons << "\",\n"
+       << "\t\"demo_rand_muses\": \"" << demo_rand_muses << "\",\n"
+       << "\t\"demo_rand_mus_size\": \"" << demo_rand_mus_size << "\",\n"
 #endif
        << "\t\"list_solvers\": " << list_solvers << ",\n"
        << "\t\"list_solvers_json\": " << list_solvers_json << ",\n"
@@ -83,11 +97,17 @@ public:
 
   Statistics& stats;
 
+  int rand_seed;
   std::default_random_engine rand_generator;
   std::uniform_int_distribution<int> rand_bin;
 
-  MUSEnumOptions(Statistics& s) : stats(s), rand_generator((int)time(NULL)), rand_bin(0,1) {}
+  MUSEnumOptions(Statistics& s) : stats(s), rand_seed((int)time(NULL)), rand_generator(rand_seed), rand_bin(0,1) {}
   MUSEnumOptions& operator=(const MUSEnumOptions& mo) =  delete;
+
+  void setRandSeed(int s) {
+    rand_seed = s;
+    rand_generator.seed(rand_seed);
+  }
 
   bool getRandBool(void) {
     return rand_bin(rand_generator) == 1;
