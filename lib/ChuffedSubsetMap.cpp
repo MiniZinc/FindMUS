@@ -23,7 +23,7 @@ namespace HierMUS {
       }
     } else {
       for(int i=0; i<leaves_top; i++) {
-        leaves[i].setPreferredVal(rand() % 100 > 50 ? PV_MIN : PV_MAX);
+        leaves[i].setPreferredVal(mopts.getRandBool() ? PV_MIN : PV_MAX);
       }
     }
   }

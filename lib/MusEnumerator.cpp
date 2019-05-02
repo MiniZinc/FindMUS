@@ -85,24 +85,26 @@ namespace HierMUS {
   }
 
   inline
-  void sel_split(const Selection& C, Selection& c1, Selection& c2) {
+  void sel_split(MUSEnumOptions& mopts, const Selection& C, Selection& c1, Selection& c2) {
     size_t mid = C.selected.size() / 2;
 
-    set<MapNode*>::iterator it = C.selected.begin();
     c1.exclude.insert(C.exclude.begin(), C.exclude.end());
-    for(size_t i=0; i<mid; i++) {
-      c1.selected.insert(*it);
-      c1.include.insert(ExpandedNode(*it));
-      c2.exclude.insert(*it);
-      ++it;
-    }
     c2.exclude.insert(C.exclude.begin(), C.exclude.end());
-    for(size_t i=mid; i<C.selected.size(); i++) {
-      c2.selected.insert(*it);
-      c2.include.insert(ExpandedNode(*it));
-      c1.exclude.insert(*it);
-      ++it;
+
+    set<MapNode*>::iterator it = C.selected.begin();
+    for(size_t c=0; c<C.selected.size(); c++, ++it) {
+      if(c < mid) { // c1
+      //if(mopts.getRandBool()) { // c1
+        c1.selected.insert(*it);
+        c1.include.insert(ExpandedNode(*it));
+        c2.exclude.insert(*it);
+      } else { // c2
+        c2.selected.insert(*it);
+        c2.include.insert(ExpandedNode(*it));
+        c1.exclude.insert(*it);
+      }
     }
+
   }
 
   inline
@@ -155,7 +157,7 @@ namespace HierMUS {
     if(C.selected.size() == 1) return C;
 
     Selection C1, C2;
-    sel_split(C, C1, C2);
+    sel_split(mopts, C, C1, C2);
 
     OptionalSelection D2, D1;
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {

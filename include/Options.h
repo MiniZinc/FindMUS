@@ -4,6 +4,7 @@
 #include "Types.h"
 
 #include <string>
+#include <random>
 
 namespace HierMUS {
 
@@ -82,8 +83,15 @@ public:
 
   Statistics& stats;
 
-  MUSEnumOptions(Statistics& s) : stats(s) {}
+  std::default_random_engine rand_generator;
+  std::uniform_int_distribution<int> rand_bin;
+
+  MUSEnumOptions(Statistics& s) : stats(s), rand_generator((int)time(NULL)), rand_bin(0,1) {}
   MUSEnumOptions& operator=(const MUSEnumOptions& mo) =  delete;
+
+  bool getRandBool(void) {
+    return rand_bin(rand_generator) == 1;
+  }
 
   bool timedOut() {
     if(timelimit < 0) return false;
