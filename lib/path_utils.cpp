@@ -26,10 +26,17 @@ vector<string> getAllAssigns(const string& path) {
   return assigns;
 }
 
-string generalizeLabel(const string& path_el, bool mix) {
-  static std::regex generalize_regex {"=" reg_number};
+string generalizeLabel(const string& path_el, bool remove_locations, bool mix) {
   std::stringstream new_label;
-  new_label << std::regex_replace(path_el, generalize_regex, "=$$");
+
+  if(remove_locations) {
+    static std::regex index_regex {"\\|" reg_number};
+    new_label << std::regex_replace(path_el, index_regex, "|0");
+  } else {
+    static std::regex generalize_regex {"=" reg_number};
+    new_label << std::regex_replace(path_el, generalize_regex, "=$$");
+  }
+
   if(mix)
     new_label << path_el;
 

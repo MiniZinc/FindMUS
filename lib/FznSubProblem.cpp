@@ -166,7 +166,8 @@ namespace HierMUS {
         } else {
           string path;
           if(mopts.subproblem_structure != STR_NORMAL) { // Not STR_FLAT and not STR_NORMAL
-            path = utils::generalizeLabel(nameToPath[name], mopts.subproblem_structure == STR_GEN_MIX);
+            path = utils::generalizeLabel(nameToPath[name], mopts.subproblem_structure == STR_IDX_MIX || mopts.subproblem_structure == STR_IDX,
+                                                            mopts.subproblem_structure == STR_GEN_MIX || mopts.subproblem_structure == STR_IDX_MIX);
           } else {
             path = nameToPath[name];
           }

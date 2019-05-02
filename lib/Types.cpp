@@ -111,7 +111,7 @@ namespace HierMUS {
     std::stringstream ss;
     std::unordered_set<string> paths;
     for(auto& ps : constraints) {
-      paths.insert(utils::generalizeLabel(ps.first, false));
+      paths.insert(utils::generalizeLabel(ps.first, false, false));
     }
     std::vector<string> path_vec(paths.begin(), paths.end());
 

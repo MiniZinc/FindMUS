@@ -10,7 +10,7 @@ void help_short(int exit_code) {
             << "  usage: findMUS <flatzinc file> [paths file]\n"
             << "                 [-a] [-n <n>]\n"
             << "                 [--ignore-unsat-background]\n"
-            << "                 [--structure {normal, flat, gen, mix}]\n"
+            << "                 [--structure {normal, flat, gen, mix, idx, idxmix}]\n"
             << "                 [--binarize {none, leaves, all}]\n"
             << "                 [--depth {mzn, fzn, i}\n"
             << "                 [--verbose-{enum,map,subsolve} <v>]\n"
@@ -94,12 +94,14 @@ void help_long(void) {
       << "   --filter-sep <sep>\n"
       << "     Separator used for named and path filters\n"
       << "  Subproblem structure options:\n"
-      << "   --structure flat,gen,normal,mix\n"
+      << "   --structure flat,gen,normal,mix,idx,idxmix\n"
       << "     Alters initial structure: (Default: normal)\n"
       << "       flat:   Remove all structure\n"
       << "       gen:    Remove instance specific structure\n"
       << "       normal: No change\n"
       << "       mix:    Apply 'gen' before 'normal'\n"
+      << "       idx:    Remove all location inforation\n"
+      << "       idxmix: Apply 'idx' before 'normal'\n"
       << "   --binarize normal,leaves,all\n"
       << "     Add additional structure: (Default: normal)\n"
       << "       normal: no change\n"
@@ -149,6 +151,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       else if(type == "normal") mo.subproblem_structure = STR_NORMAL;
       else if(type == "gen")    mo.subproblem_structure = STR_GEN;
       else if(type == "mix")    mo.subproblem_structure = STR_GEN_MIX;
+      else if(type == "idx")    mo.subproblem_structure = STR_IDX;
+      else if(type == "idxmix") mo.subproblem_structure = STR_IDX_MIX;
       else {
         std::cout << "Incorrect structure setting. Available options are {flat, <normal>, gen, mix}\n";
         help_short(EXIT_FAILURE);

@@ -35,10 +35,12 @@ namespace HierMUS {
   enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_MAP_QX };
 
   enum InitialStructure {
-    STR_FLAT,   // Remove all structure
-    STR_NORMAL, // Leave the structure as is
-    STR_GEN,    // Remove instance specific structure (loop iterations etc...)
-    STR_GEN_MIX // Place normal structure below generalized model structure
+    STR_FLAT,    // Remove all structure
+    STR_NORMAL,  // Leave the structure as is
+    STR_GEN,     // Remove instance specific structure (loop iterations etc...)
+    STR_GEN_MIX, // Place normal structure below generalized model structure
+    STR_IDX,     // Remove location information
+    STR_IDX_MIX  // Remove location information, include original path afterwards
   };
 
   enum Binarize {

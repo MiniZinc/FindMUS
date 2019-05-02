@@ -6,14 +6,14 @@
 #include <regex>
 
 #define reg_mzn_ident "[A-Za-z_][A-Za-z0-9_]*"
-#define reg_number "[0-9]*"
+#define reg_number "[0-9]+"
 
 namespace utils {
 
 #define minor_sep '|'
 #define major_sep ';'
 
-std::string generalizeLabel(const std::string& path_el, bool mix);
+std::string generalizeLabel(const std::string& path_el, bool remove_locations, bool mix);
 std::vector<std::string> getAllAssigns(const std::string& path);
 
 
