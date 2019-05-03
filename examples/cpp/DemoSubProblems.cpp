@@ -205,6 +205,23 @@ namespace HierMUS {
     return sol;
   }
 
+  void makeRandomBinary(std::default_random_engine& rand_gen, MapNode& node) {
+    if(node.children.size() > 2) {
+      std::normal_distribution<> rand_pivot{node.children.size()/2, 2};
+      int pivot = std::round(rand_pivot(rand_gen));
+      if(pivot > 0 && pivot < node.children.size()-1) {
+        vector<MapNode> left (node.children.begin(),       node.children.begin()+pivot);
+        vector<MapNode> right(node.children.begin()+pivot, node.children.end());
+        node.children.clear();
+        node.children.push_back(MapNode(node.path + "_L", {}, left));
+        node.children.push_back(MapNode(node.path + "_R", {}, right));
+      }
+    }
+    for(MapNode& child : node.children) {
+      makeRandomBinary(rand_gen, child);
+    }
+  }
+
   // RandomProblem
   RandomProblem::RandomProblem(MUSEnumOptions& mo,
                                int seed,
@@ -222,9 +239,7 @@ namespace HierMUS {
 
     tree.children = nodes;
     if(mo.subproblem_structure != STR_FLAT) {
-      tree.makeBinary([](const MapNode& n){ 
-        return n.children.size() > 2;
-      });
+      makeRandomBinary(rand_generator, tree);
     }
 
     for(unsigned int i=0; i<nmuses; i++) {
