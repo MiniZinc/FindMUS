@@ -40,7 +40,7 @@ void help_long(void) {
 #ifdef BUILD_FINDMUS_EXAMPLES
   std::cout << "  --demo <demo>\n"
             << "    Use demo model and tree. <string> must be one of:\n"
-            << "      hm5, hm5_2, fflat, rand\n"
+            << "      hm5, hm5_2, fflat, glm, rand\n"
             << "  --demo-rand-seed <n>\n"
             << "    For use with 'rand' demo, random seed\n"
             << "  --demo-rand-cons <n>\n"
