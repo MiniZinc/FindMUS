@@ -9,7 +9,15 @@
 namespace HierMUS {
   using std::vector;
 
-  OldMUSEnumer::OldMUSEnumer(SubProblem& prob, MUSEnumOptions& mo) : MusEnumerator(prob, mo), needs_expansion{false} {
+  void allow_excludes(Selection& s) {
+    for(MapNode* node : s.exclude) {
+      s.selected.insert(node);
+      s.include.insert(ExpandedNode(node));
+    }
+    s.exclude.clear();
+  }
+
+  OldMUSEnumer::OldMUSEnumer(SubProblem& prob, MUSEnumOptions& mo) : MusEnumerator(prob, mo), needs_expansion{true} {
     if(mopts.map_enumeration_alg == ALG_REMUS) {
       inner_enum = new ReMUS(prob, mo, subsetMap);
     } else if(mopts.map_enumeration_alg == ALG_MARCO) {
@@ -21,13 +29,14 @@ namespace HierMUS {
     inner_enum->setUnsatCallback([&](const Selection& s) {
       if(mopts.verbose_enum) { std::cout << "OldMUSEnumer: SubEnumerator adding set: " << s << " to frontier, resulting in "; }
       frontier = sel_union(frontier, s);
-      if (mopts.verbose_enum) { std::cout << frontier << "\n"; }
-      needs_expansion = !isLeaves(frontier);
+      if(!mopts.map_enum_focus_mode) allow_excludes(frontier);
+      if(mopts.verbose_enum) { std::cout << frontier << "\n"; }
     });
 
     Selection root = subsetMap->getRootSelector();
     frontier = subsetMap->expand(root);
     inner_enum->setFrontier(frontier);
+    needs_expansion = !isLeaves(frontier);
     frontier = empty_selection;
     subsetMap->enableTempBlocking();
   }
@@ -35,21 +44,23 @@ namespace HierMUS {
 
   void OldMUSEnumer::setFrontier(const Selection&) { }
 
-  bool needs_expansion = false;
-
   bool OldMUSEnumer::search() {
     while(inner_enum->search()) {
-      current_mus = inner_enum->getCurrentMUS();
-      return true;
+      if(!needs_expansion) {
+        current_mus = inner_enum->getCurrentMUS();
+        return true;
+      }
     }
 
     current_mus = empty_selection;
     if(needs_expansion) {
       frontier = subsetMap->expand(frontier);
+      if(!mopts.map_enum_focus_mode) allow_excludes(frontier);
+
+      needs_expansion = !isLeaves(frontier);
       inner_enum->setFrontier(frontier);
       frontier = empty_selection;
       subsetMap->reset();
-      needs_expansion = false;
       return search();
     }
 
