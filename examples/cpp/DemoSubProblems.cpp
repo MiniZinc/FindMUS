@@ -207,7 +207,7 @@ namespace HierMUS {
 
   void makeRandomBinary(std::default_random_engine& rand_gen, MapNode& node) {
     if(node.children.size() > 2) {
-      std::normal_distribution<> rand_pivot{node.children.size()/2, 2};
+      std::normal_distribution<> rand_pivot{node.children.size()/2.0, 2};
       int pivot = std::round(rand_pivot(rand_gen));
       if(pivot > 0 && pivot < node.children.size()-1) {
         vector<MapNode> left (node.children.begin(),       node.children.begin()+pivot);
