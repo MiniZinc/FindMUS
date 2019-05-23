@@ -21,16 +21,21 @@ namespace HierMUS {
       std::set<MapNode*> forceInclude;
 
       bool consistent;
+      bool tempBlocking;
 
     public:
-      SubsetMap(SubProblem* prob, MUSEnumOptions& mo) : mopts(mo), problem(prob), consistent{true} {}
+      SubsetMap(SubProblem* prob, MUSEnumOptions& mo) : mopts(mo), problem(prob), consistent{true}, tempBlocking{false} {}
       virtual ~SubsetMap() {}
 
       void setForceInclude(const Selection& selection);
       void clearForceInclude(void);
 
-      virtual void pushTempSupersetBlock(const Selection& selection) = 0;
-      virtual void popTempSupersetBlock(void) = 0;
+      void enableTempBlocking(void) { tempBlocking = true; }
+      void disableTempBlocking(void) { tempBlocking = false; }
+      virtual void pushTempBlockSupersets(const Selection& selection) = 0;
+      virtual void pushTempBlockSubsets(const Selection& selection) = 0;
+      virtual void popTempBlock(void) = 0;
+      virtual void reset(void) = 0;
 
       virtual Selection expand(const Selection& selection) = 0;
       virtual void setMaximal(bool max_mode) = 0;
@@ -41,7 +46,6 @@ namespace HierMUS {
       virtual Selection getLeavesSelector() = 0;
       virtual void blockSupersets(const Selection& selection) = 0;
       virtual void blockSubsets(const Selection& selection) = 0;
-      virtual void reset(void) = 0;
 
       bool isConsistent(void) const { return consistent; }
   };

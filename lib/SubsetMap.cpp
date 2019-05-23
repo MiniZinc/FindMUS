@@ -27,11 +27,11 @@ namespace HierMUS {
 
   Selection SubsetMap::getRandomSelection(const Selection& selection, const Selection& finc, bool strictSubset) {
     setMaximal(false);
-    if(strictSubset) pushTempSupersetBlock(selection);
+    if(strictSubset) { pushTempBlockSupersets(selection); }
     setForceInclude(finc);
     Selection s = getSelection(selection);
     clearForceInclude();
-    if(strictSubset) popTempSupersetBlock();
+    if(strictSubset) { popTempBlock(); }
     setMaximal(true);
     return std::move(s);
   }

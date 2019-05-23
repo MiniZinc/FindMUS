@@ -19,14 +19,17 @@ namespace HierMUS {
     }
 
     inner_enum->setUnsatCallback([&](const Selection& s) {
-      if(mopts.verbose_enum) { std::cout << "OldMUSEnumer: SubEnumerator adding set: " << s << " to candidates\n"; }
+      if(mopts.verbose_enum) { std::cout << "OldMUSEnumer: SubEnumerator adding set: " << s << " to frontier, resulting in "; }
       frontier = sel_union(frontier, s);
+      if (mopts.verbose_enum) { std::cout << frontier << "\n"; }
       needs_expansion = !isLeaves(frontier);
     });
 
     Selection root = subsetMap->getRootSelector();
     frontier = subsetMap->expand(root);
     inner_enum->setFrontier(frontier);
+    frontier = empty_selection;
+    subsetMap->enableTempBlocking();
   }
   OldMUSEnumer::~OldMUSEnumer() { delete subsetMap; }
 
@@ -44,6 +47,7 @@ namespace HierMUS {
     if(needs_expansion) {
       frontier = subsetMap->expand(frontier);
       inner_enum->setFrontier(frontier);
+      frontier = empty_selection;
       subsetMap->reset();
       needs_expansion = false;
       return search();

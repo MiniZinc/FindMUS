@@ -28,27 +28,25 @@ namespace HierMUS {
     }
   }
 
-  void ChuffedSubsetProblem::pushTempSupersetBlock(const Selection& selection) {
-      vec<Lit> cl;
-      int control = sat.newVar();
-      Lit conLit = Lit(control, true);
-      tempStack.push_back(conLit);
-      sat.polarity[control] = false;
-      cl.push(~conLit);
-      for(MapNode* node : selection.selected) {
-        cl.push(node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.conj->getLit(true));
-        //if(mopts.verbose_map) std::cout << (node->var.isLeaf ? " ~" :  " ~c") << node->path;
-      }
-      sat.addClause(cl);
+  void ChuffedSubsetProblem::pushTempBlockSupersets(const Selection& selection) {
+    bool alreadyEnabled = tempBlocking;
+    if(!alreadyEnabled) { enableTempBlocking(); }
+    blockSupersets(selection);
+    if(!alreadyEnabled) { disableTempBlocking(); }
   }
 
-  void ChuffedSubsetProblem::popTempSupersetBlock() {
-    if(!tempStack.empty()) {
-      vec<Lit> cl;
-      cl.push(~tempStack.back());
-      tempStack.pop_back();
-      sat.addClause(cl);
-    }
+  void ChuffedSubsetProblem::pushTempBlockSubsets(const Selection& selection) {
+    bool alreadyEnabled = tempBlocking;
+    if(!alreadyEnabled) { enableTempBlocking(); }
+    blockSubsets(selection);
+    if(!alreadyEnabled) { disableTempBlocking(); }
+  }
+
+  void ChuffedSubsetProblem::popTempBlock(void) {
+    vec<Lit> cl;
+    cl.push(~tempStack.back());
+    tempStack.pop_back();
+    sat.addClause(cl);
   }
 
   ChuffedSubsetProblem::ChuffedSubsetProblem(SubProblem* prob, MUSEnumOptions& mo)
@@ -90,7 +88,7 @@ namespace HierMUS {
       output_vars(va);
       branch(va, VAR_INORDER, VAL_MAX);
 
-      sat.addClause(blockRoot);
+      //sat.addClause(blockRoot);
 
       // Add sat brancher
       so.vsids = true;
@@ -124,7 +122,9 @@ namespace HierMUS {
     }
 
   void ChuffedSubsetProblem::reset(void) {
-
+    while(!tempStack.empty()) {
+      popTempBlock();
+    }
   }
 
   inline
@@ -252,7 +252,7 @@ namespace HierMUS {
 
   void ChuffedSubsetProblem::blockSupersets(const Selection& selection) {
     vec<Lit> blockClause;
-    if(mopts.verbose_map) std::cout << "SubsetMap:\tSuperset block: ";
+    if(mopts.verbose_map) std::cout << "SubsetMap:\tSuperset block: " << (tempBlocking ? "<Temp> " : "") ;
 
     for(const MapNode* node : selection.selected) {
       blockClause.push(node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.conj->getLit(true));
@@ -262,12 +262,20 @@ namespace HierMUS {
       std::cout << "\n";
     }
 
+    if(tempBlocking) {
+      int control = sat.newVar();
+      Lit conLit = Lit(control, true);
+      tempStack.push_back(conLit);
+      sat.polarity[control] = false;
+      blockClause.push(~conLit);
+    }
+
     block(blockClause);
   }
 
   void ChuffedSubsetProblem::blockSubsets(const Selection& selection) {
     vec<Lit> blockClause;
-    if(mopts.verbose_map) std::cout << "SubsetMap:\tSubset block:   ";
+    if(mopts.verbose_map) std::cout << "SubsetMap:\tSubset block:   " << (tempBlocking ? "<Temp> " : "") ;
 
     for(const MapNode* node : selection.exclude) {
       blockClause.push( node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.disj->getLit(true)  );
@@ -275,6 +283,14 @@ namespace HierMUS {
     if(mopts.verbose_map) {
       streamMapNodeSet(std::cout, selection.exclude, true, "d_");
       std::cout << "\n";
+    }
+
+    if(tempBlocking) {
+      int control = sat.newVar();
+      Lit conLit = Lit(control, true);
+      tempStack.push_back(conLit);
+      sat.polarity[control] = false;
+      blockClause.push(~conLit);
     }
 
     block(blockClause);
@@ -338,7 +354,7 @@ namespace HierMUS {
       all_assumptions.push(node->var.isLeaf ? node->var.leaf->getLit(true) : node->var.conj->getLit(true));
       if(mopts.verbose_map) std::cout << (node->var.isLeaf ? " " :  " c") << node->path;
     }
-    
+
     sat.addClause(atLeastOne);
     all_assumptions.push(conLit);
 

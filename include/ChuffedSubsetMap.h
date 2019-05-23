@@ -46,6 +46,9 @@ namespace HierMUS {
       ChuffedSubsetProblem(SubProblem* prob, MUSEnumOptions& mo);
       ~ChuffedSubsetProblem() { delete obj; }
 
+      void pushTempBlockSupersets(const Selection& selection);
+      void pushTempBlockSubsets(const Selection& selection);
+      void popTempBlock(void);
       void reset(void);
 
       void print(std::ostream&);
@@ -55,9 +58,6 @@ namespace HierMUS {
       Selection getSelection();
       Selection getRootSelector();
       Selection getLeavesSelector();
-
-      void pushTempSupersetBlock(const Selection& selection);
-      void popTempSupersetBlock(void);
 
       void block(vec<Lit>& blockClause);
       void blockSupersets(const Selection& selection);

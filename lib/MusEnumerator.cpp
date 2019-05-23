@@ -52,10 +52,10 @@ namespace HierMUS {
   bool MusEnumerator::linear_shrink_with_map(Selection& model, const set<MapNode*>&) {
     Selection u = model;
     do {
-      subsetMap->pushTempSupersetBlock(u);
+      subsetMap->pushTempBlockSupersets(u);
       stats.map_calls++;
       Selection m = subsetMap->getSelection(u);
-      subsetMap->popTempSupersetBlock();
+      subsetMap->popTempBlock();
       if(m.selected.empty()) break;
       if(mopts.timedOut()) return false;
 
