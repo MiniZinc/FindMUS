@@ -46,6 +46,8 @@ namespace HierMUS {
       ChuffedSubsetProblem(SubProblem* prob, MUSEnumOptions& mo);
       ~ChuffedSubsetProblem() { delete obj; }
 
+      void reset(void);
+
       void print(std::ostream&);
       void setMaximal(bool max_mode);
       Selection expand(const Selection& selection);

@@ -41,6 +41,7 @@ namespace HierMUS {
       virtual Selection getLeavesSelector() = 0;
       virtual void blockSupersets(const Selection& selection) = 0;
       virtual void blockSubsets(const Selection& selection) = 0;
+      virtual void reset(void) = 0;
 
       bool isConsistent(void) const { return consistent; }
   };

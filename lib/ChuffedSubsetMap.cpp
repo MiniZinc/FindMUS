@@ -123,6 +123,10 @@ namespace HierMUS {
       std::cout << "SubsetMap:\tnleaves:\t" << leafNodes.size() << "\tnbranches:\t" << branchNodes.size() << "\n";
     }
 
+  void ChuffedSubsetProblem::reset(void) {
+
+  }
+
   inline
   string getFilenameFromNode(const MapNode& node) {
     if(node.path == "all") return "";

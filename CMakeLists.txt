@@ -32,6 +32,7 @@ add_library(hiermus
   lib/ReMUS.cpp
   lib/StackMUS.cpp
   lib/HierMUSEnumer.cpp
+  lib/OldMUSEnumer.cpp
   lib/FznSubProblem.cpp
   lib/Types.cpp
   lib/Selection.cpp
@@ -49,6 +50,7 @@ add_library(hiermus
   include/ReMUS.h
   include/StackMUS.h
   include/HierMUSEnumer.h
+  include/OldMUSEnumer.h
   include/FznSubProblem.h
   include/Types.h
   include/Selection.h
