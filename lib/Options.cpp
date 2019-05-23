@@ -63,6 +63,8 @@ void help_long(void) {
       << "  --output-{html, json, brief}\n"
       << "    Output modes, html for use with MiniZincIDE, brief for testing, json\n"
       << "    for easier to parse output.\n"
+      << "  --use-old-enumer\n"
+      << "    Use old approach (for testing only).\n"
       << "\n"
       << " Enumeration Options:\n"
       << "  --marco\n"
@@ -258,6 +260,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.subproblem_output_format = OUT_HTML;
     } else if(strcmp(argv[i], "--output-brief") == 0) {
       mo.subproblem_output_format = OUT_DEBUG;
+    } else if(strcmp(argv[i], "--use-old-enumer") == 0) {
+      dro.use_new_enumer = false;
 #ifdef BUILD_FINDMUS_EXAMPLES
     } else if(strcmp(argv[i], "--demo") == 0) {
       dro.demo_name = argv[++i];

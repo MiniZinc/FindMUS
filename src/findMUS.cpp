@@ -5,6 +5,7 @@
 #include <csignal>
 
 #include "HierMUSEnumer.h"
+#include "OldMUSEnumer.h"
 
 #include "FznSubProblem.h"
 #include "Options.h"
@@ -168,10 +169,15 @@ int main(int argc, char **argv) {
   }
 
   // Create MUS Enumerator
-  HierMUSEnumer me(*problem, mo);
+  MusEnumerator* me;
+  if (dro.use_new_enumer) {
+    me = new HierMUSEnumer(*problem, mo);
+  } else {
+    me = new OldMUSEnumer(*problem, mo);
+  }
 
   // Is the model unsat to begin with?
-  if(!dro.ignore_sat_model && problem->check(me.getRootSelector())) {
+  if(!dro.ignore_sat_model && problem->check(me->getRootSelector())) {
     std::cout << "Error: Cannot prove UNSAT within solver timelimit. Set a larger timeout with the\n"
               << "'--solver-timelimit' argument or use '--ignore-sat-model' flag to run MUS enumeration anyway.\n";
     return EXIT_FAILURE;
@@ -183,5 +189,7 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  FindMUSState::run(dro, mo, me);
+  FindMUSState::run(dro, mo, *me);
+
+  delete me;
 }

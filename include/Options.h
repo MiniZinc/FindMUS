@@ -20,6 +20,7 @@ public:
   bool ignore_sat_model = false;
   bool ignore_unsatisfiable_background = false;
   bool colour = false;
+  bool use_new_enumer = true;
 #ifdef BUILD_FINDMUS_EXAMPLES
   string demo_name;
   int demo_rand_seed;
