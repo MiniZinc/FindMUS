@@ -72,66 +72,6 @@ namespace HierMUS {
     return true;
   }
 
-  inline
-  void sel_split(MUSEnumOptions& mopts, const Selection& C, Selection& c1, Selection& c2) {
-    size_t mid = C.selected.size() / 2;
-
-    c1.exclude.insert(C.exclude.begin(), C.exclude.end());
-    c2.exclude.insert(C.exclude.begin(), C.exclude.end());
-
-    set<MapNode*>::iterator it = C.selected.begin();
-    for(size_t c=0; c<C.selected.size(); c++, ++it) {
-      if(c < mid) { // c1
-      //if(mopts.getRandBool()) { // c1
-        c1.selected.insert(*it);
-        c1.include.insert(ExpandedNode(*it));
-        c2.exclude.insert(*it);
-      } else { // c2
-        c2.selected.insert(*it);
-        c2.include.insert(ExpandedNode(*it));
-        c1.exclude.insert(*it);
-      }
-    }
-
-  }
-
-  inline
-  Selection empty_sel(const Selection& C) {
-    Selection e;
-    e.exclude.insert(C.selected.begin(), C.selected.end());
-    e.exclude.insert(C.exclude.begin(), C.exclude.end());
-    return e;
-  }
-
-  inline
-  bool is_subset(const Selection& C, const set<MapNode*>& crits) {
-    if(crits.empty() || C.selected.size() > crits.size()) return false;
-    for(MapNode* mn : C.selected) {
-      if(crits.find(mn) == crits.end())
-        return false;
-    }
-    return true;
-  }
-
-  inline
-  Selection sel_complement(const Selection& original, const Selection& subset) {
-    Selection co = original;
-
-    co.include.clear();
-    co.selected.clear();
-
-    for(MapNode* mn : original.selected) {
-      if(subset.selected.find(mn) == subset.selected.end()) {
-        co.selected.insert(mn);
-        co.include.insert(ExpandedNode(mn));
-        co.exclude.erase(mn);
-      } else {
-        co.exclude.insert(mn);
-      }
-    }
-    return co;
-  }
-
 #define QXTimeOut OptionalSelection()
 
   OptionalSelection MusEnumerator::qx_back(Selection B, size_t D, Selection C,
@@ -145,7 +85,8 @@ namespace HierMUS {
     if(C.selected.size() == 1) return C;
 
     Selection C1, C2;
-    sel_split(mopts, C, C1, C2);
+    //sel_split(mopts, C, C1, C2);
+    sel_split(C, C1, C2);
 
     OptionalSelection D2, D1;
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {

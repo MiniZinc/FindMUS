@@ -31,11 +31,11 @@ namespace HierMUS {
 
   static const Selection empty_selection;
 
-  inline Selection sel_union(const Selection& c1, const Selection& c2);
-  inline void sel_split(const Selection& C, Selection& c1, Selection& c2);
-  inline Selection empty_sel(const Selection& C);
-  inline bool is_subset(const Selection& C, const std::set<MapNode*>& crits);
-  inline Selection sel_complement(const Selection& original, const Selection& subset);
+  Selection sel_union(const Selection& c1, const Selection& c2);
+  void sel_split(const Selection& C, Selection& c1, Selection& c2);
+  Selection empty_sel(const Selection& C);
+  bool is_subset(const Selection& C, const std::set<MapNode*>& crits);
+  Selection sel_complement(const Selection& original, const Selection& subset);
 
   std::set<std::string> getLeaves(const Selection& b);
   bool isLeaves(const Selection& s);

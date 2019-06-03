@@ -13,7 +13,6 @@ namespace HierMUS {
     return leaves;
   }
 
-  inline
   Selection sel_union(const Selection& c1, const Selection& c2) {
     Selection un = c1;
     un.exclude.insert(c2.exclude.begin(), c2.exclude.end());
@@ -25,7 +24,6 @@ namespace HierMUS {
     return un;
   }
 
-  inline
   Selection sel_difference(const Selection& c1, const Selection& c2) {
     Selection di = c1;
     for(MapNode* mn : c2.selected) {
@@ -36,7 +34,6 @@ namespace HierMUS {
     return di;
   }
 
-  inline
   Selection sel_complement(const Selection& U, const Selection& S) {
     Selection co = U;
 
@@ -55,28 +52,27 @@ namespace HierMUS {
     return co;
   }
 
-  inline
   void sel_split(const Selection& C, Selection& c1, Selection& c2) {
     size_t mid = C.selected.size() / 2;
 
-    std::set<MapNode*>::iterator it = C.selected.begin();
     c1.exclude.insert(C.exclude.begin(), C.exclude.end());
-    for(size_t i=0; i<mid; i++) {
-      c1.selected.insert(*it);
-      c1.include.insert(ExpandedNode(*it));
-      c2.exclude.insert(*it);
-      ++it;
-    }
     c2.exclude.insert(C.exclude.begin(), C.exclude.end());
-    for(size_t i=mid; i<C.selected.size(); i++) {
-      c2.selected.insert(*it);
-      c2.include.insert(ExpandedNode(*it));
-      c1.exclude.insert(*it);
-      ++it;
+
+    std::set<MapNode*>::iterator it = C.selected.begin();
+    for(size_t c=0; c<C.selected.size(); c++, ++it) {
+      if(c < mid) { // c1
+      //if(mopts.getRandBool()) { // c1
+        c1.selected.insert(*it);
+        c1.include.insert(ExpandedNode(*it));
+        c2.exclude.insert(*it);
+      } else { // c2
+        c2.selected.insert(*it);
+        c2.include.insert(ExpandedNode(*it));
+        c1.exclude.insert(*it);
+      }
     }
   }
-
-  inline
+  
   Selection empty_sel(const Selection& C) {
     Selection e;
     e.exclude.insert(C.selected.begin(), C.selected.end());
@@ -84,7 +80,6 @@ namespace HierMUS {
     return e;
   }
 
-  inline
   bool is_subset(const Selection& C, const std::set<MapNode*>& crits) {
     if(crits.empty() || C.selected.size() > crits.size()) return false;
     for(MapNode* mn : C.selected) {
@@ -93,7 +88,6 @@ namespace HierMUS {
     }
     return true;
   }
-
 
   static bool output_leaves_for_selections = false;
   static bool output_details_for_selections = true;
