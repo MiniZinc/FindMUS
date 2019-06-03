@@ -73,18 +73,6 @@ namespace HierMUS {
   }
 
   inline
-  Selection sel_union(const Selection& c1, const Selection& c2) {
-    Selection un = c1;
-    un.exclude.insert(c2.exclude.begin(), c2.exclude.end());
-    for(MapNode* mn: c2.selected) {
-      un.selected.insert(mn);
-      un.include.insert(ExpandedNode(mn));
-      un.exclude.erase(mn);
-    }
-    return un;
-  }
-
-  inline
   void sel_split(MUSEnumOptions& mopts, const Selection& C, Selection& c1, Selection& c2) {
     size_t mid = C.selected.size() / 2;
 
