@@ -30,7 +30,13 @@ namespace HierMUS {
     OUT_JSON
   };
 
-  enum MusAlg { ALG_STACKMUS, ALG_MARCO, ALG_REMUS };
+  enum Sense { 
+               SEN_HINT, // STR_GEN, BIN_ALL, DEPTH_INSTANCE, SH_MAP_LIN, ALG_MARCO
+               SEN_MZN,  // STR_NORMAL, BIN_ALL, DEPTH_INSTANCE, SH_MAP_QX, ALG_MARCO
+               SEN_FZN,  // STR_NORMAL, BIN_ALL, DEPTH_PROGRAM, SH_MAP_QX, ALG_MARCO
+             };
+
+  enum MusAlg { ALG_MARCO }; // Other options have been removed
 
   enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_MAP_QX };
 
@@ -45,8 +51,7 @@ namespace HierMUS {
 
   enum Binarize {
     BIN_NONE,
-    BIN_LEAVES,    // Introduce binary structure at the program-level leaves
-    BIN_EVERYWHERE // Force entire tree to be binary (use with --flat-structure to remove all original instance structure)
+    BIN_ALL   // Force entire tree to be binary (use with --flat-structure to remove all original instance structure)
   };
 
   enum MapDepth { 

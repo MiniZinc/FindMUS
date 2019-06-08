@@ -194,18 +194,10 @@ namespace HierMUS {
     if(mopts.subproblem_structure == STR_GEN)
       tree.mergeLeaves();
 
-    if(mopts.subproblem_binarize == BIN_EVERYWHERE) {
+    if(mopts.subproblem_binarize == BIN_ALL) {
       tree.makeBinary([](const MapNode& n){ 
           return n.children.size() > 2;
           });
-    } else if(mopts.subproblem_binarize == BIN_LEAVES) {
-      tree.makeBinary([](const MapNode& n) {
-        if(n.children.size() < 3) return false;
-          for(const MapNode& cn : n.children)
-            if(cn.children.empty())
-              return true;
-        return false;
-      });
     }
 
     cs = tree.getCounts();

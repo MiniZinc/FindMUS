@@ -19,8 +19,8 @@ include_directories("include" ${CMAKE_BINARY_DIR})
 
 # The version number.
 set (findMUS_VERSION_MAJOR 0)
-set (findMUS_VERSION_MINOR 1)
-set (findMUS_VERSION_PATCH 1)
+set (findMUS_VERSION_MINOR 5)
+set (findMUS_VERSION_PATCH 0)
 
 add_library(hiermus
   lib/SubProblem.cpp
@@ -29,10 +29,7 @@ add_library(hiermus
   lib/path_utils.cpp
   lib/MusEnumerator.cpp
   lib/Marco.cpp
-  lib/ReMUS.cpp
-  lib/StackMUS.cpp
   lib/HierMUSEnumer.cpp
-  lib/OldMUSEnumer.cpp
   lib/FznSubProblem.cpp
   lib/Types.cpp
   lib/Selection.cpp
@@ -47,10 +44,7 @@ add_library(hiermus
   include/SubsetMap.h
   include/MusEnumerator.h
   include/Marco.h
-  include/ReMUS.h
-  include/StackMUS.h
   include/HierMUSEnumer.h
-  include/OldMUSEnumer.h
   include/FznSubProblem.h
   include/Types.h
   include/Selection.h

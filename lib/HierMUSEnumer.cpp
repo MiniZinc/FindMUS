@@ -10,14 +10,7 @@ namespace HierMUS {
   using std::vector;
 
   HierMUSEnumer::HierMUSEnumer(SubProblem& prob, MUSEnumOptions& mo) : MusEnumerator(prob, mo) {
-    if(mopts.map_enumeration_alg == ALG_REMUS) {
-      inner_enum = new ReMUS(prob, mo, subsetMap);
-    } else if(mopts.map_enumeration_alg == ALG_MARCO) {
-      inner_enum = new Marco(prob, mo, subsetMap);
-    } else {
-      inner_enum = new StackMUS(prob, mo, subsetMap);
-    }
-
+    inner_enum = new Marco(prob, mo, subsetMap);
     inner_enum->setUnsatCallback([&](const Selection& s) {
       if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: SubEnumerator adding set: " << s << " to candidates\n"; }
       if(frontier_idx != -1) {

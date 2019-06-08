@@ -2,6 +2,13 @@
 # findMUS Changelog #
 ======================
 
+version 0.5.0
+=============
+Changes:
+  - Removed alternative MUS algorithms, MARCO is now the default (and only option)
+  - Added shrink algorithms that use the map (linear with map, quickXplain with map)
+  - Added sense option (--sense hint,mzn,fzn) which sets multiple options at once
+  - Removed colour output
 
 Version 0.1.1
 =============

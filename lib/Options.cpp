@@ -7,11 +7,13 @@ namespace HierMUS {
 namespace OptionsHelper {
 void help_short(int exit_code) {
   std::cout << "findMUS: Explain an unsatisfiable model\n"
+            << "  version: 0.5.0\n"
             << "  usage: findMUS <flatzinc file> [paths file]\n"
             << "                 [-a] [-n <n>]\n"
             << "                 [--ignore-unsat-background]\n"
+            << "                 [--sense {hint, mzn, fzn}]\n"
             << "                 [--structure {normal, flat, gen, mix, idx, idxmix}]\n"
-            << "                 [--binarize {none, leaves, all}]\n"
+            << "                 [--binarize {none, all}]\n"
             << "                 [--depth {mzn, fzn, i}\n"
             << "                 [--verbose-{enum,map,subsolve} <v>]\n"
             << "                 [--verbose]\n"
@@ -29,6 +31,8 @@ void help_long(void) {
       << "    Symbol table for unsatisfiable flatzinc model\n"
       << "\n"
       << " Driver Options:\n"
+      << "  --sense hint,mzn,fzn\n"
+      << "    Use preset parameters\n"
       << "  -n <n>   --nmuses <n>\n"
       << "    Number of MUSes to find\n"
       << "  -a\n"
@@ -63,14 +67,8 @@ void help_long(void) {
       << "  --output-{html, json, brief}\n"
       << "    Output modes, html for use with MiniZincIDE, brief for testing, json\n"
       << "    for easier to parse output.\n"
-      << "  --use-old-enumer\n"
-      << "    Use old approach (for testing only).\n"
       << "\n"
       << " Enumeration Options:\n"
-      << "  --marco\n"
-      << "    Use MARCO algorithm as sub-enumerator\n"
-      << "  --remus\n"
-      << "    Use ReMUS algorithm as sub-enumerator\n"
       << "  --shrink-alg lin,map_lin,qx,map_qx\tdefault: lin\n"
       << "    Shrink algorithm to use:\n"
       << "      lin:     linear shrink\n"
@@ -117,7 +115,6 @@ void help_long(void) {
       << "   --binarize normal,leaves,all\n"
       << "     Add additional structure: (Default: normal)\n"
       << "       normal: no change\n"
-      << "       leaves: introduce structure at the leaves\n"
       << "       all:    introduce structure throughout tree\n"
       << "\n"
       << " Verbosity Options:\n"
@@ -137,12 +134,27 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
   for(int i=1; i<argc; i++) {
     if(strcmp(argv[i], "--help") == 0) {
       help_long();
-    } else if(strcmp(argv[i], "--colour") == 0) {
-      dro.colour = true;
-    } else if(strcmp(argv[i], "--marco") == 0) {
-      mo.map_enumeration_alg = ALG_MARCO;
-    } else if(strcmp(argv[i], "--remus") == 0) {
-      mo.map_enumeration_alg = ALG_REMUS;
+    } else if(strcmp(argv[i], "--sense") == 0) {
+      std::string s = argv[++i];
+      if(s == "hint") {
+        mo.subproblem_structure = STR_GEN;
+        mo.map_shrink_alg = SH_MAP_LIN;
+        mo.subproblem_binarize = BIN_ALL;
+        mo.map_depth = DEPTH_INSTANCE;
+      } else if(s == "mzn") {
+        mo.subproblem_structure = STR_NORMAL;
+        mo.map_shrink_alg = SH_MAP_QX;
+        mo.subproblem_binarize = BIN_ALL;
+        mo.map_depth = DEPTH_INSTANCE;
+      } else if(type == "fzn") { 
+        mo.subproblem_structure = STR_NORMAL;
+        mo.map_shrink_alg = SH_MAP_QX;
+        mo.subproblem_binarize = BIN_ALL;
+        mo.map_depth = DEPTH_PROGRAM;
+      } else {
+        std::cout << "Unknown sense. Available options are {hint, mzn, fzn}\n";
+        help_short(EXIT_FAILURE);
+      }
     } else if(strcmp(argv[i], "--shrink-alg") == 0) {
       std::string alg = argv[++i];
       if(alg == "lin")          mo.map_shrink_alg = SH_LIN;
@@ -172,8 +184,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
     } else if(strcmp(argv[i], "--binarize") == 0) {
       std::string type = argv[++i];
       if(type == "none")        mo.subproblem_binarize = BIN_NONE;
-      else if(type == "leaves") mo.subproblem_binarize = BIN_LEAVES;
-      else if(type == "all")    mo.subproblem_binarize = BIN_EVERYWHERE;
+      else if(type == "all")    mo.subproblem_binarize = BIN_ALL;
       else {
         std::cout << "Incorrect binarize option. Available options are {<none>, leaves, all}\n";
         help_short(EXIT_FAILURE);

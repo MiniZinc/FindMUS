@@ -109,13 +109,8 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
   while(!sigint && !mo.timedOut() && me.search()) {
 
-    if(dro.colour) std::cout << "\033[1;31m";
-
     me.printMUS();
-
     std::cout << std::flush;
-    if(dro.colour) std::cout << "\033[0m";
-
     nmuses++;
 
     if(dro.maxmuses > 0) {
@@ -169,12 +164,7 @@ int main(int argc, char **argv) {
   }
 
   // Create MUS Enumerator
-  MusEnumerator* me;
-  if (dro.use_new_enumer) {
-    me = new HierMUSEnumer(*problem, mo);
-  } else {
-    me = new OldMUSEnumer(*problem, mo);
-  }
+  MusEnumerator* me = new HierMUSEnumer(*problem, mo);
 
   // Is the model unsat to begin with?
   if(!dro.ignore_sat_model && problem->check(me->getRootSelector())) {
