@@ -54,7 +54,7 @@ add_library(hiermus
 
 if(libminizinc_FOUND)
     add_executable(findMUS src/findMUS.cpp)
-    target_link_libraries(findMUS hiermus chuffed_fzn chuffed minizinc_fzn minizinc_solver minizinc_compiler ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(findMUS hiermus chuffed_fzn chuffed mzn ${CMAKE_THREAD_LIBS_INIT})
 
     if(BUILD_FINDMUS_EXAMPLES)
       target_include_directories(findMUS PRIVATE examples/cpp)
