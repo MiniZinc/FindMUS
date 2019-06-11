@@ -30,10 +30,10 @@ namespace HierMUS {
     OUT_JSON
   };
 
-  enum Sense { 
-               SEN_HINT, // STR_GEN, BIN_ALL, DEPTH_INSTANCE, SH_MAP_LIN, ALG_MARCO
-               SEN_MZN,  // STR_NORMAL, BIN_ALL, DEPTH_INSTANCE, SH_MAP_QX, ALG_MARCO
-               SEN_FZN,  // STR_NORMAL, BIN_ALL, DEPTH_PROGRAM, SH_MAP_QX, ALG_MARCO
+  enum ParamSet { 
+               PSET_HINT, // STR_GEN, BIN_ALL, DEPTH_INSTANCE, SH_MAP_LIN, ALG_MARCO
+               PSET_MZN,  // STR_NORMAL, BIN_ALL, DEPTH_INSTANCE, SH_MAP_QX, ALG_MARCO
+               PSET_FZN,  // STR_NORMAL, BIN_ALL, DEPTH_PROGRAM, SH_MAP_QX, ALG_MARCO
              };
 
   enum MusAlg { ALG_MARCO }; // Other options have been removed

@@ -5,7 +5,6 @@
 #include <csignal>
 
 #include "HierMUSEnumer.h"
-#include "OldMUSEnumer.h"
 
 #include "FznSubProblem.h"
 #include "Options.h"
@@ -156,13 +155,7 @@ int main(int argc, char **argv) {
     writeDotFile(dro, problem);
     exit(EXIT_SUCCESS);
   }
-
-  // Are you using remus in Hierarchical Mode
-  if(mo.subproblem_structure != STR_FLAT && mo.map_enumeration_alg == ALG_REMUS) {
-    std::cout << "Warning: Using ReMUS as HierMUS's sub-MUS-enumerator is not currently supported."
-              << "Use --structure flat for accurate MUSes.\n";
-  }
-
+  
   // Create MUS Enumerator
   MusEnumerator* me = new HierMUSEnumer(*problem, mo);
 

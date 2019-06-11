@@ -2,9 +2,7 @@
 #include <vector>
 
 #include "HierMUSEnumer.h"
-#include "StackMUS.h"
 #include "Marco.h"
-#include "ReMUS.h"
 
 namespace HierMUS {
   using std::vector;

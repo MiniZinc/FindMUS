@@ -11,7 +11,7 @@ void help_short(int exit_code) {
             << "  usage: findMUS <flatzinc file> [paths file]\n"
             << "                 [-a] [-n <n>]\n"
             << "                 [--ignore-unsat-background]\n"
-            << "                 [--sense {hint, mzn, fzn}]\n"
+            << "                 [--paramset {hint, mzn, fzn}]\n"
             << "                 [--structure {normal, flat, gen, mix, idx, idxmix}]\n"
             << "                 [--binarize {none, all}]\n"
             << "                 [--depth {mzn, fzn, i}\n"
@@ -31,7 +31,7 @@ void help_long(void) {
       << "    Symbol table for unsatisfiable flatzinc model\n"
       << "\n"
       << " Driver Options:\n"
-      << "  --sense hint,mzn,fzn\n"
+      << "  --paramset hint,mzn,fzn\n"
       << "    Use preset parameters\n"
       << "  -n <n>   --nmuses <n>\n"
       << "    Number of MUSes to find\n"
@@ -112,7 +112,7 @@ void help_long(void) {
       << "       mix:    Apply 'gen' before 'normal'\n"
       << "       idx:    Remove all location inforation\n"
       << "       idxmix: Apply 'idx' before 'normal'\n"
-      << "   --binarize normal,leaves,all\n"
+      << "   --binarize normal,all\n"
       << "     Add additional structure: (Default: normal)\n"
       << "       normal: no change\n"
       << "       all:    introduce structure throughout tree\n"
@@ -134,7 +134,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
   for(int i=1; i<argc; i++) {
     if(strcmp(argv[i], "--help") == 0) {
       help_long();
-    } else if(strcmp(argv[i], "--sense") == 0) {
+    } else if(strcmp(argv[i], "--paramset") == 0) {
       std::string s = argv[++i];
       if(s == "hint") {
         mo.subproblem_structure = STR_GEN;
@@ -146,13 +146,13 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
         mo.map_shrink_alg = SH_MAP_QX;
         mo.subproblem_binarize = BIN_ALL;
         mo.map_depth = DEPTH_INSTANCE;
-      } else if(type == "fzn") { 
+      } else if(s == "fzn") { 
         mo.subproblem_structure = STR_NORMAL;
         mo.map_shrink_alg = SH_MAP_QX;
         mo.subproblem_binarize = BIN_ALL;
         mo.map_depth = DEPTH_PROGRAM;
       } else {
-        std::cout << "Unknown sense. Available options are {hint, mzn, fzn}\n";
+        std::cout << "Unknown paramset. Available options are {hint, mzn, fzn}\n";
         help_short(EXIT_FAILURE);
       }
     } else if(strcmp(argv[i], "--shrink-alg") == 0) {
@@ -271,8 +271,6 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.subproblem_output_format = OUT_HTML;
     } else if(strcmp(argv[i], "--output-brief") == 0) {
       mo.subproblem_output_format = OUT_DEBUG;
-    } else if(strcmp(argv[i], "--use-old-enumer") == 0) {
-      dro.use_new_enumer = false;
 #ifdef BUILD_FINDMUS_EXAMPLES
     } else if(strcmp(argv[i], "--demo") == 0) {
       dro.demo_name = argv[++i];

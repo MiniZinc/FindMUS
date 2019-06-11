@@ -45,7 +45,7 @@ public:
 
   double timelimit = -1;
 
-  Sense sense = SEN_DETAIL; // Default mode for commandline
+  ParamSet sense = PSET_MZN; // Default mode for commandline
 
   // FznSubProblem
   string mzn_stdlib_dir;
@@ -69,7 +69,7 @@ public:
   unsigned int map_depth_max = 1;
 
   MusAlg map_enumeration_alg = ALG_MARCO;
-  ShrinkAlg map_shrink_alg = SH_MAPQX;
+  ShrinkAlg map_shrink_alg = SH_MAP_QX;
   bool map_enum_focus_mode = true;
 
   Statistics& stats;
