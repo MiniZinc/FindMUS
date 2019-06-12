@@ -106,7 +106,7 @@ SubProblem* createProblem(DriverOptions& dro,
     }
     if(dro.fznpath.empty()) {
       MiniZinc::MznSolver solver(std::cerr, std::cerr);
-      vector<string> args { "minizinc", "-c", "--solver", mo.subproblem_solver };
+      vector<string> args { "--verbose", "-c", "--solver", mo.subproblem_solver };
       args.insert(args.end(), dro.input_files.begin(), dro.input_files.end());
 
       temp_files.reserve(2);
@@ -122,12 +122,9 @@ SubProblem* createProblem(DriverOptions& dro,
       args.push_back("--no-output-ozn");
 
       std::vector<string> args_vec(args);
-      switch (solver.processOptions(args_vec)) {
-        case 0:
-          break;
-        default:
-          std::cerr << "FznSubProblem:\tError: Failed to compile model with args:\t" << utils::join(args, " ") << std::endl;
-          exit(EXIT_FAILURE);
+      if(solver.run(args_vec, "", "minizinc") == MiniZinc::SolverInstance::ERROR) {
+        std::cerr << "FznSubProblem:\tError: Failed to compile model with args:\t" << utils::join(args, " ") << std::endl;
+        exit(EXIT_FAILURE);
       }
     }
 
