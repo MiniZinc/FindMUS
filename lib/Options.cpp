@@ -13,7 +13,7 @@ void help_short(int exit_code) {
             << "                 [--ignore-unsat-background]\n"
             << "                 [--paramset {hint, mzn, fzn}]\n"
             << "                 [--structure {normal, flat, gen, mix, idx, idxmix}]\n"
-            << "                 [--binarize {none, all}]\n"
+            << "                 [--binarize]\n"
             << "                 [--depth {mzn, fzn, i}\n"
             << "                 [--verbose-{enum,map,subsolve} <v>]\n"
             << "                 [--verbose]\n"
@@ -39,7 +39,7 @@ void help_long(void) {
       << "    Find all MUSes\n"
       << "  --stdlib-dir <path>\n"
       << "    Set path to MiniZinc standard library\n"
-      << "   --ignore-unsat-background\n"
+      << "  --ignore-unsat-background\n"
       << "     Skip unsatisfiable background check\n";
 #ifdef BUILD_FINDMUS_EXAMPLES
   std::cout << "  --demo <demo>\n"
@@ -112,10 +112,8 @@ void help_long(void) {
       << "       mix:    Apply 'gen' before 'normal'\n"
       << "       idx:    Remove all location inforation\n"
       << "       idxmix: Apply 'idx' before 'normal'\n"
-      << "   --binarize normal,all\n"
-      << "     Add additional structure: (Default: normal)\n"
-      << "       normal: no change\n"
-      << "       all:    introduce structure throughout tree\n"
+      << "   --binarize\n"
+      << "     Add additional binary structure\n"
       << "\n"
       << " Verbosity Options:\n"
       << "  --verbose-{map,enum,subsolve} <n>:\n"
@@ -182,13 +180,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
         help_short(EXIT_FAILURE);
       }
     } else if(strcmp(argv[i], "--binarize") == 0) {
-      std::string type = argv[++i];
-      if(type == "none")        mo.subproblem_binarize = BIN_NONE;
-      else if(type == "all")    mo.subproblem_binarize = BIN_ALL;
-      else {
-        std::cout << "Incorrect binarize option. Available options are {<none>, leaves, all}\n";
-        help_short(EXIT_FAILURE);
-      }
+      mo.subproblem_binarize = BIN_ALL;
     } else if(strcmp(argv[i], "--ignore-sat-model") == 0) {
       dro.ignore_sat_model = true;
     } else if(strcmp(argv[i], "--ignore-unsat-background") == 0) {
