@@ -4,9 +4,6 @@
 #include <iomanip>
 #include <csignal>
 
-#include <minizinc/solver.hh>
-#include <minizinc/file_utils.hh>
-
 #include "HierMUSEnumer.h"
 
 #include "FznSubProblem.h"
@@ -15,6 +12,9 @@
 #ifdef BUILD_FINDMUS_EXAMPLES
 #include "DemoSubProblems.h"
 #endif
+
+#include <minizinc/solver.hh>
+#include <minizinc/file_utils.hh>
 
 using namespace HierMUS;
 using std::string;
@@ -106,7 +106,7 @@ SubProblem* createProblem(DriverOptions& dro,
     }
     if(dro.fznpath.empty()) {
       MiniZinc::MznSolver solver(std::cerr, std::cerr);
-      vector<string> args { "--verbose", "-c", "--solver", mo.subproblem_solver };
+      vector<string> args { "-c", "--solver", mo.subproblem_solver };
       args.insert(args.end(), dro.input_files.begin(), dro.input_files.end());
 
       temp_files.reserve(2);
@@ -114,6 +114,8 @@ SubProblem* createProblem(DriverOptions& dro,
       dro.fznpath = temp_files.back().name();
       temp_files.emplace_back(".paths");
       dro.pathpath = temp_files.back().name();
+
+      if(dro.verbose_compile) args.push_back("--verbose");
 
       args.push_back("-o");
       args.push_back(dro.fznpath);

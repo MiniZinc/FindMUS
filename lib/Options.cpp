@@ -16,6 +16,7 @@ void help_short(int exit_code) {
             << "                 [--binarize]\n"
             << "                 [--depth {mzn, fzn, i}\n"
             << "                 [--verbose-{enum,map,subsolve} <v>]\n"
+            << "                 [--verbose-compile]\n"
             << "                 [--verbose]\n"
             << "\n";
   if(exit_code == EXIT_FAILURE)
@@ -118,6 +119,8 @@ void help_long(void) {
       << " Verbosity Options:\n"
       << "  --verbose-{map,enum,subsolve} <n>:\n"
       << "    Set verbosity level for different components\n"
+      << "  --verbose-compile\n"
+      << "    Send --verbose to mzn2fzn\n"
       << "  --verbose\n"
       << "    Set verbosity level of all components to 1\n"
       << "\n"
@@ -249,6 +252,9 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.verbose_enum = 1;
       mo.verbose_map = 1;
       mo.verbose_subsolve = 1;
+      dro.verbose_compile = true;
+    } else if(strcmp(argv[i], "--verbose-compile") == 0) {
+      dro.verbose_compile = true;
     } else if(strcmp(argv[i], "--verbose-enum") == 0) {
       mo.verbose_enum = static_cast<unsigned int>(atoi(argv[++i]));
     } else if(strcmp(argv[i], "--verbose-map") == 0) {

@@ -29,6 +29,7 @@ public:
 #endif
   bool list_solvers = false;
   bool list_solvers_json = false;
+  bool verbose_compile = false;
 
   DriverOptions() {
 #ifdef BUILD_FINDMUS_EXAMPLES
