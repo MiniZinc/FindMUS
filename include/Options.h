@@ -58,7 +58,7 @@ public:
   std::set<string> subproblem_name_filters_excludes;
   std::set<string> subproblem_path_filters;
   std::set<string> subproblem_path_filters_excludes;
-  InitialStructure subproblem_structure = STR_GEN;
+  InitialStructure subproblem_structure = STR_NORMAL;
   Binarize subproblem_binarize = BIN_ALL;
 
   string subproblem_solver = "org.gecode.gecode";
