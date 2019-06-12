@@ -124,8 +124,28 @@ SubProblem* createProblem(DriverOptions& dro,
       args.push_back("--no-output-ozn");
 
       std::vector<string> args_vec(args);
-      if(solver.run(args_vec, "", "minizinc") == MiniZinc::SolverInstance::ERROR) {
-        std::cerr << "FznSubProblem:\tError: Failed to compile model with args:\t" << utils::join(args, " ") << std::endl;
+      try {
+        if(solver.run(args_vec, "", "minizinc") == MiniZinc::SolverInstance::ERROR) {
+          std::cerr << "FznSubProblem:\tError: Failed to compile model with args:\t" << utils::join(args, " ") << std::endl;
+          exit(EXIT_FAILURE);
+        }
+      }  catch (const MiniZinc::LocationException& e) {
+        std::cerr << std::endl;
+        std::cerr << e.loc() << ":" << std::endl;
+        std::cerr << e.what() << ": " << e.msg() << std::endl;
+        exit(EXIT_FAILURE);
+      } catch (const MiniZinc::Exception& e) {
+        std::cerr << std::endl;
+        std::string what = e.what();
+        std::cerr << what << (what.empty() ? "" : ": ") << e.msg() << std::endl;
+        exit(EXIT_FAILURE);
+      } catch (const std::exception& e) {
+        std::cerr << std::endl;
+        std::cerr << e.what() << std::endl;
+        exit(EXIT_FAILURE);
+      } catch (...) {
+        std::cerr << std::endl;
+        std::cerr << "  UNKNOWN EXCEPTION." << std::endl;
         exit(EXIT_FAILURE);
       }
     }

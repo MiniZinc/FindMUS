@@ -13,7 +13,7 @@ void help_short(int exit_code) {
             << "                 [--ignore-unsat-background]\n"
             << "                 [--paramset {hint, mzn, fzn}]\n"
             << "                 [--structure {normal, flat, gen, mix, idx, idxmix}]\n"
-            << "                 [--binarize]\n"
+            << "                 [--do-not-binarize]\n"
             << "                 [--depth {mzn, fzn, i}\n"
             << "                 [--verbose-{enum,map,subsolve} <v>]\n"
             << "                 [--verbose-compile]\n"
@@ -113,8 +113,8 @@ void help_long(void) {
       << "       mix:    Apply 'gen' before 'normal'\n"
       << "       idx:    Remove all location inforation\n"
       << "       idxmix: Apply 'idx' before 'normal'\n"
-      << "   --binarize\n"
-      << "     Add additional binary structure\n"
+      << "   --do-not-binarize\n"
+      << "     Do not add binary structure\n"
       << "\n"
       << " Verbosity Options:\n"
       << "  --verbose-{map,enum,subsolve} <n>:\n"
@@ -182,8 +182,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
         std::cout << "Incorrect structure setting. Available options are {flat, <normal>, gen, mix}\n";
         help_short(EXIT_FAILURE);
       }
-    } else if(strcmp(argv[i], "--binarize") == 0) {
-      mo.subproblem_binarize = BIN_ALL;
+    } else if(strcmp(argv[i], "--do-not-binarize") == 0) {
+      mo.subproblem_binarize = BIN_NONE;
     } else if(strcmp(argv[i], "--ignore-sat-model") == 0) {
       dro.ignore_sat_model = true;
     } else if(strcmp(argv[i], "--ignore-unsat-background") == 0) {
