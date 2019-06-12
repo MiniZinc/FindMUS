@@ -69,6 +69,12 @@ void help_long(void) {
       << "    Output modes, html for use with MiniZincIDE, brief for testing, json\n"
       << "    for easier to parse output.\n"
       << "\n"
+      << " Compiler Options:\n"
+      << "  --domains  (-g)\n"
+      << "    Record domain changes during compilation\n"
+      << "  --verbose-compile\n"
+      << "    Send --verbose to mzn2fzn\n"
+      << "\n"
       << " Enumeration Options:\n"
       << "  --shrink-alg lin,map_lin,qx,map_qx\tdefault: lin\n"
       << "    Shrink algorithm to use:\n"
@@ -119,8 +125,6 @@ void help_long(void) {
       << " Verbosity Options:\n"
       << "  --verbose-{map,enum,subsolve} <n>:\n"
       << "    Set verbosity level for different components\n"
-      << "  --verbose-compile\n"
-      << "    Send --verbose to mzn2fzn\n"
       << "  --verbose\n"
       << "    Set verbosity level of all components to 1\n"
       << "\n"
@@ -252,9 +256,11 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.verbose_enum = 1;
       mo.verbose_map = 1;
       mo.verbose_subsolve = 1;
-      dro.verbose_compile = true;
+      dro.compile_verbose = true;
     } else if(strcmp(argv[i], "--verbose-compile") == 0) {
-      dro.verbose_compile = true;
+      dro.compile_verbose = true;
+    } else if(strcmp(argv[i], "--domains") == 0 || strcmp(argv[i], "-g") == 0) {
+      dro.compile_domains = true;
     } else if(strcmp(argv[i], "--verbose-enum") == 0) {
       mo.verbose_enum = static_cast<unsigned int>(atoi(argv[++i]));
     } else if(strcmp(argv[i], "--verbose-map") == 0) {
@@ -281,8 +287,6 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
     } else if(strcmp(argv[i], "--demo-rand-mus-size") == 0) {
       dro.demo_rand_mus_size = atoi(argv[++i]);
 #endif
-    } else if(strcmp(argv[i], "--paths") == 0) {
-      dro.pathpath = argv[++i];
     } else {
       if(argv[i][0] == '-') {
         std::cerr << "No support for reading from stdin: " << argv[i] << "\n";

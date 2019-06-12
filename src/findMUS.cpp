@@ -115,7 +115,8 @@ SubProblem* createProblem(DriverOptions& dro,
       temp_files.emplace_back(".paths");
       dro.pathpath = temp_files.back().name();
 
-      if(dro.verbose_compile) args.push_back("--verbose");
+      if(dro.compile_domains) args.push_back("-g");
+      if(dro.compile_verbose) args.push_back("--verbose");
 
       args.push_back("-o");
       args.push_back(dro.fznpath);
