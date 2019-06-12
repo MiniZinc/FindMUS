@@ -10,6 +10,7 @@ namespace HierMUS {
 
 class DriverOptions {
 public:
+  vector<string> input_files; // Support mzn and dzn files
   string fznpath;
   string pathpath;
   int maxmuses = 1; // Start in focus_mode

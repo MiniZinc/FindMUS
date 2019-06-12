@@ -4,6 +4,9 @@
 #include <iomanip>
 #include <csignal>
 
+#include <minizinc/solver.hh>
+#include <minizinc/file_utils.hh>
+
 #include "HierMUSEnumer.h"
 
 #include "FznSubProblem.h"
@@ -16,58 +19,6 @@
 using namespace HierMUS;
 using std::string;
 
-SubProblem* createProblem(DriverOptions& dro,
-                          MUSEnumOptions& mo) {
-  SubProblem* problem = nullptr;
-#ifdef BUILD_FINDMUS_EXAMPLES
-  if(!dro.demo_name.empty()) {
-    if(dro.demo_name == "hm5") problem = new HM5(mo);
-    else if(dro.demo_name == "hm5_2") problem = new HM5_2(mo);
-    else if(dro.demo_name == "glm") problem = new GLM(mo);
-    else if(dro.demo_name == "fflat") problem = new FFLAT(mo);
-    else if(dro.demo_name == "rand") problem = new RandomProblem(mo, 
-                                                                 dro.demo_rand_seed,
-                                                                 dro.demo_rand_cons,
-                                                                 dro.demo_rand_muses,
-                                                                 dro.demo_rand_mus_size);
-  }
-#endif
-  if(!problem) {
-    if(dro.fznpath.empty()) {
-      std::cerr << "No flatzinc file provided\n";
-      OptionsHelper::help_short(EXIT_FAILURE);
-    } else {
-      std::ifstream checkpath(dro.fznpath);
-      if(!checkpath.is_open()) {
-        std::cerr << "Flatzinc file "<< dro.fznpath << " cannot be opened.\n";
-        OptionsHelper::help_short(EXIT_FAILURE);
-      }
-    }
-    if(dro.pathpath.empty()) {
-      string base = dro.fznpath.substr(0,dro.fznpath.length()-4);
-      dro.pathpath = base + ".paths";
-    }
-    {
-      std::ifstream checkpath(dro.pathpath);
-      if(!checkpath.is_open()) {
-        std::cerr << "Path file "<< dro.pathpath << " cannot be opened.\n";
-        OptionsHelper::help_short(EXIT_FAILURE);
-      }
-    }
-    problem = new FznSubProblem(dro.fznpath, dro.pathpath, mo);
-  }
-  return problem;
-}
-
-void writeDotFile(const DriverOptions& dro, SubProblem* problem){
-  std::ofstream f(dro.dump_dot_path);
-  if(!f.is_open()) {
-    std::cout << "\nFailed to write to file\n";
-    return;
-  }
-  DotWriter dw(f, problem->getTree());
-  dw.print();
-}
 
 namespace FindMUSState {
 static bool sigint = false;
@@ -131,6 +82,92 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
 }
 }
 
+SubProblem* createProblem(DriverOptions& dro,
+                          MUSEnumOptions& mo,
+                          vector<MiniZinc::FileUtils::TmpFile>& temp_files) {
+  SubProblem* problem = nullptr;
+#ifdef BUILD_FINDMUS_EXAMPLES
+  if(!dro.demo_name.empty()) {
+    if(dro.demo_name == "hm5") problem = new HM5(mo);
+    else if(dro.demo_name == "hm5_2") problem = new HM5_2(mo);
+    else if(dro.demo_name == "glm") problem = new GLM(mo);
+    else if(dro.demo_name == "fflat") problem = new FFLAT(mo);
+    else if(dro.demo_name == "rand") problem = new RandomProblem(mo, 
+                                                                 dro.demo_rand_seed,
+                                                                 dro.demo_rand_cons,
+                                                                 dro.demo_rand_muses,
+                                                                 dro.demo_rand_mus_size);
+  }
+#endif
+  if(!problem) {
+    if(dro.input_files.empty()) {
+      std::cerr << "No input files provided\n";
+      OptionsHelper::help_short(EXIT_FAILURE);
+    }
+    if(dro.fznpath.empty()) {
+      MiniZinc::MznSolver solver(std::cerr, std::cerr);
+      vector<string> args { "minizinc", "-c", "--solver", mo.subproblem_solver };
+      args.insert(args.end(), dro.input_files.begin(), dro.input_files.end());
+
+      temp_files.reserve(2);
+      temp_files.emplace_back(".fzn");
+      dro.fznpath = temp_files.back().name();
+      temp_files.emplace_back(".paths");
+      dro.pathpath = temp_files.back().name();
+
+      args.push_back("-o");
+      args.push_back(dro.fznpath);
+      args.push_back("--output-paths-to-file");
+      args.push_back(dro.pathpath);
+      args.push_back("--no-output-ozn");
+
+      std::vector<string> args_vec(args);
+      switch (solver.processOptions(args_vec)) {
+        case 0:
+          break;
+        default:
+          std::cerr << "FznSubProblem:\tError: Failed to compile model with args:\t" << utils::join(args, " ") << std::endl;
+          exit(EXIT_FAILURE);
+      }
+    }
+
+    if(dro.fznpath.empty()) {
+      std::cerr << "No flatzinc file provided\n";
+      OptionsHelper::help_short(EXIT_FAILURE);
+    } else {
+      std::ifstream checkpath(dro.fznpath);
+      if(!checkpath.is_open()) {
+        std::cerr << "Flatzinc file "<< dro.fznpath << " cannot be opened.\n";
+        OptionsHelper::help_short(EXIT_FAILURE);
+      }
+    }
+    if(dro.pathpath.empty()) {
+      string base = dro.fznpath.substr(0,dro.fznpath.length()-4);
+      dro.pathpath = base + ".paths";
+    }
+    {
+      std::ifstream checkpath(dro.pathpath);
+      if(!checkpath.is_open()) {
+        std::cerr << "Path file "<< dro.pathpath << " cannot be opened.\n";
+        OptionsHelper::help_short(EXIT_FAILURE);
+      }
+    }
+    problem = new FznSubProblem(dro.fznpath, dro.pathpath, mo);
+  }
+  return problem;
+}
+
+void writeDotFile(const DriverOptions& dro, SubProblem* problem){
+  std::ofstream f(dro.dump_dot_path);
+  if(!f.is_open()) {
+    std::cout << "\nFailed to write to file\n";
+    return;
+  }
+  DotWriter dw(f, problem->getTree());
+  dw.print();
+}
+
+
 int main(int argc, char **argv) {
   Statistics s;
   DriverOptions dro;
@@ -147,8 +184,9 @@ int main(int argc, char **argv) {
     exit(EXIT_SUCCESS);
   }
 
+  vector<MiniZinc::FileUtils::TmpFile> temp_files;
   // Create SubProblem
-  HierMUS::SubProblem* problem = createProblem(dro, mo);
+  HierMUS::SubProblem* problem = createProblem(dro, mo, temp_files);
 
   if(!dro.dump_dot_path.empty()) {
     std::cout << "Writing diagram to: " << dro.dump_dot_path << " and exiting\n";

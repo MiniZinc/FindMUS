@@ -279,16 +279,33 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       dro.pathpath = argv[++i];
     } else {
       if(argv[i][0] == '-') {
-        std::cerr << "Unknown argument: " << argv[i] << "\n";
-        help_short(EXIT_FAILURE);
-      } else if(dro.fznpath.empty()) {
-        dro.fznpath = argv[i];
-      } else if(dro.pathpath.empty()) {
-        dro.pathpath = argv[i];
-      } else {
-        std::cerr << "Unknown argument: " << argv[i] << "\n";
+        std::cerr << "No support for reading from stdin: " << argv[i] << "\n";
         help_short(EXIT_FAILURE);
       }
+      dro.input_files.push_back(argv[i]);
+    }
+  }
+
+  // Update fznpath and pathpath if available
+  for(const string& p : dro.input_files) {
+    if(p.size() > 3) {
+      if(p.substr(p.size()-3, 3) == "fzn") {
+        if(!dro.fznpath.empty()) {
+          std::cerr << "No support for multiple FlatZinc (.fzn) input files: " << p << "\n";
+          help_short(EXIT_FAILURE);
+        }
+        dro.fznpath = p;
+      }
+      if(p.substr(p.size()-3, 3) == "ths") {
+        if(!dro.pathpath.empty()) {
+          std::cerr << "No support for multiple paths (.paths) input files: " << p << "\n";
+          help_short(EXIT_FAILURE);
+        }
+        dro.pathpath = p;
+      }
+    } else {
+      std::cerr << "Unknown file: " << p << std::endl;
+      help_short(EXIT_FAILURE);
     }
   }
 
