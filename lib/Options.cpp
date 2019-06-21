@@ -301,11 +301,16 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       dro.demo_rand_mus_size = atoi(argv[++i]);
 #endif
     } else {
-      if(argv[i][0] == '-') {
-        std::cerr << "No support for reading from stdin: " << argv[i] << "\n";
+      if(strcmp(argv[i], "-") == 0) {
+        std::cerr << "No support for reading from stdin (-)\n";
         help_short(EXIT_FAILURE);
       }
-      dro.input_files.push_back(argv[i]);
+      if(argv[i][0] == '-') {
+        std::cout << "Unknown argument: " << argv[i] << "\n";
+        help_short(EXIT_FAILURE);
+      } else {
+        dro.input_files.push_back(argv[i]);
+      }
     }
   }
 

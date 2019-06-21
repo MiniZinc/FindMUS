@@ -5,9 +5,10 @@
 version 0.5.0
 =============
 Changes:
-  - Removed alternative MUS algorithms, MARCO is now the default (and only option)
+  - Removed alternative MUS algorithms, Hierarchical MARCO is now the default (and only option)
+  - Added restart to flat behaviour which is triggered when the number of satisfiable sets explored in a row is greater than half the number of constraints (this condition is likely to change in future)
   - Added shrink algorithms that use the map (linear with map, quickXplain with map)
-  - Added sense option (--sense hint,mzn,fzn) which sets multiple options at once
+  - Added sense option (--paramset hint,mzn,fzn) which sets multiple options at once (default: hint)
   - Removed colour output
 
 Version 0.1.1
