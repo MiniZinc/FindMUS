@@ -76,7 +76,7 @@ namespace HierMUS {
     }
 
     tree.children = nodes;
-    if(mopts.subproblem_binarize == BIN_LEAVES) {
+    if(mopts.subproblem_binarize == BIN_ALL) {
       tree.makeBinary([](const MapNode& n){ 
         return n.children.size() > 2;
       });

@@ -72,13 +72,12 @@ namespace HierMUS {
         eqs  .resize(branches_top);
       }
 
-      // Change this to adjustable brancher later
       vec<Branching*> va;
-      if(mopts.map_enumeration_alg == ALG_STACKMUS) {
-        for(int i=0; i<branches_top; i++) {
-          va.push(new BoolView(conjs[i]));
-        }
-      }
+      //  // Don't branch on leaves first?
+      //  for(int i=0; i<branches_top; i++) {
+      //    va.push(new BoolView(conjs[i]));
+      //  }
+      //
 
       vec<Lit> blockRoot;
       for(int i=0; i<leaves_top; i++) {

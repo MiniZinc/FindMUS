@@ -12,6 +12,7 @@
     "needsMznExecutable": false,
     "stdFlags": ["--output-html", "-v", "-s", "-a", "-n", "-t"],
     "extraFlags": [
+      ["--sense", "Preset parameters {hint, mzn, fzn}", "string"]
       ["--soft-defines", "Consider functional constraints as part of MUSes.", "bool"],
       ["--structure", "Alters initial structure {flat, gen, normal, mix}", "string"],
       ["--binarize", "Inject arbitrary structure {none, leaves, all}", "string"],
@@ -26,9 +27,7 @@
       ["--dump-dot", "Write tree to GraphViz file", "string"],
       ["-n", "Number of MUSes to find (if set to 1 use special focus mode)", "int"],
       ["--output-brief", "Do not output traces.", "bool"],
-      ["--marco", "Use MARCO as subenumerator", "bool"],
-      ["--remus", "Use REMUS as subenumerator", "bool"],
-      ["--qx", "Use QuickXplain as shrink method (StackMUS does not call external shrink method)", "bool"],
+      ["--shrink-alg", "Select MUS shrink algorithm {lin, map_lin, qx, map_qx}", "string"],
       ["--help", "Extra help information", "bool"],
     ]
 }

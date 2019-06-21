@@ -7,13 +7,15 @@ namespace HierMUS {
 namespace OptionsHelper {
 void help_short(int exit_code) {
   std::cout << "findMUS: Explain an unsatisfiable model\n"
+            << "  version: 0.5.0\n"
             << "  usage: findMUS <flatzinc file> [paths file]\n"
             << "                 [-a] [-n <n>]\n"
-            << "                 [--ignore-unsat-background]\n"
+            << "                 [--paramset {hint, mzn, fzn}]\n"
             << "                 [--structure {normal, flat, gen, mix, idx, idxmix}]\n"
-            << "                 [--binarize {none, leaves, all}]\n"
+            << "                 [--no-binarize]\n"
             << "                 [--depth {mzn, fzn, i}\n"
             << "                 [--verbose-{enum,map,subsolve} <v>]\n"
+            << "                 [--verbose-compile]\n"
             << "                 [--verbose]\n"
             << "\n";
   if(exit_code == EXIT_FAILURE)
@@ -29,14 +31,17 @@ void help_long(void) {
       << "    Symbol table for unsatisfiable flatzinc model\n"
       << "\n"
       << " Driver Options:\n"
+      << "  --paramset hint,mzn,fzn. Default: hint\n"
+      << "    Use preset parameter sets:\n"
+      << "      hint: --structure gen --shrink-alg map_lin --binarize all --depth mzn\n"
+      << "      mzn: --shrink-alg map_qx --binarize all --depth mzn\n"
+      << "      fzn: --shrink-alg map_qx --binarize all --depth fzn\n"
       << "  -n <n>   --nmuses <n>\n"
       << "    Number of MUSes to find\n"
       << "  -a\n"
       << "    Find all MUSes\n"
       << "  --stdlib-dir <path>\n"
-      << "    Set path to MiniZinc standard library\n"
-      << "   --ignore-unsat-background\n"
-      << "     Skip unsatisfiable background check\n";
+      << "    Set path to MiniZinc standard library\n";
 #ifdef BUILD_FINDMUS_EXAMPLES
   std::cout << "  --demo <demo>\n"
             << "    Use demo model and tree. <string> must be one of:\n"
@@ -63,14 +68,14 @@ void help_long(void) {
       << "  --output-{html, json, brief}\n"
       << "    Output modes, html for use with MiniZincIDE, brief for testing, json\n"
       << "    for easier to parse output.\n"
-      << "  --use-old-enumer\n"
-      << "    Use old approach (for testing only).\n"
+      << "\n"
+      << " Compiler Options:\n"
+      << "  --domains  (-g)\n"
+      << "    Record domain changes during compilation\n"
+      << "  --verbose-compile\n"
+      << "    Send --verbose to mzn2fzn\n"
       << "\n"
       << " Enumeration Options:\n"
-      << "  --marco\n"
-      << "    Use MARCO algorithm as sub-enumerator\n"
-      << "  --remus\n"
-      << "    Use ReMUS algorithm as sub-enumerator\n"
       << "  --shrink-alg lin,map_lin,qx,map_qx\tdefault: lin\n"
       << "    Shrink algorithm to use:\n"
       << "      lin:     linear shrink\n"
@@ -82,6 +87,8 @@ void help_long(void) {
       << "      mzn: the user's model\n"
       << "      fzn: the program level constraints (decomposition)\n"
       << "      <n>: integer, a custom depth\n"
+      << "  --no-restarts\n"
+      << "    Do not restart to flat mode if large run of sat sets encountered\n"
       << "  --seed <n>\n"
       << "    Set random seed\n"
       << "\n"
@@ -114,11 +121,8 @@ void help_long(void) {
       << "       mix:    Apply 'gen' before 'normal'\n"
       << "       idx:    Remove all location inforation\n"
       << "       idxmix: Apply 'idx' before 'normal'\n"
-      << "   --binarize normal,leaves,all\n"
-      << "     Add additional structure: (Default: normal)\n"
-      << "       normal: no change\n"
-      << "       leaves: introduce structure at the leaves\n"
-      << "       all:    introduce structure throughout tree\n"
+      << "   --no-binarize\n"
+      << "     Do not add binary structure\n"
       << "\n"
       << " Verbosity Options:\n"
       << "  --verbose-{map,enum,subsolve} <n>:\n"
@@ -133,16 +137,44 @@ void help_long(void) {
   exit(EXIT_FAILURE);
 }
 
+
+void setParamSet(ParamSet ps, MUSEnumOptions& mo) {
+  mo.sense = ps;
+  if(ps == PSET_HINT) {
+    mo.subproblem_structure = STR_GEN;
+    mo.map_shrink_alg = SH_MAP_LIN;
+    mo.subproblem_binarize = BIN_ALL;
+    mo.map_depth = DEPTH_INSTANCE;
+  } else if(ps == PSET_MZN) {
+    mo.subproblem_structure = STR_NORMAL;
+    mo.map_shrink_alg = SH_MAP_QX;
+    mo.subproblem_binarize = BIN_ALL;
+    mo.map_depth = DEPTH_INSTANCE;
+  } else if(ps == PSET_FZN) {
+    mo.subproblem_structure = STR_NORMAL;
+    mo.map_shrink_alg = SH_MAP_QX;
+    mo.subproblem_binarize = BIN_ALL;
+    mo.map_depth = DEPTH_PROGRAM;
+  }
+}
+
 void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
+  setParamSet(PSET_HINT, mo);
   for(int i=1; i<argc; i++) {
     if(strcmp(argv[i], "--help") == 0) {
       help_long();
-    } else if(strcmp(argv[i], "--colour") == 0) {
-      dro.colour = true;
-    } else if(strcmp(argv[i], "--marco") == 0) {
-      mo.map_enumeration_alg = ALG_MARCO;
-    } else if(strcmp(argv[i], "--remus") == 0) {
-      mo.map_enumeration_alg = ALG_REMUS;
+    } else if(strcmp(argv[i], "--paramset") == 0) {
+      std::string s = argv[++i];
+      if(s == "hint") {
+        setParamSet(PSET_HINT, mo);
+      } else if(s == "mzn") {
+        setParamSet(PSET_MZN, mo);
+      } else if(s == "fzn") { 
+        setParamSet(PSET_FZN, mo);
+      } else {
+        std::cout << "Unknown paramset. Available options are {hint, mzn, fzn}\n";
+        help_short(EXIT_FAILURE);
+      }
     } else if(strcmp(argv[i], "--shrink-alg") == 0) {
       std::string alg = argv[++i];
       if(alg == "lin")          mo.map_shrink_alg = SH_LIN;
@@ -169,19 +201,10 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
         std::cout << "Incorrect structure setting. Available options are {flat, <normal>, gen, mix}\n";
         help_short(EXIT_FAILURE);
       }
-    } else if(strcmp(argv[i], "--binarize") == 0) {
-      std::string type = argv[++i];
-      if(type == "none")        mo.subproblem_binarize = BIN_NONE;
-      else if(type == "leaves") mo.subproblem_binarize = BIN_LEAVES;
-      else if(type == "all")    mo.subproblem_binarize = BIN_EVERYWHERE;
-      else {
-        std::cout << "Incorrect binarize option. Available options are {<none>, leaves, all}\n";
-        help_short(EXIT_FAILURE);
-      }
-    } else if(strcmp(argv[i], "--ignore-sat-model") == 0) {
-      dro.ignore_sat_model = true;
-    } else if(strcmp(argv[i], "--ignore-unsat-background") == 0) {
-      dro.ignore_unsatisfiable_background = true;
+    } else if(strcmp(argv[i], "--no-binarize") == 0) {
+      mo.subproblem_binarize = BIN_NONE;
+    } else if(strcmp(argv[i], "--no-restarts") == 0) {
+      mo.restarts_enabled = false;
     } else if(strcmp(argv[i], "--nmuses") == 0 || strcmp(argv[i], "-n") == 0) {
       dro.maxmuses = atoi(argv[++i]);
       if(dro.maxmuses != 1) { // Disable focus mode
@@ -246,6 +269,11 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.verbose_enum = 1;
       mo.verbose_map = 1;
       mo.verbose_subsolve = 1;
+      dro.compile_verbose = true;
+    } else if(strcmp(argv[i], "--verbose-compile") == 0) {
+      dro.compile_verbose = true;
+    } else if(strcmp(argv[i], "--domains") == 0 || strcmp(argv[i], "-g") == 0) {
+      dro.compile_domains = true;
     } else if(strcmp(argv[i], "--verbose-enum") == 0) {
       mo.verbose_enum = static_cast<unsigned int>(atoi(argv[++i]));
     } else if(strcmp(argv[i], "--verbose-map") == 0) {
@@ -260,8 +288,6 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.subproblem_output_format = OUT_HTML;
     } else if(strcmp(argv[i], "--output-brief") == 0) {
       mo.subproblem_output_format = OUT_DEBUG;
-    } else if(strcmp(argv[i], "--use-old-enumer") == 0) {
-      dro.use_new_enumer = false;
 #ifdef BUILD_FINDMUS_EXAMPLES
     } else if(strcmp(argv[i], "--demo") == 0) {
       dro.demo_name = argv[++i];
@@ -274,20 +300,35 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
     } else if(strcmp(argv[i], "--demo-rand-mus-size") == 0) {
       dro.demo_rand_mus_size = atoi(argv[++i]);
 #endif
-    } else if(strcmp(argv[i], "--paths") == 0) {
-      dro.pathpath = argv[++i];
     } else {
       if(argv[i][0] == '-') {
-        std::cerr << "Unknown argument: " << argv[i] << "\n";
-        help_short(EXIT_FAILURE);
-      } else if(dro.fznpath.empty()) {
-        dro.fznpath = argv[i];
-      } else if(dro.pathpath.empty()) {
-        dro.pathpath = argv[i];
-      } else {
-        std::cerr << "Unknown argument: " << argv[i] << "\n";
+        std::cerr << "No support for reading from stdin: " << argv[i] << "\n";
         help_short(EXIT_FAILURE);
       }
+      dro.input_files.push_back(argv[i]);
+    }
+  }
+
+  // Update fznpath and pathpath if available
+  for(const string& p : dro.input_files) {
+    if(p.size() > 3) {
+      if(p.substr(p.size()-3, 3) == "fzn") {
+        if(!dro.fznpath.empty()) {
+          std::cerr << "No support for multiple FlatZinc (.fzn) input files: " << p << "\n";
+          help_short(EXIT_FAILURE);
+        }
+        dro.fznpath = p;
+      }
+      if(p.substr(p.size()-3, 3) == "ths") {
+        if(!dro.pathpath.empty()) {
+          std::cerr << "No support for multiple paths (.paths) input files: " << p << "\n";
+          help_short(EXIT_FAILURE);
+        }
+        dro.pathpath = p;
+      }
+    } else {
+      std::cerr << "Unknown file: " << p << std::endl;
+      help_short(EXIT_FAILURE);
     }
   }
 

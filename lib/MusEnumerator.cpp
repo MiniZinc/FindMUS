@@ -40,10 +40,13 @@ namespace HierMUS {
       if(mopts.timedOut()) return false;
       if(criticals.find(mn) != criticals.end()) continue;
       model.selected.erase(mn);
+      stats.madeSatCheck();
       if(subProblem.check(model)) {
+        stats.foundSatSet();
         model.selected.insert(mn);
+      } else {
+        stats.foundUnSatSet();
       }
-      stats.sat_calls++;
     }
     updateIncludeExclude(model);
     return true;
@@ -53,16 +56,18 @@ namespace HierMUS {
     Selection u = model;
     do {
       subsetMap->pushTempBlockSupersets(u);
-      stats.map_calls++;
+      stats.madeMapCall();
       Selection m = subsetMap->getSelection(u);
       subsetMap->popTempBlock();
       if(m.selected.empty()) break;
       if(mopts.timedOut()) return false;
 
-      stats.sat_calls++;
+      stats.madeSatCheck();
       if(subProblem.check(m)) {
+        stats.foundSatSet();
         subsetMap->blockSubsets(m);
       } else {
+        stats.foundUnSatSet();
         u = m;
       }
     } while(true);
@@ -79,8 +84,13 @@ namespace HierMUS {
     if(mopts.timedOut()) return QXTimeOut;
 
     if(D>0 && !B.selected.empty()) {
-      stats.sat_calls++;
-      if(!subProblem.check(B)) return empty_sel(C);
+      stats.madeSatCheck();
+      if(!subProblem.check(B)) {
+        stats.foundUnSatSet();
+        return empty_sel(C);
+      } else {
+        stats.foundSatSet();
+      }
     }
     if(C.selected.size() == 1) return C;
 
@@ -125,10 +135,12 @@ static int indent=0;
     if(mopts.timedOut()) return QXTimeOut;
 
     if(D>0 && !B.selected.empty()) {
-      stats.sat_calls++;
+      stats.madeSatCheck();
       if(subProblem.check(B)) {
+        stats.foundSatSet();
         subsetMap->blockSubsets(B);
       } else {
+        stats.foundUnSatSet();
         subsetMap->blockSupersets(B);
         QXLOG("Returning empty"); indent--;
         return empty_sel(C);
@@ -140,6 +152,7 @@ static int indent=0;
     }
 
     Selection C1, C2;
+    stats.madeMapCall();
     C1 = subsetMap->getRandomSelection(C, B, true);
     if(C1.selected.empty()) {
       QXLOG("returning C <- |C1| == 0"); indent--;

@@ -2,22 +2,13 @@
 #include <vector>
 
 #include "HierMUSEnumer.h"
-#include "StackMUS.h"
 #include "Marco.h"
-#include "ReMUS.h"
 
 namespace HierMUS {
   using std::vector;
 
   HierMUSEnumer::HierMUSEnumer(SubProblem& prob, MUSEnumOptions& mo) : MusEnumerator(prob, mo) {
-    if(mopts.map_enumeration_alg == ALG_REMUS) {
-      inner_enum = new ReMUS(prob, mo, subsetMap);
-    } else if(mopts.map_enumeration_alg == ALG_MARCO) {
-      inner_enum = new Marco(prob, mo, subsetMap);
-    } else {
-      inner_enum = new StackMUS(prob, mo, subsetMap);
-    }
-
+    inner_enum = new Marco(prob, mo, subsetMap);
     inner_enum->setUnsatCallback([&](const Selection& s) {
       if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: SubEnumerator adding set: " << s << " to candidates\n"; }
       if(frontier_idx != -1) {
@@ -26,6 +17,10 @@ namespace HierMUS {
       }
       candidates.push_back(s);
     });
+
+    Statistics& stats = inner_enum->getStatistics();
+    stats.restarts_enabled = mo.restarts_enabled;
+    stats.treecounts = subProblem.getTree().getCounts();
 
     Selection root = subsetMap->getRootSelector();
     root.is_min = true;
@@ -37,6 +32,17 @@ namespace HierMUS {
   void HierMUSEnumer::setFrontier(const Selection&) { }
 
   void HierMUSEnumer::loadNextCandidate() {
+    Statistics& stats = inner_enum->getStatistics();
+
+    if(stats.shouldRestart()) {
+      if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Restarting in flat mode\n"; }
+      candidates.clear();
+      Selection leaves = subsetMap->getLeavesSelector();
+      leaves.is_min = false;
+      candidates.push_back(leaves);
+      stats.restarts_enabled = false;
+    }
+
     Selection top = candidates.back();
     candidates.pop_back();
     Selection expanded = subsetMap->expand(top);

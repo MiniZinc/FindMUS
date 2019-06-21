@@ -194,18 +194,10 @@ namespace HierMUS {
     if(mopts.subproblem_structure == STR_GEN)
       tree.mergeLeaves();
 
-    if(mopts.subproblem_binarize == BIN_EVERYWHERE) {
+    if(mopts.subproblem_binarize == BIN_ALL) {
       tree.makeBinary([](const MapNode& n){ 
           return n.children.size() > 2;
           });
-    } else if(mopts.subproblem_binarize == BIN_LEAVES) {
-      tree.makeBinary([](const MapNode& n) {
-        if(n.children.size() < 3) return false;
-          for(const MapNode& cn : n.children)
-            if(cn.children.empty())
-              return true;
-        return false;
-      });
     }
 
     cs = tree.getCounts();
@@ -299,13 +291,15 @@ namespace HierMUS {
 
     string res;
     bool is_sat = s != MiniZinc::SolverInstance::UNSAT;
-    if (s == MiniZinc::SolverInstance::SAT ||
-               s == MiniZinc::SolverInstance::OPT) {
+    if (s == MiniZinc::SolverInstance::SAT || s == MiniZinc::SolverInstance::OPT) {
       res = "S";
     } else if (s == MiniZinc::SolverInstance::UNSAT) {
       res = "U";
     } else if (s == MiniZinc::SolverInstance::ERROR) {
       res = "E";
+      string errfilename = "FINDMUS_failed_subproblem.fzn";
+      std::cout << "FznSubproblem:\tSolver reported error without message\n";
+      saveFzn(b, errfilename);
     } else {
       res = "?";
     }
@@ -324,7 +318,7 @@ namespace HierMUS {
   }
 
   void FznSubProblem::saveFzn(const Selection& b, const string& filename) {
-    std::cout << "FznSubProblem: dumping fzn as: " << filename << "\n";
+    std::cout << "FznSubProblem:\tdumping fzn as: " << filename << "\n";
     set<string> leaves = getLeaves(b);
     // Mark all constraints as removed;
     for(auto& kv : constraints) { kv.second->remove(); }
@@ -334,11 +328,29 @@ namespace HierMUS {
     std::ofstream f;
     f.open(filename);
     if(f.is_open()) {
-      MiniZinc::Printer p(f, 0, true, &fzn_env.envi());
-      p.print(fzn_model);
+      MiniZinc::Printer p(f, 0, true);
+      for (MiniZinc::FunctionIterator it = fzn_model->begin_functions(); it != fzn_model->end_functions(); ++it) {
+        if(!it->removed()) {
+          MiniZinc::Item& item = *it;
+          p.print(&item);
+        }
+      }
+      for (MiniZinc::VarDeclIterator it = fzn_model->begin_vardecls(); it != fzn_model->end_vardecls(); ++it) {
+        if(!it->removed()) {
+          MiniZinc::Item& item = *it;
+          p.print(&item);
+        }
+      }
+      for (MiniZinc::ConstraintIterator it = fzn_model->begin_constraints(); it != fzn_model->end_constraints(); ++it) {
+        if(!it->removed()) {
+          MiniZinc::Item& item = *it;
+          p.print(&item);
+        }
+      }
+      p.print(fzn_model->solveItem());
       f.close();
     } else {
-      std::cout << "FAILED\n";
+      std::cout << "cannot open file" << filename << " for writing\n";
     }
   }
 

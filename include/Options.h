@@ -10,6 +10,7 @@ namespace HierMUS {
 
 class DriverOptions {
 public:
+  vector<string> input_files; // Support mzn and dzn files
   string fznpath;
   string pathpath;
   int maxmuses = 1; // Start in focus_mode
@@ -17,10 +18,6 @@ public:
   bool output_progress = true;
   string dump_dot_path;
   char filter_sep = ',';
-  bool ignore_sat_model = false;
-  bool ignore_unsatisfiable_background = false;
-  bool colour = false;
-  bool use_new_enumer = true;
 #ifdef BUILD_FINDMUS_EXAMPLES
   string demo_name;
   int demo_rand_seed;
@@ -31,34 +28,13 @@ public:
   bool list_solvers = false;
   bool list_solvers_json = false;
 
+  bool compile_verbose = false;
+  bool compile_domains = false;
+
   DriverOptions() {
 #ifdef BUILD_FINDMUS_EXAMPLES
     demo_rand_seed = (int)time(NULL);
 #endif
-  }
-
-  void toJSON(std::ostream& ss) {
-    ss << "\"driver_options\": {\n"
-       << "\t\"fznpath\": \"" << fznpath << "\",\n"
-       << "\t\"fznpath\": \"" << fznpath << "\",\n"
-       << "\t\"maxmuses\": " << maxmuses << ",\n"
-       << "\t\"frequent_stats\": " << frequent_stats << ",\n"
-       << "\t\"output_progress\": " << output_progress << ",\n"
-       << "\t\"dump_dot_path\": \"" << dump_dot_path << "\",\n"
-       << "\t\"filter_sep\": \"" << filter_sep << "\",\n"
-       << "\t\"ignore_sat_model\": " << ignore_sat_model << ",\n"
-       << "\t\"ignore_unsatisfiable_background\": " << ignore_unsatisfiable_background << ",\n"
-       << "\t\"colour\": " << colour << ",\n"
-#ifdef BUILD_FINDMUS_EXAMPLES
-       << "\t\"demo_name\": \"" << demo_name << "\",\n"
-       << "\t\"demo_rand_seed\": \"" << demo_rand_seed << "\",\n"
-       << "\t\"demo_rand_cons\": \"" << demo_rand_cons << "\",\n"
-       << "\t\"demo_rand_muses\": \"" << demo_rand_muses << "\",\n"
-       << "\t\"demo_rand_mus_size\": \"" << demo_rand_mus_size << "\",\n"
-#endif
-       << "\t\"list_solvers\": " << list_solvers << ",\n"
-       << "\t\"list_solvers_json\": " << list_solvers_json << ",\n"
-       << "}";
   }
 };
 
@@ -71,6 +47,11 @@ public:
 
   double timelimit = -1;
 
+  bool restarts_enabled = true;
+
+  //ParamSet sense = PSET_MZN; // Default mode for commandline
+  ParamSet sense = PSET_HINT; // Default mode for commandline
+
   // FznSubProblem
   string mzn_stdlib_dir;
   bool subproblem_hard_functional_constraints = true;
@@ -81,7 +62,7 @@ public:
   std::set<string> subproblem_path_filters;
   std::set<string> subproblem_path_filters_excludes;
   InitialStructure subproblem_structure = STR_NORMAL;
-  Binarize subproblem_binarize = BIN_NONE;
+  Binarize subproblem_binarize = BIN_ALL;
 
   string subproblem_solver = "org.gecode.gecode";
   string subproblem_solver_flags = "";
@@ -89,11 +70,11 @@ public:
   SubProblemOutputFormat subproblem_output_format = OUT_NORMAL;
 
   // SubsetMap
-  MapDepth map_depth = DEPTH_CUSTOM; // DEPTH_INSTANCE should probably be the default in future
+  MapDepth map_depth = DEPTH_INSTANCE; // DEPTH_INSTANCE should probably be the default in future
   unsigned int map_depth_max = 1;
 
-  MusAlg map_enumeration_alg = ALG_STACKMUS;
-  ShrinkAlg map_shrink_alg = SH_LIN;
+  MusAlg map_enumeration_alg = ALG_MARCO;
+  ShrinkAlg map_shrink_alg = SH_MAP_QX;
   bool map_enum_focus_mode = true;
 
   Statistics& stats;

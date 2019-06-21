@@ -5,7 +5,6 @@
 #include <csignal>
 
 #include "HierMUSEnumer.h"
-#include "OldMUSEnumer.h"
 
 #include "FznSubProblem.h"
 #include "Options.h"
@@ -14,61 +13,12 @@
 #include "DemoSubProblems.h"
 #endif
 
+#include <minizinc/solver.hh>
+#include <minizinc/file_utils.hh>
+
 using namespace HierMUS;
 using std::string;
 
-SubProblem* createProblem(DriverOptions& dro,
-                          MUSEnumOptions& mo) {
-  SubProblem* problem = nullptr;
-#ifdef BUILD_FINDMUS_EXAMPLES
-  if(!dro.demo_name.empty()) {
-    if(dro.demo_name == "hm5") problem = new HM5(mo);
-    else if(dro.demo_name == "hm5_2") problem = new HM5_2(mo);
-    else if(dro.demo_name == "glm") problem = new GLM(mo);
-    else if(dro.demo_name == "fflat") problem = new FFLAT(mo);
-    else if(dro.demo_name == "rand") problem = new RandomProblem(mo, 
-                                                                 dro.demo_rand_seed,
-                                                                 dro.demo_rand_cons,
-                                                                 dro.demo_rand_muses,
-                                                                 dro.demo_rand_mus_size);
-  }
-#endif
-  if(!problem) {
-    if(dro.fznpath.empty()) {
-      std::cerr << "No flatzinc file provided\n";
-      OptionsHelper::help_short(EXIT_FAILURE);
-    } else {
-      std::ifstream checkpath(dro.fznpath);
-      if(!checkpath.is_open()) {
-        std::cerr << "Flatzinc file "<< dro.fznpath << " cannot be opened.\n";
-        OptionsHelper::help_short(EXIT_FAILURE);
-      }
-    }
-    if(dro.pathpath.empty()) {
-      string base = dro.fznpath.substr(0,dro.fznpath.length()-4);
-      dro.pathpath = base + ".paths";
-    }
-    {
-      std::ifstream checkpath(dro.pathpath);
-      if(!checkpath.is_open()) {
-        std::cerr << "Path file "<< dro.pathpath << " cannot be opened.\n";
-        OptionsHelper::help_short(EXIT_FAILURE);
-      }
-    }
-    problem = new FznSubProblem(dro.fznpath, dro.pathpath, mo);
-  }
-  return problem;
-}
-
-void writeDotFile(const DriverOptions& dro, SubProblem* problem){
-  std::ofstream f(dro.dump_dot_path);
-  if(!f.is_open()) {
-    std::cout << "\nFailed to write to file\n";
-    return;
-  }
-  DotWriter dw(f, problem->getTree());
-  dw.print();
-}
 
 namespace FindMUSState {
 static bool sigint = false;
@@ -105,26 +55,21 @@ static void regHandler() {
 static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   regHandler();
   double start_time = wallClockTime();
-  int nmuses = 0;
+  Statistics& stats = me.getStatistics();
   if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
   while(!sigint && !mo.timedOut() && me.search()) {
 
-    if(dro.colour) std::cout << "\033[1;31m";
-
     me.printMUS();
-
     std::cout << std::flush;
-    if(dro.colour) std::cout << "\033[0m";
-
-    nmuses++;
+    stats.nmuses++;
 
     if(dro.maxmuses > 0) {
-      if(dro.output_progress) { std::cout << "%%%mzn-progress " << (static_cast<float>(nmuses) / dro.maxmuses * 100.0f) << std::endl; }
-      if(nmuses >= dro.maxmuses) break;
+      if(dro.output_progress) { std::cout << "%%%mzn-progress " << (static_cast<float>(stats.nmuses) / dro.maxmuses * 100.0f) << std::endl; }
+      if(stats.nmuses >= dro.maxmuses) break;
     }
     if(dro.frequent_stats)
       std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
-                << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
+                << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
   }
 
   if(sigint || mo.timedOut()) {
@@ -133,9 +78,115 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
 
   if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
   std::cout << "Total Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
-            << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
+            << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
 }
 }
+
+SubProblem* createProblem(DriverOptions& dro,
+                          MUSEnumOptions& mo,
+                          vector<MiniZinc::FileUtils::TmpFile>& temp_files) {
+  SubProblem* problem = nullptr;
+#ifdef BUILD_FINDMUS_EXAMPLES
+  if(!dro.demo_name.empty()) {
+    if(dro.demo_name == "hm5") problem = new HM5(mo);
+    else if(dro.demo_name == "hm5_2") problem = new HM5_2(mo);
+    else if(dro.demo_name == "glm") problem = new GLM(mo);
+    else if(dro.demo_name == "fflat") problem = new FFLAT(mo);
+    else if(dro.demo_name == "rand") problem = new RandomProblem(mo, 
+                                                                 dro.demo_rand_seed,
+                                                                 dro.demo_rand_cons,
+                                                                 dro.demo_rand_muses,
+                                                                 dro.demo_rand_mus_size);
+  }
+#endif
+  if(!problem) {
+    if(dro.input_files.empty()) {
+      std::cerr << "No input files provided\n";
+      OptionsHelper::help_short(EXIT_FAILURE);
+    }
+    if(dro.fznpath.empty()) {
+      MiniZinc::MznSolver solver(std::cerr, std::cerr);
+      vector<string> args { "-c", "--solver", mo.subproblem_solver };
+      args.insert(args.end(), dro.input_files.begin(), dro.input_files.end());
+
+      temp_files.reserve(2);
+      temp_files.emplace_back(".fzn");
+      dro.fznpath = temp_files.back().name();
+      temp_files.emplace_back(".paths");
+      dro.pathpath = temp_files.back().name();
+
+      if(dro.compile_domains) args.push_back("-g");
+      if(dro.compile_verbose) args.push_back("--verbose");
+
+      args.push_back("-o");
+      args.push_back(dro.fznpath);
+      args.push_back("--output-paths-to-file");
+      args.push_back(dro.pathpath);
+      args.push_back("--no-output-ozn");
+
+      std::vector<string> args_vec(args);
+      try {
+        if(solver.run(args_vec, "", "minizinc") == MiniZinc::SolverInstance::ERROR) {
+          std::cerr << "FznSubProblem:\tError: Failed to compile model with args:\t" << utils::join(args, " ") << std::endl;
+          exit(EXIT_FAILURE);
+        }
+      }  catch (const MiniZinc::LocationException& e) {
+        std::cerr << std::endl;
+        std::cerr << e.loc() << ":" << std::endl;
+        std::cerr << e.what() << ": " << e.msg() << std::endl;
+        exit(EXIT_FAILURE);
+      } catch (const MiniZinc::Exception& e) {
+        std::cerr << std::endl;
+        std::string what = e.what();
+        std::cerr << what << (what.empty() ? "" : ": ") << e.msg() << std::endl;
+        exit(EXIT_FAILURE);
+      } catch (const std::exception& e) {
+        std::cerr << std::endl;
+        std::cerr << e.what() << std::endl;
+        exit(EXIT_FAILURE);
+      } catch (...) {
+        std::cerr << std::endl;
+        std::cerr << "  UNKNOWN EXCEPTION." << std::endl;
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    if(dro.fznpath.empty()) {
+      std::cerr << "No flatzinc file provided\n";
+      OptionsHelper::help_short(EXIT_FAILURE);
+    } else {
+      std::ifstream checkpath(dro.fznpath);
+      if(!checkpath.is_open()) {
+        std::cerr << "Flatzinc file "<< dro.fznpath << " cannot be opened.\n";
+        OptionsHelper::help_short(EXIT_FAILURE);
+      }
+    }
+    if(dro.pathpath.empty()) {
+      string base = dro.fznpath.substr(0,dro.fznpath.length()-4);
+      dro.pathpath = base + ".paths";
+    }
+    {
+      std::ifstream checkpath(dro.pathpath);
+      if(!checkpath.is_open()) {
+        std::cerr << "Path file "<< dro.pathpath << " cannot be opened.\n";
+        OptionsHelper::help_short(EXIT_FAILURE);
+      }
+    }
+    problem = new FznSubProblem(dro.fznpath, dro.pathpath, mo);
+  }
+  return problem;
+}
+
+void writeDotFile(const DriverOptions& dro, SubProblem* problem){
+  std::ofstream f(dro.dump_dot_path);
+  if(!f.is_open()) {
+    std::cout << "\nFailed to write to file\n";
+    return;
+  }
+  DotWriter dw(f, problem->getTree());
+  dw.print();
+}
+
 
 int main(int argc, char **argv) {
   Statistics s;
@@ -153,40 +204,37 @@ int main(int argc, char **argv) {
     exit(EXIT_SUCCESS);
   }
 
+  vector<MiniZinc::FileUtils::TmpFile> temp_files;
   // Create SubProblem
-  HierMUS::SubProblem* problem = createProblem(dro, mo);
+  HierMUS::SubProblem* problem = createProblem(dro, mo, temp_files);
 
   if(!dro.dump_dot_path.empty()) {
     std::cout << "Writing diagram to: " << dro.dump_dot_path << " and exiting\n";
     writeDotFile(dro, problem);
     exit(EXIT_SUCCESS);
   }
-
-  // Are you using remus in Hierarchical Mode
-  if(mo.subproblem_structure != STR_FLAT && mo.map_enumeration_alg == ALG_REMUS) {
-    std::cout << "Warning: Using ReMUS as HierMUS's sub-MUS-enumerator is not currently supported."
-              << "Use --structure flat for accurate MUSes.\n";
-  }
-
+  
   // Create MUS Enumerator
-  MusEnumerator* me;
-  if (dro.use_new_enumer) {
-    me = new HierMUSEnumer(*problem, mo);
-  } else {
-    me = new OldMUSEnumer(*problem, mo);
-  }
+  MusEnumerator* me = new HierMUSEnumer(*problem, mo);
 
   // Is the model unsat to begin with?
-  if(!dro.ignore_sat_model && problem->check(me->getRootSelector())) {
-    std::cout << "Error: Cannot prove UNSAT within solver timelimit. Set a larger timeout with the\n"
-              << "'--solver-timelimit' argument or use '--ignore-sat-model' flag to run MUS enumeration anyway.\n";
+  if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
+    std::cout << "Error: Cannot prove UNSAT within solver timelimit. "
+              << "Set a larger timeout with the '--solver-timelimit' argument.\n";
     return EXIT_FAILURE;
   }
 
   // Is the background satisfiable:
-  if(!dro.ignore_unsatisfiable_background && !problem->check(Selection())) {
-    std::cout << "Background is not satisfiable, exiting." << std::endl;
+  if(!problem->check(Selection())) {
+    std::cout << "Background is not satisfiable, exiting. "
+      << "Try using --soft-defines." << std::endl;
     return EXIT_FAILURE;
+  }
+
+  // Print suggestion if using gen/hint
+  if(mo.subproblem_structure == STR_GEN) {
+    std::cout << "Note: Generalising model structure (stripping instance specific info). "
+      << "Use \"--paramset mzn\" for more precise output\n";
   }
 
   FindMUSState::run(dro, mo, *me);

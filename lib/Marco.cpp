@@ -24,13 +24,14 @@ namespace HierMUS {
     if(mopts.timedOut()) return false;
     while(true) {
       if(mopts.timedOut()) return false;
-      stats.map_calls++;
+      stats.madeMapCall();
       Selection s = subsetMap->getSelection(frontier);
 
       if(s.selected.size() == 0) break;
 
-      stats.sat_calls++;
+      stats.madeSatCheck();
       if(!subProblem.check(s)) {
+        stats.foundUnSatSet();
         std::set<MapNode*> empty_crits;
         if(!shrink(s, empty_crits)) return false;
         frontier.is_min = false;
@@ -48,6 +49,9 @@ namespace HierMUS {
         }
       } else {
         subsetMap->blockSubsets(s);
+        stats.foundSatSet();
+        if(stats.shouldRestart())
+          return false;
       }
     }
     if(frontier.is_min && isLeaves(frontier)) {
