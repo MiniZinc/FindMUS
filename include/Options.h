@@ -18,8 +18,6 @@ public:
   bool output_progress = true;
   string dump_dot_path;
   char filter_sep = ',';
-  bool ignore_sat_model = false;
-  bool ignore_unsatisfiable_background = false;
 #ifdef BUILD_FINDMUS_EXAMPLES
   string demo_name;
   int demo_rand_seed;
@@ -49,7 +47,10 @@ public:
 
   double timelimit = -1;
 
-  ParamSet sense = PSET_MZN; // Default mode for commandline
+  bool restarts_enabled = true;
+
+  //ParamSet sense = PSET_MZN; // Default mode for commandline
+  ParamSet sense = PSET_HINT; // Default mode for commandline
 
   // FznSubProblem
   string mzn_stdlib_dir;

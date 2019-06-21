@@ -15,10 +15,44 @@ namespace HierMUS {
   struct Statistics {
     double start_time;
     double last_time;
-    int sat_calls;
-    int map_calls;
 
-    Statistics() : start_time{wallClockTime()}, last_time{start_time}, sat_calls{0}, map_calls{0} {}
+    int sat_calls = 0;
+    int map_calls = 0;
+
+    counts treecounts;
+
+    int local_sat_chain_limit = 0;
+    int local_sat_chain = 0;
+    bool should_restart = false;
+    bool restarts_enabled = false;
+
+    int nmuses = 0;
+
+    Statistics() : start_time{wallClockTime()}, last_time{start_time} {}
+
+    inline void addCounts(counts& tc) {
+      treecounts = tc;
+      local_sat_chain_limit = treecounts.nleaves/2;
+    }
+
+    inline void madeSatCheck(void) { sat_calls++; }
+    inline void madeMapCall(void) { map_calls++; }
+
+    inline void foundSatSet(void) {
+      local_sat_chain++;
+      if(restarts_enabled && shouldRestart())
+        should_restart = true;
+    }
+
+    inline void foundUnSatSet(void) { local_sat_chain = 0; }
+
+    inline bool shouldRestart(void) const {
+      if(!restarts_enabled) return false;
+      if(should_restart) return true;
+      if(local_sat_chain_limit == 0)
+      return local_sat_chain > local_sat_chain_limit;
+    }
+
   };
 
   std::ostream& operator<<(std::ostream& os, Statistics const& a);

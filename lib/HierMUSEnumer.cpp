@@ -18,6 +18,10 @@ namespace HierMUS {
       candidates.push_back(s);
     });
 
+    Statistics& stats = inner_enum->getStatistics();
+    stats.restarts_enabled = mo.restarts_enabled;
+    stats.treecounts = subProblem.getTree().getCounts();
+
     Selection root = subsetMap->getRootSelector();
     root.is_min = true;
     candidates.push_back(root);
@@ -28,6 +32,17 @@ namespace HierMUS {
   void HierMUSEnumer::setFrontier(const Selection&) { }
 
   void HierMUSEnumer::loadNextCandidate() {
+    Statistics& stats = inner_enum->getStatistics();
+
+    if(stats.shouldRestart()) {
+      if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Restarting in flat mode\n"; }
+      candidates.clear();
+      Selection leaves = subsetMap->getLeavesSelector();
+      leaves.is_min = false;
+      candidates.push_back(leaves);
+      stats.restarts_enabled = false;
+    }
+
     Selection top = candidates.back();
     candidates.pop_back();
     Selection expanded = subsetMap->expand(top);

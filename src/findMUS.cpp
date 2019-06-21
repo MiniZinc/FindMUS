@@ -55,21 +55,21 @@ static void regHandler() {
 static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   regHandler();
   double start_time = wallClockTime();
-  int nmuses = 0;
+  Statistics& stats = me.getStatistics();
   if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
   while(!sigint && !mo.timedOut() && me.search()) {
 
     me.printMUS();
     std::cout << std::flush;
-    nmuses++;
+    stats.nmuses++;
 
     if(dro.maxmuses > 0) {
-      if(dro.output_progress) { std::cout << "%%%mzn-progress " << (static_cast<float>(nmuses) / dro.maxmuses * 100.0f) << std::endl; }
-      if(nmuses >= dro.maxmuses) break;
+      if(dro.output_progress) { std::cout << "%%%mzn-progress " << (static_cast<float>(stats.nmuses) / dro.maxmuses * 100.0f) << std::endl; }
+      if(stats.nmuses >= dro.maxmuses) break;
     }
     if(dro.frequent_stats)
       std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
-                << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
+                << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
   }
 
   if(sigint || mo.timedOut()) {
@@ -78,7 +78,7 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
 
   if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
   std::cout << "Total Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
-            << "\tnmuses: " << nmuses << "\t" << me.getStatistics() << "\n";
+            << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
 }
 }
 
@@ -218,16 +218,23 @@ int main(int argc, char **argv) {
   MusEnumerator* me = new HierMUSEnumer(*problem, mo);
 
   // Is the model unsat to begin with?
-  if(!dro.ignore_sat_model && problem->check(me->getRootSelector())) {
-    std::cout << "Error: Cannot prove UNSAT within solver timelimit. Set a larger timeout with the\n"
-              << "'--solver-timelimit' argument or use '--ignore-sat-model' flag to run MUS enumeration anyway.\n";
+  if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
+    std::cout << "Error: Cannot prove UNSAT within solver timelimit. "
+              << "Set a larger timeout with the '--solver-timelimit' argument.\n";
     return EXIT_FAILURE;
   }
 
   // Is the background satisfiable:
-  if(!dro.ignore_unsatisfiable_background && !problem->check(Selection())) {
-    std::cout << "Background is not satisfiable, exiting." << std::endl;
+  if(!problem->check(Selection())) {
+    std::cout << "Background is not satisfiable, exiting. "
+      << "Try using --soft-defines." << std::endl;
     return EXIT_FAILURE;
+  }
+
+  // Print suggestion if using gen/hint
+  if(mo.subproblem_structure == STR_GEN) {
+    std::cout << "Note: Generalising model structure (stripping instance specific info). "
+      << "Use \"--paramset mzn\" for more precise output\n";
   }
 
   FindMUSState::run(dro, mo, *me);

@@ -10,10 +10,9 @@ void help_short(int exit_code) {
             << "  version: 0.5.0\n"
             << "  usage: findMUS <flatzinc file> [paths file]\n"
             << "                 [-a] [-n <n>]\n"
-            << "                 [--ignore-unsat-background]\n"
             << "                 [--paramset {hint, mzn, fzn}]\n"
             << "                 [--structure {normal, flat, gen, mix, idx, idxmix}]\n"
-            << "                 [--do-not-binarize]\n"
+            << "                 [--no-binarize]\n"
             << "                 [--depth {mzn, fzn, i}\n"
             << "                 [--verbose-{enum,map,subsolve} <v>]\n"
             << "                 [--verbose-compile]\n"
@@ -32,16 +31,17 @@ void help_long(void) {
       << "    Symbol table for unsatisfiable flatzinc model\n"
       << "\n"
       << " Driver Options:\n"
-      << "  --paramset hint,mzn,fzn\n"
-      << "    Use preset parameters\n"
+      << "  --paramset hint,mzn,fzn. Default: hint\n"
+      << "    Use preset parameter sets:\n"
+      << "      hint: --structure gen --shrink-alg map_lin --binarize all --depth mzn\n"
+      << "      mzn: --shrink-alg map_qx --binarize all --depth mzn\n"
+      << "      fzn: --shrink-alg map_qx --binarize all --depth fzn\n"
       << "  -n <n>   --nmuses <n>\n"
       << "    Number of MUSes to find\n"
       << "  -a\n"
       << "    Find all MUSes\n"
       << "  --stdlib-dir <path>\n"
-      << "    Set path to MiniZinc standard library\n"
-      << "  --ignore-unsat-background\n"
-      << "     Skip unsatisfiable background check\n";
+      << "    Set path to MiniZinc standard library\n";
 #ifdef BUILD_FINDMUS_EXAMPLES
   std::cout << "  --demo <demo>\n"
             << "    Use demo model and tree. <string> must be one of:\n"
@@ -87,6 +87,8 @@ void help_long(void) {
       << "      mzn: the user's model\n"
       << "      fzn: the program level constraints (decomposition)\n"
       << "      <n>: integer, a custom depth\n"
+      << "  --no-restarts\n"
+      << "    Do not restart to flat mode if large run of sat sets encountered\n"
       << "  --seed <n>\n"
       << "    Set random seed\n"
       << "\n"
@@ -119,7 +121,7 @@ void help_long(void) {
       << "       mix:    Apply 'gen' before 'normal'\n"
       << "       idx:    Remove all location inforation\n"
       << "       idxmix: Apply 'idx' before 'normal'\n"
-      << "   --do-not-binarize\n"
+      << "   --no-binarize\n"
       << "     Do not add binary structure\n"
       << "\n"
       << " Verbosity Options:\n"
@@ -135,27 +137,40 @@ void help_long(void) {
   exit(EXIT_FAILURE);
 }
 
+
+void setParamSet(ParamSet ps, MUSEnumOptions& mo) {
+  mo.sense = ps;
+  if(ps == PSET_HINT) {
+    mo.subproblem_structure = STR_GEN;
+    mo.map_shrink_alg = SH_MAP_LIN;
+    mo.subproblem_binarize = BIN_ALL;
+    mo.map_depth = DEPTH_INSTANCE;
+  } else if(ps == PSET_MZN) {
+    mo.subproblem_structure = STR_NORMAL;
+    mo.map_shrink_alg = SH_MAP_QX;
+    mo.subproblem_binarize = BIN_ALL;
+    mo.map_depth = DEPTH_INSTANCE;
+  } else if(ps == PSET_FZN) {
+    mo.subproblem_structure = STR_NORMAL;
+    mo.map_shrink_alg = SH_MAP_QX;
+    mo.subproblem_binarize = BIN_ALL;
+    mo.map_depth = DEPTH_PROGRAM;
+  }
+}
+
 void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
+  setParamSet(PSET_HINT, mo);
   for(int i=1; i<argc; i++) {
     if(strcmp(argv[i], "--help") == 0) {
       help_long();
     } else if(strcmp(argv[i], "--paramset") == 0) {
       std::string s = argv[++i];
       if(s == "hint") {
-        mo.subproblem_structure = STR_GEN;
-        mo.map_shrink_alg = SH_MAP_LIN;
-        mo.subproblem_binarize = BIN_ALL;
-        mo.map_depth = DEPTH_INSTANCE;
+        setParamSet(PSET_HINT, mo);
       } else if(s == "mzn") {
-        mo.subproblem_structure = STR_NORMAL;
-        mo.map_shrink_alg = SH_MAP_QX;
-        mo.subproblem_binarize = BIN_ALL;
-        mo.map_depth = DEPTH_INSTANCE;
+        setParamSet(PSET_MZN, mo);
       } else if(s == "fzn") { 
-        mo.subproblem_structure = STR_NORMAL;
-        mo.map_shrink_alg = SH_MAP_QX;
-        mo.subproblem_binarize = BIN_ALL;
-        mo.map_depth = DEPTH_PROGRAM;
+        setParamSet(PSET_FZN, mo);
       } else {
         std::cout << "Unknown paramset. Available options are {hint, mzn, fzn}\n";
         help_short(EXIT_FAILURE);
@@ -186,12 +201,10 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
         std::cout << "Incorrect structure setting. Available options are {flat, <normal>, gen, mix}\n";
         help_short(EXIT_FAILURE);
       }
-    } else if(strcmp(argv[i], "--do-not-binarize") == 0) {
+    } else if(strcmp(argv[i], "--no-binarize") == 0) {
       mo.subproblem_binarize = BIN_NONE;
-    } else if(strcmp(argv[i], "--ignore-sat-model") == 0) {
-      dro.ignore_sat_model = true;
-    } else if(strcmp(argv[i], "--ignore-unsat-background") == 0) {
-      dro.ignore_unsatisfiable_background = true;
+    } else if(strcmp(argv[i], "--no-restarts") == 0) {
+      mo.restarts_enabled = false;
     } else if(strcmp(argv[i], "--nmuses") == 0 || strcmp(argv[i], "-n") == 0) {
       dro.maxmuses = atoi(argv[++i]);
       if(dro.maxmuses != 1) { // Disable focus mode
