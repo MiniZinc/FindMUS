@@ -47,7 +47,7 @@ public:
 
   double timelimit = -1;
 
-  bool restarts_enabled = true;
+  bool restarts_enabled = false;
 
   //ParamSet sense = PSET_MZN; // Default mode for commandline
   ParamSet sense = PSET_HINT; // Default mode for commandline

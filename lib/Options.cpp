@@ -74,6 +74,8 @@ void help_long(void) {
       << "    Record domain changes during compilation\n"
       << "  --verbose-compile\n"
       << "    Send --verbose to mzn2fzn\n"
+      << "  -D<data>\n"
+      << "    Include the given data assignment in the model.\n"
       << "\n"
       << " Enumeration Options:\n"
       << "  --shrink-alg lin,map_lin,qx,map_qx\tdefault: lin\n"
@@ -87,8 +89,8 @@ void help_long(void) {
       << "      mzn: the user's model\n"
       << "      fzn: the program level constraints (decomposition)\n"
       << "      <n>: integer, a custom depth\n"
-      << "  --no-restarts\n"
-      << "    Do not restart to flat mode if large run of sat sets encountered\n"
+      << "  --restarts\n"
+      << "    Enable restart to flat mode if large run of sat sets encountered\n"
       << "  --seed <n>\n"
       << "    Set random seed\n"
       << "\n"
@@ -175,6 +177,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
         std::cout << "Unknown paramset. Available options are {hint, mzn, fzn}\n";
         help_short(EXIT_FAILURE);
       }
+    } else if(argv[i][0] == '-' && argv[i][1] == 'D') {
+      dro.input_files.push_back(argv[i]);
     } else if(strcmp(argv[i], "--shrink-alg") == 0) {
       std::string alg = argv[++i];
       if(alg == "lin")          mo.map_shrink_alg = SH_LIN;
@@ -203,8 +207,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       }
     } else if(strcmp(argv[i], "--no-binarize") == 0) {
       mo.subproblem_binarize = BIN_NONE;
-    } else if(strcmp(argv[i], "--no-restarts") == 0) {
-      mo.restarts_enabled = false;
+    } else if(strcmp(argv[i], "--restarts") == 0) {
+      mo.restarts_enabled = true;
     } else if(strcmp(argv[i], "--nmuses") == 0 || strcmp(argv[i], "-n") == 0) {
       dro.maxmuses = atoi(argv[++i]);
       if(dro.maxmuses != 1) { // Disable focus mode
