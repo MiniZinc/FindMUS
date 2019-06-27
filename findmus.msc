@@ -13,7 +13,7 @@
   "stdFlags": ["--output-html", "-v", "-s", "-a", "-n", "-t"],
   "extraFlags": [
     ["--paramset", "Preset parameters", "opt:hint:mzn:fzn", "hint"],
-    ["--solver", "Which solver to use for SAT checking", "string", "gecode"],
+    ["--subsolver", "Which solver to use for SAT checking", "string", "gecode"],
     ["--structure", "Alter initial structure", "opt:flat:gen:normal:mix:idx:idxmix", "gen"],
     ["--no-binarize", "Disable binarization", "bool", "false"],
     ["--shrink-alg", "Select MUS shrink algorithm", "opt:lin:map_lin:qx:map_qx", "map_qx"],

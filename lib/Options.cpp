@@ -95,7 +95,7 @@ void help_long(void) {
       << "    Set random seed\n"
       << "\n"
       << " Subproblem: Solving options\n"
-      << "  --solver <s>\n"
+      << "  --solver <s>, --subsolver <s>\n"
       << "    Use solver <s> for SAT checking. Default: \"fzn-gecode\"\n"
       << "  --solver-flags <f>\n"
       << "    Pass flags <f> to solver for SAT checking. Default: \"-time 1000\"\n"
@@ -162,6 +162,12 @@ void setParamSet(ParamSet ps, MUSEnumOptions& mo) {
 
 void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
   setParamSet(PSET_HINT, mo);
+
+  std::cout << "Args: ";
+  for(int i=0; i<argc; i++) std::cout << " " << argv[i];
+  std::cout << "\n";
+
+
   for(int i=1; i<argc; i++) {
     if(strcmp(argv[i], "--help") == 0) {
       help_long();
@@ -225,7 +231,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       dro.list_solvers = true;
     } else if(strcmp(argv[i], "--solvers-json") == 0) {
       dro.list_solvers_json = true;
-    } else if(strcmp(argv[i], "--solver") == 0) {
+    } else if(strcmp(argv[i], "--subsolver") == 0 || strcmp(argv[i], "--solver") == 0) {
       mo.subproblem_solver = argv[++i];
     } else if(strcmp(argv[i], "--solver-flags") == 0) {
       mo.subproblem_solver_flags = argv[++i];
