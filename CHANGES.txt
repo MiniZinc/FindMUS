@@ -2,6 +2,12 @@
 # findMUS Changelog #
 ======================
 
+version 0.5.1
+=============
+Changes:
+  - Added --subsolver and --subsolver-timelimit options due to argument clashing with the main MiniZinc driver
+
+
 version 0.5.0
 =============
 Changes:

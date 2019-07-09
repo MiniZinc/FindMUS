@@ -99,7 +99,7 @@ void help_long(void) {
       << "    Use solver <s> for SAT checking. Default: \"fzn-gecode\"\n"
       << "  --solver-flags <f>\n"
       << "    Pass flags <f> to solver for SAT checking. Default: \"-time 1000\"\n"
-      << "  --solver-timelimit <ms>\n"
+      << "  --solver-timelimit <ms>, --subsolver-timelimit\n"
       << "    Hard time limit for solver in milliseconds. Default: 1100\n"
       << "  Subproblem filtering options:\n"
       << "   --soft-defines\n"
@@ -235,7 +235,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.subproblem_solver = argv[++i];
     } else if(strcmp(argv[i], "--solver-flags") == 0) {
       mo.subproblem_solver_flags = argv[++i];
-    } else if(strcmp(argv[i], "--solver-timelimit") == 0) {
+    } else if(strcmp(argv[i], "--subsolver-timelimit") == 0 || strcmp(argv[i], "--solver-timelimit") == 0) {
       mo.subproblem_solver_time_limit = atoi(argv[++i]);
     } else if(strcmp(argv[i], "--depth") == 0) {
       std::string a = argv[++i];
