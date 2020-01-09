@@ -5,7 +5,6 @@ if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif(POLICY CMP0074)
 
-option(USE_SYSTEM_LIBMINIZINC "Try to load libminizinc targets from CMake package" OFF)
 option(BUILD_FINDMUS_EXAMPLES "Build set of cpp example SubProblems" OFF)
 
 message("-- Configuring: C++ options")
