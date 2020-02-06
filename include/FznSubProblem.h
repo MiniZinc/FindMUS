@@ -34,6 +34,8 @@ namespace HierMUS {
       NullSolns2Out s2o;
       MiniZinc::Model* fzn_model;
 
+      bool last_sat;
+
       std::unordered_map<std::string, MiniZinc::ConstraintI*> constraints;
       std::unordered_map<std::string, std::string> nameToPath;
       std::string fzn_file;
@@ -52,6 +54,7 @@ namespace HierMUS {
       void printLongSol(const Selection& b);
       void printHtml(const Selection& b);
       bool check(const Selection& b);
+      bool provedSAT();
   };
 }
 

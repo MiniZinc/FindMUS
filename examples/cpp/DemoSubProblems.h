@@ -14,6 +14,7 @@ namespace HierMUS {
       explicit HM5(MUSEnumOptions& mo);
       void printSol(const Selection& b);
       bool check(const Selection& b);
+      bool provedSAT() { return false; } ;
   };
 
   class GLM : public SubProblem {
@@ -21,6 +22,7 @@ namespace HierMUS {
       explicit GLM(MUSEnumOptions& mo);
       void printSol(const Selection& b);
       bool check(const Selection& b);
+      bool provedSAT() { return false; } ;
   };
   
   class HM5_2 : public SubProblem {
@@ -28,6 +30,7 @@ namespace HierMUS {
       explicit HM5_2(MUSEnumOptions& mo);
       void printSol(const Selection& b);
       bool check(const Selection& b);
+      bool provedSAT() { return false; } ;
   };
 
   class FFLAT : public SubProblem {
@@ -35,6 +38,7 @@ namespace HierMUS {
       explicit FFLAT(MUSEnumOptions& mo);
       void printSol(const Selection& b);
       bool check(const Selection& b);
+      bool provedSAT() { return false; } ;
   };
 
   class RandomProblem : public SubProblem {
@@ -48,6 +52,7 @@ namespace HierMUS {
                              unsigned int mussize);
       void printSol(const Selection& b);
       bool check(const Selection& b);
+      bool provedSAT() { return false; } ;
   };
 
 }

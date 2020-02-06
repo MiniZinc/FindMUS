@@ -22,6 +22,7 @@ namespace HierMUS {
       virtual ~SubProblem();
       virtual void printSol(const Selection& b) = 0;
       virtual bool check(const Selection& b) = 0;
+      virtual bool provedSAT() = 0;
       virtual MapNode& getTree();
 
       std::vector<std::string> leaf_names;

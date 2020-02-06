@@ -82,7 +82,9 @@ namespace HierMUS {
     }
   }
 
-  FznSubProblem::FznSubProblem(string fznpath, string pathfilepath, MUSEnumOptions& mo) : SubProblem(mo), fzn_file (fznpath) {
+  FznSubProblem::FznSubProblem(
+      string fznpath, string pathfilepath,
+      MUSEnumOptions& mo) : SubProblem(mo), last_sat{false}, fzn_file (fznpath) {
     double start_build = wallClockTime();
     ifstream pathstream(pathfilepath);
     if(!pathstream.is_open()) {
@@ -208,6 +210,8 @@ namespace HierMUS {
     //}
   }
 
+  bool FznSubProblem::provedSAT() { return last_sat; }
+
   ConstraintSet FznSubProblem::getConstraintSet(const Selection& b) {
     set<string> leaf_names = getLeaves(b);
     ConstraintSet entries;
@@ -291,7 +295,9 @@ namespace HierMUS {
 
     string res;
     bool is_sat = s != MiniZinc::SolverInstance::UNSAT;
+    last_sat = false;
     if (s == MiniZinc::SolverInstance::SAT || s == MiniZinc::SolverInstance::OPT) {
+      last_sat = true;
       res = "S";
     } else if (s == MiniZinc::SolverInstance::UNSAT) {
       res = "U";

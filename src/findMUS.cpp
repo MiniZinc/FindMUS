@@ -219,8 +219,12 @@ int main(int argc, char **argv) {
 
   // Is the model unsat to begin with?
   if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
-    std::cout << "Error: Cannot prove UNSAT within solver timelimit. "
-              << "Set a larger timeout with the '--solver-timelimit' argument.\n";
+    if(problem->provedSAT()) {
+      std::cout << "Error: Model is Satisfiable\n";
+    } else {
+      std::cout << "Error: Cannot prove UNSAT within solver timelimit. "
+                << "Set a larger timeout with the '--solver-timelimit' argument.\n";
+    }
     return EXIT_FAILURE;
   }
 

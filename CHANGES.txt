@@ -2,6 +2,10 @@
 # findMUS Changelog #
 ======================
 
+Recent changes
+==============
+  - Temporarily added Problem::provedSAT() so the FindMUS tool can distinguish between failing to prove UNSAT and actually proving SAT
+
 version 0.5.1
 =============
 Changes:
