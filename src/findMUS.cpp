@@ -221,6 +221,7 @@ int main(int argc, char **argv) {
   if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
     if(problem->provedSAT()) {
       std::cout << "Error: Model is Satisfiable\n";
+      return EXIT_SUCCESS;
     } else {
       std::cout << "Error: Cannot prove UNSAT within solver timelimit. "
                 << "Set a larger timeout with the '--solver-timelimit' argument.\n";
@@ -244,4 +245,6 @@ int main(int argc, char **argv) {
   FindMUSState::run(dro, mo, *me);
 
   delete me;
+
+  return EXIT_SUCCESS;
 }
