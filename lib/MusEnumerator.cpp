@@ -135,9 +135,14 @@ static int indent=0;
     if(mopts.timedOut()) return QXTimeOut;
 
     if(D>0 && !B.selected.empty()) {
-      stats.madeSatCheck();
-      if(subProblem.check(B)) {
+      bool known_sat = subsetMap->knownSat(B);
+      if(!known_sat) {
+        stats.madeSatCheck();
+        known_sat = subProblem.check(B);
         stats.foundSatSet();
+      }
+
+      if(known_sat) {
         subsetMap->blockSubsets(B);
       } else {
         stats.foundUnSatSet();

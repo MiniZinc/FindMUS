@@ -33,6 +33,7 @@ namespace HierMUS {
       int branches_top;
 
       IntVar* obj;
+      Lit satLit; // Enables/disables superset blocks
 
       Selection solution_set;
       Selection solution_template;
@@ -54,7 +55,7 @@ namespace HierMUS {
       void print(std::ostream&);
       void setMaximal(bool max_mode);
       Selection expand(const Selection& selection);
-      Selection getSelection(const Selection& selection);
+      Selection getSelection(const Selection& selection, bool blockSat = true);
       Selection getSelection();
       Selection getRootSelector();
       Selection getLeavesSelector();

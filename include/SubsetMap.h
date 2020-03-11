@@ -32,6 +32,7 @@ namespace HierMUS {
 
       void enableTempBlocking(void) { tempBlocking = true; }
       void disableTempBlocking(void) { tempBlocking = false; }
+
       virtual void pushTempBlockSupersets(const Selection& selection) = 0;
       virtual void pushTempBlockSubsets(const Selection& selection) = 0;
       virtual void popTempBlock(void) = 0;
@@ -39,8 +40,11 @@ namespace HierMUS {
 
       virtual Selection expand(const Selection& selection) = 0;
       virtual void setMaximal(bool max_mode) = 0;
+
       virtual Selection getRandomSelection(const Selection& selection, const Selection& finc, bool strictSubset);
-      virtual Selection getSelection(const Selection& selection) = 0;
+      virtual Selection getSelection(const Selection& selection, bool blockSat = true) = 0;
+      virtual bool knownSat(const Selection& selection);
+
       virtual Selection getSelection() = 0;
       virtual Selection getRootSelector() = 0;
       virtual Selection getLeavesSelector() = 0;

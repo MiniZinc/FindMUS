@@ -49,8 +49,8 @@ namespace HierMUS {
     inline bool shouldRestart(void) const {
       if(!restarts_enabled) return false;
       if(should_restart) return true;
-      if(local_sat_chain_limit == 0)
-      return local_sat_chain > local_sat_chain_limit;
+      if(local_sat_chain_limit == 0) return local_sat_chain > local_sat_chain_limit;
+      return false;
     }
 
   };

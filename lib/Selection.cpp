@@ -21,6 +21,9 @@ namespace HierMUS {
       un.include.insert(ExpandedNode(mn));
       un.exclude.erase(mn);
     }
+    for(MapNode* mn : c1.selected) {
+      un.exclude.erase(mn);
+    }
     return un;
   }
 

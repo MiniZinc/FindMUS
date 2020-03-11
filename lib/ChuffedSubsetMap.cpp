@@ -13,6 +13,7 @@
 #include "path_utils.h"
 
 namespace HierMUS {
+
   using std::vector;
   using std::string;
 
@@ -88,11 +89,12 @@ namespace HierMUS {
       branch(va, VAR_INORDER, VAL_MAX);
 
       //sat.addClause(blockRoot);
+      int satControl = sat.newVar();
+      satLit = Lit(satControl, true);
 
       // Add sat brancher
       so.vsids = true;
       engine.branching->add(&sat);
-
 
       engine.start_time = wallClockTime();
       engine.opt_time = 0;
@@ -251,6 +253,9 @@ namespace HierMUS {
 
   void ChuffedSubsetProblem::blockSupersets(const Selection& selection) {
     vec<Lit> blockClause;
+    // control variable for disabling superset blocking
+    blockClause.push(satLit);
+
     if(mopts.verbose_map) std::cout << "SubsetMap:\tSuperset block: " << (tempBlocking ? "<Temp> " : "") ;
 
     for(const MapNode* node : selection.selected) {
@@ -322,10 +327,10 @@ namespace HierMUS {
   }
 
   Selection ChuffedSubsetProblem::getSelection() {
-    return getSelection(getLeavesSelector());
+    return getSelection(getLeavesSelector(), true);
   }
 
-  Selection ChuffedSubsetProblem::getSelection(const Selection& selection) {
+  Selection ChuffedSubsetProblem::getSelection(const Selection& selection, bool blockSat /* = true */ ) {
     if(!consistent) {
       if(mopts.verbose_map) { std::cout << "SubsetMap:\tInconsistent. Returning: {}. \n"; }
       return {};  // Return empty Selection
@@ -365,6 +370,8 @@ namespace HierMUS {
       all_assumptions.push(node->var.isLeaf ? ~node->var.leaf->getLit(true) : ~node->var.disj->getLit(true));
       if(mopts.verbose_map) std::cout << (node->var.isLeaf ? " ~" :  " ~d") << node->path;
     }
+
+    all_assumptions.push( blockSat ? ~satLit : satLit );
 
     if(mopts.verbose_map) std::cout << " }\n";
     engine.set_assumptions(all_assumptions);

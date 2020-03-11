@@ -36,4 +36,8 @@ namespace HierMUS {
     return std::move(s);
   }
 
+  bool SubsetMap::knownSat(const Selection& selection) {
+    return getSelection(selection, false).selected.empty();
+  }
+
 }
