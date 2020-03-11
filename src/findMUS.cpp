@@ -11,6 +11,7 @@
 
 #ifdef BUILD_FINDMUS_EXAMPLES
 #include "DemoSubProblems.h"
+#include "FileSP.h"
 #endif
 
 #include <minizinc/solver.hh>
@@ -90,8 +91,11 @@ SubProblem* createProblem(DriverOptions& dro,
   if(!dro.demo_name.empty()) {
     if(dro.demo_name == "hm5") problem = new HM5(mo);
     else if(dro.demo_name == "hm5_2") problem = new HM5_2(mo);
+    else if(dro.demo_name == "file") problem = new FileSP(mo, dro.demo_path);
     else if(dro.demo_name == "glm") problem = new GLM(mo);
     else if(dro.demo_name == "fflat") problem = new FFLAT(mo);
+    else if(dro.demo_name == "path") problem = new Path(mo);
+    else if(dro.demo_name == "p1f") problem = new P1f(mo);
     else if(dro.demo_name == "rand") problem = new RandomProblem(mo, 
                                                                  dro.demo_rand_seed,
                                                                  dro.demo_rand_cons,

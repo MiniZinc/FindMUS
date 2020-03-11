@@ -64,6 +64,8 @@ if(libminizinc_FOUND)
       add_library(findmus_examples
         examples/cpp/DemoSubProblems.cpp
         examples/cpp/DemoSubProblems.h
+        examples/cpp/FileSP.cpp
+        examples/cpp/FileSP.h
       )
       target_compile_definitions(hiermus PRIVATE BUILD_FINDMUS_EXAMPLES)
       target_compile_definitions(findMUS PRIVATE BUILD_FINDMUS_EXAMPLES)

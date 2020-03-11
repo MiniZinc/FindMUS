@@ -20,6 +20,7 @@ public:
   char filter_sep = ',';
 #ifdef BUILD_FINDMUS_EXAMPLES
   string demo_name;
+  string demo_path;
   int demo_rand_seed;
   int demo_rand_cons;
   int demo_rand_muses;

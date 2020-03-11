@@ -1,0 +1,12 @@
+names b1 b2 b3 b4 b5 b6
+parent 12 b1
+parent 12 b2
+parent 34 b3
+parent 34 b4
+parent 56 b5
+parent 56 b6
+parent 1234 12
+parent 1234 34
+mus b1 b2
+mus b1 b3
+mus b2 b3 b6

@@ -205,6 +205,138 @@ namespace HierMUS {
     return sol;
   }
 
+
+  // Path
+  Path::Path(MUSEnumOptions& mo) : SubProblem(mo) {
+    MapNode a1 {"a1", "a1"};
+    MapNode a2 {"a2", "a2"};
+    MapNode a3 {"a3", "a3"};
+    MapNode b1 {"b1", "b1"};
+    MapNode b2 {"b2", "b2"};
+    MapNode b3 {"b3", "b3"};
+    MapNode c1 {"c1", "c1"};
+    MapNode c2 {"c2", "c2"};
+    MapNode c3 {"c3", "c3"};
+
+    leaf_names = { "a1", "a2", "a3",
+                   "b1", "b2", "b3",
+                   "c1", "c2", "c3" };
+
+
+    if(mo.subproblem_structure == STR_FLAT) {
+      tree.children = {a1,a2,a3,b1,b2,b3,c1,c2,c3};
+    } else {
+      MapNode as {"as", {a1,a2,a3}};
+      MapNode bs {"bs", {b1,b2,b3}};
+      MapNode cs {"cs", {c1,c2,c3}};
+
+      tree.children = {as,bs,cs};
+    }
+    if(mopts.subproblem_binarize != BIN_NONE) {
+      tree.makeBinary([](const MapNode& n){ 
+        return n.children.size() > 2;
+      });
+    }
+  }
+
+  void Path::printSol(const Selection& b) {
+    set<string> leaves = getLeaves(b);
+    for(const string& leaf : leaves) {
+      std::cout << leaf << ", ";
+    }
+    std::cout << "\n";
+  }
+
+  bool Path::check(const Selection& s) {
+    bool a1 = false;
+    bool a2 = false;
+    bool a3 = false;
+    bool b1 = false;
+    bool b2 = false;
+    bool b3 = false;
+    bool c1 = false;
+    bool c2 = false;
+    bool c3 = false;
+
+    bool sol = true;
+    set<string> leaves = getLeaves(s);
+    for(const string& leaf : leaves) {
+      if(leaf == "a1") a1 = true;
+      if(leaf == "a2") a2 = true;
+      if(leaf == "a3") a3 = true;
+      if(leaf == "b1") b1 = true;
+      if(leaf == "b2") b2 = true;
+      if(leaf == "b3") b3 = true;
+      if(leaf == "c1") c1 = true;
+      if(leaf == "c2") c2 = true;
+      if(leaf == "c3") c3 = true;
+    }
+
+    if( a1 && a2 ) sol = false;
+    if( c2 && c3 ) sol = false;
+    if( c1 && c2 ) sol = false;
+    if( a1 && a3 ) sol = false;
+
+    if(mopts.verbose_subsolve)
+      std::cout << "Path::check(" << s << ") :" << sol<<"\n";
+    return sol;
+  }
+
+  // P1f
+  P1f::P1f(MUSEnumOptions& mo) : SubProblem(mo) {
+    MapNode b21 {"21", "21"};
+    MapNode b22 {"22", "22"};
+    MapNode b23 {"23", "23"};
+    MapNode b24 {"24", "24"};
+    MapNode b25 {"25", "25"};
+    MapNode b31 {"31", "31"};
+    MapNode b32 {"32", "32"};
+    MapNode b33 {"33", "33"};
+    MapNode b27 {"27", "27"};
+    MapNode b14 {"14", "14"};
+
+    leaf_names = {"21", "22", "23", "24", "25", "31", "32", "33", "27", "14"};
+
+    if(mo.subproblem_structure == STR_FLAT) {
+      tree.children = {b21, b22, b23, b24, b25, b31, b32, b33, b27, b14};
+    } else {
+      MapNode b11 {"11", {b21, b22}};
+      MapNode b12 {"12", {b23, b24, b25}};
+      MapNode b13 {"13", {MapNode {"26", {b31,b32,b33}}, b27}};
+
+      tree.children = {b11,b12,b13,b14};
+    }
+    if(mopts.subproblem_binarize != BIN_NONE) {
+      tree.makeBinary([](const MapNode& n){ 
+        return n.children.size() > 2;
+      });
+    }
+  }
+
+  void P1f::printSol(const Selection& b) {
+    set<string> leaves = getLeaves(b);
+    for(const string& leaf : leaves) {
+      std::cout << leaf << ", ";
+    }
+    std::cout << "\n";
+  }
+
+  bool P1f::check(const Selection& s) {
+    bool sol = true;
+    set<string> leaves = getLeaves(s);
+    for(const string& leaf : leaves) {
+      if(leaf == "23") sol = false;
+      if(leaf == "24") sol = false;
+      if(leaf == "25") sol = false;
+      if(leaf == "27") sol = false;
+      if(leaf == "14") sol = false;
+    }
+
+    if(mopts.verbose_subsolve)
+      std::cout << "P1f::check(" << s << ") :" << sol<<"\n";
+    return sol;
+  }
+
   void makeRandomBinary(std::default_random_engine& rand_gen, MapNode& node) {
     if(node.children.size() > 2) {
       std::normal_distribution<> rand_pivot{node.children.size()/2.0, 2};

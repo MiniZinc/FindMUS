@@ -301,6 +301,9 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
 #ifdef BUILD_FINDMUS_EXAMPLES
     } else if(strcmp(argv[i], "--demo") == 0) {
       dro.demo_name = argv[++i];
+      if(dro.demo_name == "file") {
+        dro.demo_path = argv[++i];
+      }
     } else if(strcmp(argv[i], "--demo-rand-seed") == 0) {
       dro.demo_rand_seed = atoi(argv[++i]);
     } else if(strcmp(argv[i], "--demo-rand-cons") == 0) {

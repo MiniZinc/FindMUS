@@ -24,7 +24,7 @@ namespace HierMUS {
       bool check(const Selection& b);
       bool provedSAT() { return false; } ;
   };
-  
+
   class HM5_2 : public SubProblem {
     public:
       explicit HM5_2(MUSEnumOptions& mo);
@@ -36,6 +36,22 @@ namespace HierMUS {
   class FFLAT : public SubProblem {
     public:
       explicit FFLAT(MUSEnumOptions& mo);
+      void printSol(const Selection& b);
+      bool check(const Selection& b);
+      bool provedSAT() { return false; } ;
+  };
+
+  class Path: public SubProblem {
+    public:
+      explicit Path(MUSEnumOptions& mo);
+      void printSol(const Selection& b);
+      bool check(const Selection& b);
+      bool provedSAT() { return false; } ;
+  };
+
+  class P1f: public SubProblem {
+    public:
+      explicit P1f(MUSEnumOptions& mo);
       void printSol(const Selection& b);
       bool check(const Selection& b);
       bool provedSAT() { return false; } ;
