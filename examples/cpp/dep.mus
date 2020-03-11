@@ -1,0 +1,7 @@
+names a1 a2 a3 b1 b2 b3 c1 c2 c3
+parent as a1 a2 a3
+parent bs b1 b2 b3
+parent cs c1 c2 c3
+mus a1 b1
+mus b2 c2
+mus a3 b3

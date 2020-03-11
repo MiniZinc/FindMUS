@@ -1,0 +1,10 @@
+names 21 22 23 24 25 31 32 33 27 14
+parent 11 21 22
+parent 12 23 24 25
+parent 26 31 32 33
+parent 13 26 27
+mus 23
+mus 24
+mus 25
+mus 27
+mus 14
