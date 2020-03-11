@@ -49,7 +49,7 @@ namespace HierMUS {
         // Get MapNode for parent (create it if it doesn't exist)
         int pi = -1;
         for(int i=0 ; i<nodes.size(); i++) {
-          if(nodes[i].con_id == parent_name) { pi = i; }
+          if(nodes[i].path == parent_name) { pi = i; break; }
         }
         if(pi == -1) {
           pi = nodes.size();
@@ -59,11 +59,14 @@ namespace HierMUS {
         while(entry >> child_name || !entry.eof()) {
           int ci = -1;
           for(int i=0; i<nodes.size(); i++) {
-            if(nodes[i].con_id == child_name) { ci = i; break; }
+            if(nodes[i].path == child_name) { ci = i; break; }
           }
-          assert(ci != -1);
+          if(ci == -1) {
+            ci = nodes.size();
+            nodes.emplace_back(child_name);
+          }
           nodes[pi].children.push_back(nodes[ci]);
-          has_parent.insert(nodes[ci].con_id);
+          has_parent.insert(nodes[ci].path);
         }
       } else if(cmd == "mus") {
         set<string> mus;
@@ -77,13 +80,13 @@ namespace HierMUS {
 
     if(mo.subproblem_structure == STR_FLAT) {
       for(MapNode& node : nodes) {
-        if(find(leaf_names.begin(), leaf_names.end(), node.con_id) != leaf_names.end()) {
+        if(find(leaf_names.begin(), leaf_names.end(), node.path) != leaf_names.end()) {
           tree.children.push_back(node);
         }
       }
     } else {
       for(MapNode& node : nodes) {
-        if(has_parent.find(node.con_id) == has_parent.end()) {
+        if(has_parent.find(node.path) == has_parent.end()) {
           tree.children.push_back(node);
         }
       }
