@@ -1,5 +1,9 @@
 #include <iostream>
 
+#if RANDOM_SEL_SPLIT
+#include <random>
+#endif
+
 #include "Selection.h"
 #include "path_utils.h"
 
@@ -56,15 +60,24 @@ namespace HierMUS {
   }
 
   void sel_split(const Selection& C, Selection& c1, Selection& c2) {
-    size_t mid = C.selected.size() / 2;
+#if RANDOM_SEL_SPLIT
+    // Random values should be provided by MUSEnumOptions for
+    // reproducibility reasons. This code is just for small tests
+    static std::random_device rd;
+    static std::uniform_int_distribution<int> rand_bin(0,1);
+#endif
 
+    size_t mid = C.selected.size() / 2;
     c1.exclude.insert(C.exclude.begin(), C.exclude.end());
     c2.exclude.insert(C.exclude.begin(), C.exclude.end());
 
     std::set<MapNode*>::iterator it = C.selected.begin();
     for(size_t c=0; c<C.selected.size(); c++, ++it) {
+#if RANDOM_SEL_SPLIT
+      if(rand_bin(rd) == 1) { // c1
+#else
       if(c < mid) { // c1
-      //if(mopts.getRandBool()) { // c1
+#endif
         c1.selected.insert(*it);
         c1.include.insert(ExpandedNode(*it));
         c2.exclude.insert(*it);
