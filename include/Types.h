@@ -19,9 +19,6 @@ namespace HierMUS {
     int sat_calls = 0;
     int map_calls = 0;
 
-    // This records the number of calls in the most recent shrink step
-    int last_shrink_sat_calls = 0;
-
     counts treecounts;
 
     int local_sat_chain_limit = 0;

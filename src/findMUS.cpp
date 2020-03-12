@@ -58,8 +58,8 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   double start_time = wallClockTime();
   Statistics& stats = me.getStatistics();
   if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
+  int start_sat_calls = 0;
   while(!sigint && !mo.timedOut() && me.search()) {
-
     me.printMUS();
     std::cout << std::flush;
     stats.nmuses++;
@@ -68,9 +68,12 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
       if(dro.output_progress) { std::cout << "%%%mzn-progress " << (static_cast<float>(stats.nmuses) / dro.maxmuses * 100.0f) << std::endl; }
       if(stats.nmuses >= dro.maxmuses) break;
     }
+
+    int sat_calls_d = stats.sat_calls - start_sat_calls;
     if(dro.frequent_stats)
       std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
-                << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
+                << "\tnmuses: " << stats.nmuses << "\t" << stats << "\tdsat: " << sat_calls_d <<"\n";
+    start_sat_calls = stats.sat_calls;
   }
 
   if(sigint || mo.timedOut()) {
