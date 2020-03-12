@@ -9,6 +9,7 @@ namespace HierMUS {
     os << "map: " << s.map_calls;
     os << "\tsat: " << s.sat_calls;
     os << "\ttotal: " << s.sat_calls + s.map_calls;
+    os << "\tsh_sat: " << s.last_shrink_sat_calls;
     return os;
   }
 

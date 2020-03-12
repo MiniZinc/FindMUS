@@ -23,14 +23,24 @@ namespace HierMUS {
   }
 
   bool MusEnumerator::shrink(Selection& m, const set<MapNode*>& c) {
-    switch(mopts.map_shrink_alg) {
-      case SH_LIN:     return linear_shrink(m, c);
-      case SH_MAP_LIN: return linear_shrink_with_map(m, c);
-      case SH_QX:      return qx(m, c);
-      case SH_MAP_QX:  return qx_with_map(m, c);
+    bool res = false;
+
+    int start_sat_calls = stats.sat_calls;
+    stats.last_shrink_sat_calls = 0;
+
+    if(mopts.map_shrink_alg == SH_MAP_QX) {
+      res = qx_with_map(m, c);
+    } else if(mopts.map_shrink_alg == SH_QX) {
+      res = qx(m, c);
+    } else if(mopts.map_shrink_alg == SH_MAP_LIN) {
+      res = linear_shrink_with_map(m, c);
+    } else { // SH_LIN
+      res = linear_shrink(m, c);
     }
-    assert(false);
-    return false;
+
+    stats.last_shrink_sat_calls = stats.sat_calls - start_sat_calls;
+
+    return res;
   }
 
   bool MusEnumerator::linear_shrink(Selection& model, const set<MapNode*>& criticals) { 
@@ -119,6 +129,7 @@ namespace HierMUS {
   bool MusEnumerator::qx(Selection& model, const set<MapNode*>& criticals) {
     Selection B;
     OptionalSelection res = qx_back(B, 0, model, criticals);
+
     if(!res.has_value()) { return false; }
     model = res.get();
 
@@ -135,6 +146,7 @@ static int indent=0;
     if(mopts.timedOut()) return QXTimeOut;
 
     if(D>0 && !B.selected.empty()) {
+      stats.madeMapCall();
       bool known_sat = subsetMap->knownSat(B);
       if(!known_sat) {
         stats.madeSatCheck();
