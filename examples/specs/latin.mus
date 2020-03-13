@@ -1,0 +1,17 @@
+names dr1 dr2 dr3 dc1 dc2 dc3 lr12 lr23 gc12 gc23
+parent dRows dr1 dr2 dr3
+parent dCols dc1 dc2 dc3
+parent lRows lr12 lr23
+parent gCols gc12 gc23
+mus dr2 dc1 gc12 lr12 lr23 gc23
+mus dr2 lr12 gc12 dc2 gc23 dc3 dr3
+mus dr2 lr23 lr12 gc12 dc2 dr3 dc3
+mus dr2 gc23 dr1 lr12 gc12
+mus dc1 dr1 lr12 gc12 lr23
+mus dc1 dc2 lr12 gc12 lr23
+mus dc1 gc23 dr1 lr12 gc12
+mus dc2 gc12 dr1 lr12 lr23 gc23
+mus lr23 lr12 gc12 dc2 gc23 dc3 dr3
+mus lr23 lr12 gc12 gc23 dc3 dr3 dr2
+mus lr23 gc12 lr12 dc3 gc23 dc1
+mus gc12 dr1 lr12 dr3 lr23 gc23
