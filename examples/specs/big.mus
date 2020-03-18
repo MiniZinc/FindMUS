@@ -1,0 +1,54 @@
+names a1 a2 a3 b1 b2 b3 c1 c2 c3
+parent a12 a1 a2
+parent as a12 a3
+parent bs b1 b2 b3
+parent c13 c1 c3
+parent cs c13 c2
+mus a1 b1
+mus b2 c2
+mus a3 b3
+names ill1 ill2 ill3 ill4 ill5 cumu
+parent ills ill1 ill2 ill3 ill4
+mus cumu
+names b1 b2 b3 b4 b5 b6
+parent 12 b1 b2
+parent 34 b3 b4
+parent 56 b5 b6
+parent 1234 12 34
+mus b1 b2
+mus b1 b3
+mus b2 b3 b6
+names a1 a2 a3 b1 b2 b3 c1 c2 c3
+parent as a1 a2 a3
+parent bs b1 b2 b3
+parent cs c1 c2 c3
+mus a1 a2
+mus c2 c3
+mus c1 c2
+names dr1 dr2 dr3 dc1 dc2 dc3 lr12 lr23 gc12 gc23
+parent dRows dr1 dr2 dr3
+parent dCols dc1 dc2 dc3
+parent lRows lr12 lr23
+parent gCols gc12 gc23
+mus dr2 dc1 gc12 lr12 lr23 gc23
+mus dr2 lr12 gc12 dc2 gc23 dc3 dr3
+mus dr2 lr23 lr12 gc12 dc2 dr3 dc3
+mus dr2 gc23 dr1 lr12 gc12
+mus dc1 dr1 lr12 gc12 lr23
+mus dc1 dc2 lr12 gc12 lr23
+mus dc1 gc23 dr1 lr12 gc12
+mus dc2 gc12 dr1 lr12 lr23 gc23
+mus lr23 lr12 gc12 dc2 gc23 dc3 dr3
+mus lr23 lr12 gc12 gc23 dc3 dr3 dr2
+mus lr23 gc12 lr12 dc3 gc23 dc1
+mus gc12 dr1 lr12 dr3 lr23 gc23
+names 21 22 23 24 25 31 32 33 27 14
+parent 11 21 22
+parent 12 23 24 25
+parent 26 31 32 33
+parent 13 26 27
+mus 23
+mus 24
+mus 25
+mus 27
+mus 14
