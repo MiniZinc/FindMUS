@@ -32,6 +32,7 @@ add_library(hiermus
   lib/path_utils.cpp
   lib/MusEnumerator.cpp
   lib/Marco.cpp
+  lib/ReMUS.cpp
   lib/HierMUSEnumer.cpp
   lib/FznSubProblem.cpp
   lib/Types.cpp
@@ -47,6 +48,7 @@ add_library(hiermus
   include/SubsetMap.h
   include/MusEnumerator.h
   include/Marco.h
+  include/ReMUS.h
   include/HierMUSEnumer.h
   include/FznSubProblem.h
   include/Types.h

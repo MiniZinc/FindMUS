@@ -3,12 +3,21 @@
 
 #include "HierMUSEnumer.h"
 #include "Marco.h"
+#include "ReMUS.h"
 
 namespace HierMUS {
   using std::vector;
 
   HierMUSEnumer::HierMUSEnumer(SubProblem& prob, MUSEnumOptions& mo) : MusEnumerator(prob, mo) {
-    inner_enum = new Marco(prob, mo, subsetMap);
+    if(mo.map_enumeration_alg == ALG_REMUS) {
+      if(mo.subproblem_structure != STR_FLAT || mo.subproblem_binarize != BIN_NONE) {
+        std::cerr << "Warning: Hierarchical ReMUS has not been implemented. Results will be incorrect!\n";
+      }
+      inner_enum = new ReMUS(prob, mo, subsetMap);
+    } else {
+      inner_enum = new Marco(prob, mo, subsetMap);
+    }
+
     inner_enum->setUnsatCallback([&](const Selection& s) {
       if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: SubEnumerator adding set: " << s << " to candidates\n"; }
       if(frontier_idx != -1) {

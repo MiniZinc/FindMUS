@@ -70,7 +70,7 @@ namespace HierMUS {
                PSET_FZN,  // STR_NORMAL, BIN_ALL, DEPTH_PROGRAM, SH_MAP_QX, ALG_MARCO
              };
 
-  enum MusAlg { ALG_MARCO }; // Other options have been removed
+  enum MusAlg { ALG_MARCO, ALG_REMUS }; // Other options have been removed
 
   enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_MAP_QX };
 

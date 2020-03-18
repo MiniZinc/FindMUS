@@ -93,6 +93,9 @@ void help_long(void) {
       << "    Enable restart to flat mode if large run of sat sets encountered\n"
       << "  --seed <n>\n"
       << "    Set random seed\n"
+      << "  --remus\n"
+      << "    Use ReMUS instead of MARCO. A hierarchical mode has not been\n"
+      << "    implemented. This should be used with '--no-binarize --structure flat'\n"
       << "\n"
       << " Subproblem: Solving options\n"
       << "  --solver <s>, --subsolver <s>\n"
@@ -227,6 +230,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       mo.timelimit = atof(argv[++i]);
     } else if(strcmp(argv[i], "--seed") == 0) {
       mo.setRandSeed(atoi(argv[++i]));
+    } else if(strcmp(argv[i], "--remus") == 0) {
+      mo.map_enumeration_alg = ALG_REMUS;
     } else if(strcmp(argv[i], "--solvers") == 0) {
       dro.list_solvers = true;
     } else if(strcmp(argv[i], "--solvers-json") == 0) {
