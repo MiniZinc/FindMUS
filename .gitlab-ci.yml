@@ -34,7 +34,7 @@ build:linux:
   variables:
     MZNARCH: "linux"
     CMAKE_ARCH: "Ninja"
-    CMAKEDIR: "lib/cmake"
+    CMAKEDIR: "lib64/cmake/libminizinc"
   tags: [linux, docker]
 
 build:osx:
@@ -42,14 +42,14 @@ build:osx:
   variables:
     MZNARCH: "osx"
     CMAKE_ARCH: "Ninja"
-    CMAKEDIR: "lib/cmake"
+    CMAKEDIR: "lib/cmake/libminizinc"
   tags: [osx, cmake, cpp]
 
 build:win64:
   <<: *build_definition
   variables:
     MZNARCH: "win64"
-    CMAKEDIR: "CMake"
+    CMAKEDIR: "CMake/libminizinc"
     CMAKE_ARCH: "Visual Studio 15 2017 Win64"
   script:
     - curl --silent -o vendor.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fvendor/jobs/artifacts/master/download?job=vendor:%MZNARCH%"
