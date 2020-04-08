@@ -130,7 +130,7 @@ namespace HierMUS {
 #define QXLOG(X) if(mopts.verbose_enum) std::cout << string(indent*2, ' ') << "QX: " << X << std::endl;
 
 static int indent=0;
-  OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
+  /* OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
                                                     const set<MapNode*>& criticals) {
     QXLOG("START"); indent++;
     if(mopts.timedOut()) return QXTimeOut;
@@ -141,10 +141,10 @@ static int indent=0;
       if(!known_sat) {
         stats.madeSatCheck();
         known_sat = subProblem.check(B);
-        stats.foundSatSet();
       }
 
       if(known_sat) {
+        stats.foundSatSet();
         subsetMap->blockSubsets(B);
       } else {
         stats.foundUnSatSet();
@@ -153,6 +153,113 @@ static int indent=0;
         return empty_sel(C);
       }
     }
+    if(C.selected.size() == 1) { 
+      QXLOG("returning C <- |C| == 1"); indent--;
+      return C;
+    }
+
+    Selection C1, C2;
+    stats.madeMapCall();
+    C1 = subsetMap->getRandomSelection(C, B, true);
+    if(C1.selected.empty()) {
+      QXLOG("returning C <- |C1| == 0"); indent--;
+
+      return C;
+    }
+    C2 = sel_complement(C, C1);
+
+    OptionalSelection D2, D1;
+    if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
+      D2 = C2;
+    } else {
+      D2 = qx_back_with_map(sel_union(B, C1), C1.selected.size(), C2, criticals);
+      if(!D2.has_value()) return QXTimeOut;
+    }
+
+    if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
+      D1 = C1;
+    } else {
+      D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
+      if(!D1.has_value()) return QXTimeOut;
+    }
+
+    QXLOG("returning D1 U D2"); indent--;
+    return sel_union(D1.get(),D2.get());
+  } */
+
+  /* OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
+                                                    const set<MapNode*>& criticals) {
+    QXLOG("START"); indent++;
+    if(mopts.timedOut()) return QXTimeOut;
+
+    if(D>0 && !B.selected.empty()) {
+      stats.madeSatCheck();
+      if(subProblem.check(B)) {
+        stats.foundSatSet();
+        subsetMap->blockSubsets(B);
+      } else {
+        stats.foundUnSatSet();
+        subsetMap->blockSupersets(B);
+        QXLOG("Returning empty"); indent--;
+        return empty_sel(C);
+      }
+    }
+    if(C.selected.size() == 1) { 
+      QXLOG("returning C <- |C| == 1"); indent--;
+      return C;
+    }
+
+    Selection C1, C2;
+    stats.madeMapCall();
+    C1 = subsetMap->getRandomSelection(C, B, true);
+    if(C1.selected.empty()) {
+      QXLOG("returning C <- |C1| == 0"); indent--;
+
+      return C;
+    }
+    C2 = sel_complement(C, C1);
+
+    OptionalSelection D2, D1;
+    if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
+      D2 = C2;
+    } else {
+      D2 = qx_back_with_map(sel_union(B, C1), C1.selected.size(), C2, criticals);
+      if(!D2.has_value()) return QXTimeOut;
+    }
+
+    if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
+      D1 = C1;
+    } else {
+      D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
+      if(!D1.has_value()) return QXTimeOut;
+    }
+
+    QXLOG("returning D1 U D2"); indent--;
+    return sel_union(D1.get(),D2.get());
+  } */
+
+
+  OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
+                                                    const set<MapNode*>& criticals) {
+    QXLOG("START"); indent++;
+    if(mopts.timedOut()) return QXTimeOut;
+
+    if(D>0 && !B.selected.empty()) {
+      stats.madeMapCall();
+      if(!subsetMap->getSelection(B).selected.empty()) {
+        stats.madeSatCheck();
+        if(subProblem.check(B)) {
+          stats.foundSatSet();
+          subsetMap->blockSubsets(B);
+        } else {
+          stats.foundUnSatSet();
+          subsetMap->blockSupersets(B);
+          QXLOG("Returning empty"); indent--;
+          return empty_sel(C);
+        }
+      }
+    }
+
     if(C.selected.size() == 1) { 
       QXLOG("returning C <- |C| == 1"); indent--;
       return C;

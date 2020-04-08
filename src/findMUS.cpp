@@ -5,6 +5,7 @@
 #include <csignal>
 
 #include "HierMUSEnumer.h"
+#include "OldMUSEnumer.h"
 
 #include "FznSubProblem.h"
 #include "Options.h"
@@ -222,7 +223,12 @@ int main(int argc, char **argv) {
   }
   
   // Create MUS Enumerator
-  MusEnumerator* me = new HierMUSEnumer(*problem, mo);
+  MusEnumerator* me;
+  if (dro.use_new_enumer) {
+    me = new HierMUSEnumer(*problem, mo);
+  } else {
+    me = new OldMUSEnumer(*problem, mo);
+  }
 
   // Is the model unsat to begin with?
   if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT

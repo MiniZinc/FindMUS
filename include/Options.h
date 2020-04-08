@@ -18,6 +18,7 @@ public:
   bool output_progress = true;
   string dump_dot_path;
   char filter_sep = ',';
+  bool use_new_enumer = true;
 #ifdef BUILD_FINDMUS_EXAMPLES
   string demo_name;
   string demo_path;

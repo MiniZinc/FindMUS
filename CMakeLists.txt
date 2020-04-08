@@ -34,6 +34,7 @@ add_library(hiermus
   lib/Marco.cpp
   lib/ReMUS.cpp
   lib/HierMUSEnumer.cpp
+  lib/OldMUSEnumer.cpp
   lib/FznSubProblem.cpp
   lib/Types.cpp
   lib/Selection.cpp
@@ -50,6 +51,7 @@ add_library(hiermus
   include/Marco.h
   include/ReMUS.h
   include/HierMUSEnumer.h
+  include/OldMUSEnumer.h
   include/FznSubProblem.h
   include/Types.h
   include/Selection.h
