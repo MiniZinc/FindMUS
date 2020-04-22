@@ -216,24 +216,31 @@ namespace HierMUS {
     return ps.size() > 0;
   }
 
-  Selection ChuffedSubsetProblem::expand(const Selection& s) {
+  Selection ChuffedSubsetProblem::expand(const Selection& s, const Selection& m) {
     Selection newSel;
     newSel.selected = s.selected;
     newSel.exclude = s.exclude;
+    newSel.is_min = s.is_min;
 
-    if(mopts.verbose_map) std::cout << "SubsetMap:\tExpanding: " << s.include;
+    if(mopts.verbose_map) std::cout << "SubsetMap:\tExpanding: " << s.include << " from " << m.include;
     for(const ExpandedNode& en : s.include) {
-      if(s.selected.empty() || s.selected.find(en.parent) != s.selected.end()) {
-        MapNode* nm = en.child;
-        if(nm->var.isLeaf || nm->children.empty()) {
-          newSel.include.insert(en);
-        } else {
-          for(MapNode& child : nm->children)
-            newSel.include.insert(ExpandedNode(en.parent, &child));
-        }
+      if (std::any_of(m.include.begin(),
+                      m.include.end(),
+                      [&](const ExpandedNode& m_en) {return m_en.child == en.child; })) {
+        if(s.selected.empty() || s.selected.find(en.parent) != s.selected.end()) {
+          MapNode* nm = en.child;
+          if(nm->var.isLeaf || nm->children.empty()) {
+            newSel.include.insert(en);
+          } else {
+            for(MapNode& child : nm->children)
+              newSel.include.insert(ExpandedNode(en.parent, &child));
+          }
 
+        } else {
+          newSel.exclude.insert(en.child);
+        }
       } else {
-        newSel.exclude.insert(en.child);
+        newSel.include.insert(en);
       }
     }
     if(mopts.verbose_map) std::cout << " to " << newSel.include << "\n";

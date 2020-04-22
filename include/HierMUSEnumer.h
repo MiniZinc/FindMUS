@@ -8,6 +8,7 @@
 namespace HierMUS {
   class HierMUSEnumer : public MusEnumerator {
     private:
+      Selection unsatUnion;
       std::vector<Selection> candidates;
       MusEnumerator* inner_enum;
 

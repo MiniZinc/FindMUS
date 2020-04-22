@@ -54,7 +54,7 @@ namespace HierMUS {
 
       void print(std::ostream&);
       void setMaximal(bool max_mode);
-      Selection expand(const Selection& selection);
+      Selection expand(const Selection& selection, const Selection& range);
       Selection getSelection(const Selection& selection, bool blockSat = true);
       Selection getSelection();
       Selection getRootSelector();

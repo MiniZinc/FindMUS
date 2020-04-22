@@ -38,7 +38,7 @@ namespace HierMUS {
       virtual void popTempBlock(void) = 0;
       virtual void reset(void) = 0;
 
-      virtual Selection expand(const Selection& selection) = 0;
+      virtual Selection expand(const Selection& selection, const Selection& target) = 0;
       virtual void setMaximal(bool max_mode) = 0;
 
       virtual Selection getRandomSelection(const Selection& selection, const Selection& finc, bool strictSubset);

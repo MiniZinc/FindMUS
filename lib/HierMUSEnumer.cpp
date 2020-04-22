@@ -8,7 +8,7 @@
 namespace HierMUS {
   using std::vector;
 
-  HierMUSEnumer::HierMUSEnumer(SubProblem& prob, MUSEnumOptions& mo) : MusEnumerator(prob, mo) {
+  HierMUSEnumer::HierMUSEnumer(SubProblem& prob, MUSEnumOptions& mo) : MusEnumerator(prob, mo), frontier_idx{ 0 } {
     if(mo.map_enumeration_alg == ALG_REMUS) {
       if(mo.subproblem_structure != STR_FLAT || mo.subproblem_binarize != BIN_NONE) {
         std::cerr << "Warning: Hierarchical ReMUS has not been implemented. Results will be incorrect!\n";
@@ -24,7 +24,9 @@ namespace HierMUS {
         if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx] << "\n"; }
         candidates[frontier_idx].is_min = false;
       }
-      candidates.push_back(s);
+      unsatUnion = sel_union(unsatUnion, s);
+
+      candidates.push_back(subsetMap->expand(s, s));
     });
 
     Statistics& stats = inner_enum->getStatistics();
@@ -42,7 +44,6 @@ namespace HierMUS {
 
   void HierMUSEnumer::loadNextCandidate() {
     Statistics& stats = inner_enum->getStatistics();
-
     if(stats.shouldRestart()) {
       if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Restarting in flat mode\n"; }
       candidates.clear();
@@ -52,17 +53,25 @@ namespace HierMUS {
       stats.restarts_enabled = false;
     }
 
+    // Expand frontier
+    if(frontier_idx != -1) {
+      if(unsatUnion.selected.empty()) {
+        candidates[frontier_idx] = subsetMap->expand(candidates[frontier_idx], candidates[frontier_idx]);
+      } else {
+        candidates[frontier_idx] = subsetMap->expand(candidates[frontier_idx], unsatUnion);
+        unsatUnion = {};
+      }
+    }
+
     Selection top = candidates.back();
     candidates.pop_back();
-    Selection expanded = subsetMap->expand(top);
-    expanded.is_min = top.is_min;
-    if(!isLeaves(expanded)) {
+    if(!isLeaves(top)) {
       frontier_idx = static_cast<int>(candidates.size());
-      candidates.push_back(expanded);
+      candidates.push_back(top);
     } else {
       frontier_idx = -1;
     }
-    inner_enum->setFrontier(expanded);
+    inner_enum->setFrontier(top);
   }
 
   bool HierMUSEnumer::search() {

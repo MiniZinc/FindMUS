@@ -31,7 +31,7 @@ namespace HierMUS {
     });
 
     Selection root = subsetMap->getRootSelector();
-    frontier = subsetMap->expand(root);
+    frontier = subsetMap->expand(root,root);
     inner_enum->setFrontier(frontier);
     needs_expansion = !isLeaves(frontier);
     frontier = empty_selection;
@@ -51,7 +51,7 @@ namespace HierMUS {
 
     current_mus = empty_selection;
     if(needs_expansion) {
-      frontier = subsetMap->expand(frontier);
+      frontier = subsetMap->expand(frontier, frontier);
       if(!mopts.map_enum_focus_mode) allow_excludes(frontier);
 
       needs_expansion = !isLeaves(frontier);
