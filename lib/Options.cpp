@@ -166,18 +166,22 @@ void setParamSet(ParamSet ps, MUSEnumOptions& mo) {
 }
 
 void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
+  std::vector<std::string> args;
+  for(int i=0; i<argc; i++) args.push_back(argv[i]);
+
+  parse(dro, mo, args);
+}
+
+void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string>& args) {
   setParamSet(PSET_HINT, mo);
 
-  std::cout << "Args: ";
-  for(int i=0; i<argc; i++) std::cout << " " << argv[i];
-  std::cout << "\n";
+  // std::cout << "Args: " << utils::join(args, " ") << std::endl;
 
-
-  for(int i=1; i<argc; i++) {
-    if(strcmp(argv[i], "--help") == 0) {
+  for(int i=0; i<args.size(); i++) {
+    if(args[i] == "--help") {
       help_long();
-    } else if(strcmp(argv[i], "--paramset") == 0) {
-      std::string s = argv[++i];
+    } else if(args[i] ==  "--paramset") {
+      std::string s = args[++i];
       if(s == "hint") {
         setParamSet(PSET_HINT, mo);
       } else if(s == "mzn") {
@@ -188,10 +192,10 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
         std::cout << "Unknown paramset. Available options are {hint, mzn, fzn}\n";
         help_short(EXIT_FAILURE);
       }
-    } else if(argv[i][0] == '-' && argv[i][1] == 'D') {
-      dro.input_files.push_back(argv[i]);
-    } else if(strcmp(argv[i], "--shrink-alg") == 0) {
-      std::string alg = argv[++i];
+    } else if(args[i][0] == '-' && args[i][1] == 'D') {
+      dro.input_files.push_back(args[i]);
+    } else if(args[i] ==  "--shrink-alg") {
+      std::string alg = args[++i];
       if(alg == "lin")          mo.map_shrink_alg = SH_LIN;
       else if(alg == "map_lin") mo.map_shrink_alg = SH_MAP_LIN;
       else if(alg == "qx")      mo.map_shrink_alg = SH_QX;
@@ -200,12 +204,12 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
         std::cout << "Incorrect shrink option. Available options are {<lin>, map_lin, qx, map_qx}\n";
         help_short(EXIT_FAILURE);
       }
-    } else if(strcmp(argv[i], "--stdlib-dir") == 0) {
-      mo.mzn_stdlib_dir = argv[++i];
-    } else if(strcmp(argv[i], "--no-progress") == 0) {
+    } else if(args[i] ==  "--stdlib-dir") {
+      mo.mzn_stdlib_dir = args[++i];
+    } else if(args[i] ==  "--no-progress") {
       dro.output_progress = false;
-    } else if(strcmp(argv[i], "--structure") == 0) {
-      std::string type = argv[++i];
+    } else if(args[i] ==  "--structure") {
+      std::string type = args[++i];
       if(type == "flat")        mo.subproblem_structure = STR_FLAT;
       else if(type == "normal") mo.subproblem_structure = STR_NORMAL;
       else if(type == "gen")    mo.subproblem_structure = STR_GEN;
@@ -216,39 +220,39 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
         std::cout << "Incorrect structure setting. Available options are {flat, <normal>, gen, mix}\n";
         help_short(EXIT_FAILURE);
       }
-    } else if(strcmp(argv[i], "--no-binarize") == 0) {
+    } else if(args[i] ==  "--no-binarize") {
       mo.subproblem_binarize = BIN_NONE;
-    } else if(strcmp(argv[i], "--restarts") == 0) {
+    } else if(args[i] ==  "--restarts") {
       mo.restarts_enabled = true;
-    } else if(strcmp(argv[i], "--nmuses") == 0 || strcmp(argv[i], "-n") == 0) {
-      dro.maxmuses = atoi(argv[++i]);
+    } else if(args[i] == "--nmuses" || args[i] ==  "-n") {
+      dro.maxmuses = std::stoi(args[++i]);
       if(dro.maxmuses != 1) { // Disable focus mode
         mo.map_enum_focus_mode = false;
       }
-    } else if(strcmp(argv[i], "-a") == 0) {
+    } else if(args[i] ==  "-a") {
       dro.maxmuses = 0; // Find all MUSes
       mo.map_enum_focus_mode = false; // Don't use focus mode
-    } else if(strcmp(argv[i], "-t") == 0) {
-      mo.timelimit = atof(argv[++i]);
-    } else if(strcmp(argv[i], "--seed") == 0) {
-      mo.setRandSeed(atoi(argv[++i]));
-    } else if(strcmp(argv[i], "--remus") == 0) {
+    } else if(args[i] ==  "-t") {
+      mo.timelimit = std::stof(args[++i]);
+    } else if(args[i] ==  "--seed") {
+      mo.setRandSeed(std::stoi(args[++i]));
+    } else if(args[i] ==  "--remus") {
       mo.map_enumeration_alg = ALG_REMUS;
-    } else if(strcmp(argv[i], "--solvers") == 0) {
+    } else if(args[i] ==  "--solvers") {
       dro.list_solvers = true;
-    } else if(strcmp(argv[i], "--solvers-json") == 0) {
+    } else if(args[i] ==  "--solvers-json") {
       dro.list_solvers_json = true;
-    } else if(strcmp(argv[i], "--subsolver") == 0 || strcmp(argv[i], "--solver") == 0) {
-      mo.subproblem_solver = argv[++i];
-    } else if(strcmp(argv[i], "--solver-flags") == 0) {
-      mo.subproblem_solver_flags = argv[++i];
-    } else if(strcmp(argv[i], "--subsolver-timelimit") == 0 || strcmp(argv[i], "--solver-timelimit") == 0) {
-      mo.subproblem_solver_time_limit = atoi(argv[++i]);
-    } else if(strcmp(argv[i], "--depth") == 0) {
-      std::string a = argv[++i];
+    } else if(args[i] == "--subsolver" || args[i] ==  "--solver") {
+      mo.subproblem_solver = args[++i];
+    } else if(args[i] ==  "--solver-flags") {
+      mo.subproblem_solver_flags = args[++i];
+    } else if(args[i] == "--subsolver-timelimit" || args[i] ==  "--solver-timelimit") {
+      mo.subproblem_solver_time_limit = std::stoi(args[++i]);
+    } else if(args[i] ==  "--depth") {
+      std::string a = args[++i];
       if(isdigit(a[0])) {
         mo.map_depth = DEPTH_CUSTOM;
-        mo.map_depth_max = static_cast<unsigned int>(atoi(a.c_str()));
+        mo.map_depth_max = static_cast<unsigned int>(std::stoi(a.c_str()));
       } else {
         mo.map_depth_max = 0;
         if(a == "mzn") mo.map_depth = DEPTH_INSTANCE;
@@ -258,17 +262,17 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
           help_short(EXIT_FAILURE);
         }
       }
-    } else if(strcmp(argv[i], "--soft-defines") == 0) {
+    } else if(args[i] ==  "--soft-defines") {
       mo.subproblem_hard_functional_constraints = false;
-    } else if(strcmp(argv[i], "--hard-domains") == 0) {
+    } else if(args[i] ==  "--hard-domains") {
       mo.subproblem_hard_domain_constraints = true;
-    } else if(strcmp(argv[i], "--named-only") == 0) {
+    } else if(args[i] ==  "--named-only") {
       mo.subproblem_named_only = true;
-    } else if(strcmp(argv[i], "--filter-sep") == 0) {
-      dro.filter_sep = argv[++i][0];
-    } else if(!string(argv[i]).compare(0, 8, "--filter")) {
-      std::string arg = argv[i];
-      std::string csfilter = argv[++i];
+    } else if(args[i] ==  "--filter-sep") {
+      dro.filter_sep = args[++i][0];
+    } else if(!string(args[i]).compare(0, 8, "--filter")) {
+      std::string arg = args[i];
+      std::string csfilter = args[++i];
       vector<string> filters = utils::split(csfilter, dro.filter_sep);
       if(arg == "--filter-named-exclude") {
         mo.subproblem_name_filters_excludes.insert(filters.begin(), filters.end());
@@ -279,59 +283,59 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
       } else if(arg == "--filter-path") {
         mo.subproblem_path_filters.insert(filters.begin(), filters.end());
       }
-    } else if(strcmp(argv[i], "--dump-dot") == 0) {
-      dro.dump_dot_path = argv[++i];
-    } else if(strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
+    } else if(args[i] ==  "--dump-dot") {
+      dro.dump_dot_path = args[++i];
+    } else if(args[i] == "--verbose" || args[i] ==  "-v") {
       mo.verbose_final_stats = true;
       mo.verbose_enum = 1;
       mo.verbose_map = 1;
       mo.verbose_subsolve = 1;
       dro.compile_verbose = true;
-    } else if(strcmp(argv[i], "--verbose-compile") == 0) {
+    } else if(args[i] ==  "--verbose-compile") {
       dro.compile_verbose = true;
-    } else if(strcmp(argv[i], "--domains") == 0 || strcmp(argv[i], "-g") == 0) {
+    } else if(args[i] == "--domains" || args[i] ==  "-g") {
       dro.compile_domains = true;
-    } else if(strcmp(argv[i], "--verbose-enum") == 0) {
-      mo.verbose_enum = static_cast<unsigned int>(atoi(argv[++i]));
-    } else if(strcmp(argv[i], "--verbose-map") == 0) {
-      mo.verbose_map = static_cast<unsigned int>(atoi(argv[++i]));
-    } else if(strcmp(argv[i], "--verbose-subsolve") == 0) {
-      mo.verbose_subsolve = static_cast<unsigned int>(atoi(argv[++i]));
-    } else if(strcmp(argv[i], "--frequent-stats") == 0) {
+    } else if(args[i] ==  "--verbose-enum") {
+      mo.verbose_enum = static_cast<unsigned int>(std::stoi(args[++i]));
+    } else if(args[i] ==  "--verbose-map") {
+      mo.verbose_map = static_cast<unsigned int>(std::stoi(args[++i]));
+    } else if(args[i] ==  "--verbose-subsolve") {
+      mo.verbose_subsolve = static_cast<unsigned int>(std::stoi(args[++i]));
+    } else if(args[i] ==  "--frequent-stats") {
       dro.frequent_stats = true;
-    } else if(strcmp(argv[i], "--output-json") == 0) {
+    } else if(args[i] ==  "--output-json") {
       mo.subproblem_output_format = OUT_JSON;
-    } else if(strcmp(argv[i], "--output-html") == 0) {
+    } else if(args[i] ==  "--output-html") {
       mo.subproblem_output_format = OUT_HTML;
-    } else if(strcmp(argv[i], "--output-brief") == 0) {
+    } else if(args[i] ==  "--output-brief") {
       mo.subproblem_output_format = OUT_DEBUG;
-    } else if(strcmp(argv[i], "--use-old-enumer") == 0) {
+    } else if(args[i] ==  "--use-old-enumer") {
       dro.use_new_enumer = false;
 #ifdef BUILD_FINDMUS_EXAMPLES
-    } else if(strcmp(argv[i], "--demo") == 0) {
-      dro.demo_name = argv[++i];
+    } else if(args[i] ==  "--demo") {
+      dro.demo_name = args[++i];
       if(dro.demo_name == "file") {
-        dro.demo_path = argv[++i];
+        dro.demo_path = args[++i];
       }
-    } else if(strcmp(argv[i], "--demo-rand-seed") == 0) {
-      dro.demo_rand_seed = atoi(argv[++i]);
-    } else if(strcmp(argv[i], "--demo-rand-cons") == 0) {
-      dro.demo_rand_cons = atoi(argv[++i]);
-    } else if(strcmp(argv[i], "--demo-rand-muses") == 0) {
-      dro.demo_rand_muses = atoi(argv[++i]);
-    } else if(strcmp(argv[i], "--demo-rand-mus-size") == 0) {
-      dro.demo_rand_mus_size = atoi(argv[++i]);
+    } else if(args[i] ==  "--demo-rand-seed") {
+      dro.demo_rand_seed = std::stoi(args[++i]);
+    } else if(args[i] ==  "--demo-rand-cons") {
+      dro.demo_rand_cons = std::stoi(args[++i]);
+    } else if(args[i] ==  "--demo-rand-muses") {
+      dro.demo_rand_muses = std::stoi(args[++i]);
+    } else if(args[i] ==  "--demo-rand-mus-size") {
+      dro.demo_rand_mus_size = std::stoi(args[++i]);
 #endif
     } else {
-      if(strcmp(argv[i], "-") == 0) {
+      if(args[i] ==  "-") {
         std::cerr << "No support for reading from stdin (-)\n";
         help_short(EXIT_FAILURE);
       }
-      if(argv[i][0] == '-') {
-        std::cout << "Unknown argument: " << argv[i] << "\n";
+      if(args[i][0] == '-') {
+        std::cout << "Unknown argument: " << args[i] << "\n";
         help_short(EXIT_FAILURE);
       } else {
-        dro.input_files.push_back(argv[i]);
+        dro.input_files.push_back(args[i]);
       }
     }
   }

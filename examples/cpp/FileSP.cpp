@@ -23,12 +23,7 @@ namespace HierMUS {
     return true;
   }
 
-  FileSP::FileSP(MUSEnumOptions& mo, string file_path) : SubProblem(mo) {
-    std::ifstream is (file_path);
-    if(!is.is_open()) {
-      std::cerr << "Can't open file" << file_path << "\n";
-      exit(EXIT_FAILURE);
-    }
+  void FileSP::init(std::istream& is) {
     vector<MapNode> nodes;
     set<string> has_parent;
 
@@ -43,7 +38,7 @@ namespace HierMUS {
           leaf_names.push_back(name);
           nodes.emplace_back(name, name);
         }
-      } else if(cmd == "parent" && mo.subproblem_structure != STR_FLAT) {
+      } else if(cmd == "parent" && mopts.subproblem_structure != STR_FLAT) {
         string parent_name;
         entry >> parent_name;
         // Get MapNode for parent (create it if it doesn't exist)
@@ -78,7 +73,7 @@ namespace HierMUS {
       }
     }
 
-    if(mo.subproblem_structure == STR_FLAT) {
+    if(mopts.subproblem_structure == STR_FLAT) {
       for(MapNode& node : nodes) {
         if(find(leaf_names.begin(), leaf_names.end(), node.path) != leaf_names.end()) {
           tree.children.push_back(node);
@@ -96,6 +91,19 @@ namespace HierMUS {
         return n.children.size() > 2;
       });
     }
+  }
+
+  FileSP::FileSP(MUSEnumOptions& mo, std::istream& is) : SubProblem(mo) {
+    init(is);
+  }
+
+  FileSP::FileSP(MUSEnumOptions& mo, string file_path) : SubProblem(mo) {
+    std::ifstream is (file_path);
+    if(!is.is_open()) {
+      std::cerr << "Can't open file" << file_path << "\n";
+      exit(EXIT_FAILURE);
+    }
+    init(is);
   }
 
   void FileSP::printSol(const Selection& b) {
@@ -120,6 +128,14 @@ namespace HierMUS {
     if(mopts.verbose_subsolve)
       std::cout << "FileSP::check(" << s << ") :" << sol<<"\n";
     return sol;
+  }
+
+  bool FileSP::isMUS(const Selection& s) {
+    if(!s.selected.empty()) {
+      set<string> leaves = getLeaves(s);
+      if(find(muses.begin(), muses.end(), leaves) != muses.end()) return true;
+    }
+    return false;
   }
 
 }

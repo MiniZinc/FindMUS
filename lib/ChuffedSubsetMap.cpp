@@ -119,7 +119,7 @@ namespace HierMUS {
         std::cout << "SubsetMap:\tmap loaded:\ttime:\t" << std::fixed <<  std::setprecision(5) << wallClockTime() - build_start << "\n";
         std::cout << "SubsetMap:\tnleaves:\t" << leafNodes.size() << "\tnbranches:\t" << branchNodes.size() << "\n";
       }
-      std::cout << "SubsetMap:\tnleaves:\t" << leafNodes.size() << "\tnbranches:\t" << branchNodes.size() << "\n";
+      // std::cout << "SubsetMap:\tnleaves:\t" << leafNodes.size() << "\tnbranches:\t" << branchNodes.size() << "\n";
     }
 
   void ChuffedSubsetProblem::reset(void) {

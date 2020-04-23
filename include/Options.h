@@ -120,6 +120,7 @@ namespace OptionsHelper {
 void help_short(int exit_code = EXIT_SUCCESS);
 void help_long(void);
 void parse(DriverOptions& d, MUSEnumOptions& m, int argc, char**argv);
+void parse(DriverOptions& d, MUSEnumOptions& m, const std::vector<std::string>& args);
 }
 
 }

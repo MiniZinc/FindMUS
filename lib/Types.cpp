@@ -6,9 +6,9 @@
 namespace HierMUS {
 
   std::ostream& operator<<(std::ostream& os, Statistics const& s) {
-    os << "map: " << s.map_calls;
-    os << "\tsat: " << s.sat_calls;
-    os << "\ttotal: " << s.sat_calls + s.map_calls;
+    os << "map: "     << std::setw(6) << s.map_calls
+       << "\tsat: "   << std::setw(6) << s.sat_calls
+       << "\ttotal: " << std::setw(6) << s.sat_calls + s.map_calls;
     return os;
   }
 

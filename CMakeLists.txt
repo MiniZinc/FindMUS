@@ -76,6 +76,12 @@ if(libminizinc_FOUND)
       target_link_libraries(findMUS findmus_examples)
     endif()
 
+    if(BUILD_FINDMUS_TESTS)
+      add_executable(tests tests/tests.cpp examples/cpp/FileSP.cpp)
+      target_include_directories(tests PRIVATE examples/cpp)
+      target_link_libraries(tests hiermus chuffed_fzn chuffed mzn ${CMAKE_THREAD_LIBS_INIT})
+    endif()
+
     INSTALL(TARGETS findMUS
       RUNTIME DESTINATION bin
       LIBRARY DESTINATION lib
