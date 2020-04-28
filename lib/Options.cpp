@@ -167,7 +167,7 @@ void setParamSet(ParamSet ps, MUSEnumOptions& mo) {
 
 void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
   std::vector<std::string> args;
-  for(int i=0; i<argc; i++) args.push_back(argv[i]);
+  for(int i=1; i<argc; i++) args.push_back(argv[i]);
 
   parse(dro, mo, args);
 }
