@@ -58,11 +58,13 @@ public:
   string mzn_stdlib_dir;
   bool subproblem_hard_functional_constraints = true;
   bool subproblem_hard_domain_constraints = false; // This should be false until context-find is implemented!
-  bool subproblem_named_only = false;
-  std::set<string> subproblem_name_filters;
-  std::set<string> subproblem_name_filters_excludes;
-  std::set<string> subproblem_path_filters;
-  std::set<string> subproblem_path_filters_excludes;
+
+  FilterMode subproblem_filter_mode = FILTER_FOREGROUND;
+  std::vector<string> subproblem_name_filters;
+  std::vector<string> subproblem_name_filters_excludes;
+  std::vector<string> subproblem_path_filters;
+  std::vector<string> subproblem_path_filters_excludes;
+
   InitialStructure subproblem_structure = STR_NORMAL;
   Binarize subproblem_binarize = BIN_ALL;
 

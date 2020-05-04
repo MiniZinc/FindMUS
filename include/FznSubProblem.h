@@ -42,6 +42,7 @@ namespace HierMUS {
 
       ConstraintSet getConstraintSet(const Selection& b);
       bool isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name);
+      bool isFilteredIn(const MiniZinc::ConstraintI& ci, const string& name);
       void saveFzn(const Selection& b, const string& filename);
 
     public:

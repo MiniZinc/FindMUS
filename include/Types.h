@@ -94,6 +94,11 @@ namespace HierMUS {
     DEPTH_CUSTOM    // Search to a user-specified depth
   };
 
+  enum FilterMode {
+    FILTER_FOREGROUND,
+    FILTER_EXCLUSIVE
+  };
+
   struct UnsatSet {
     struct Constraint {
       std::vector<int> indices;

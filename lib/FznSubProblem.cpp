@@ -19,6 +19,7 @@
 namespace HierMUS {
   using std::string;
   using std::vector;
+  using std::pair;
   using std::stringstream;
   using std::ifstream;
   using std::ofstream;
@@ -29,57 +30,70 @@ namespace HierMUS {
   NullSolns2Out::~NullSolns2Out() {}
   std::ostream& NullSolns2Out::getOutput() { return nullstream; }
 
+  inline bool isFunctionalConstraint(const MiniZinc::ConstraintI& ci) {
+    return ci.e()->ann().containsCall(MiniZinc::constants().ann.defines_var);
+  }
+  inline bool isDomainConstraint(const MiniZinc::ConstraintI& ci) {
+    return ci.e()->ann().contains(MiniZinc::constants().ann.domain_change_constraint);
+  }
+
   bool FznSubProblem::isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name) {
-    if(nameToPath.at(name) == "NOPATH") return true;
-    if(mopts.subproblem_hard_functional_constraints &&
-       ci.e()->ann().containsCall(MiniZinc::constants().ann.defines_var))
-       return true;
-    if(mopts.subproblem_hard_domain_constraints &&
-       ci.e()->ann().contains(MiniZinc::constants().ann.domain_change_constraint))
-       return true;
-    static const vector<string> ann_strs = {"mzn_expression_name", "mzn_constraint_name"};
-    if(mopts.subproblem_named_only) {
-      for(const string& ann_str : ann_strs) {
-        MiniZinc::Expression* e = MiniZinc::getAnnotation(ci.e()->ann(), ann_str);
-        if(e) return false;
+    return nameToPath.at(name) == "NOPATH" ||
+           (mopts.subproblem_hard_functional_constraints &&
+            isFunctionalConstraint(ci)) ||
+           (mopts.subproblem_hard_domain_constraints &&
+            isDomainConstraint(ci));
+  }
+
+  struct ConNames {
+    string cons_name;
+    string expr_name;
+  };
+
+  inline ConNames getNames(const MiniZinc::ConstraintI& ci) {
+    ConNames names;
+    MiniZinc::Expression* cn = MiniZinc::getAnnotation(ci.e()->ann(), "mzn_constraint_name");
+    if(cn) names.cons_name = cn->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
+    MiniZinc::Expression* en = MiniZinc::getAnnotation(ci.e()->ann(), "mzn_expression_name");
+    if(en) names.expr_name = en->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
+    return names;
+  }
+
+  bool FznSubProblem::isFilteredIn(const MiniZinc::ConstraintI& ci, const string& name) {
+    ConNames names = getNames(ci);
+
+    if(!mopts.subproblem_name_filters.empty() && mopts.subproblem_name_filters[0] == "*") {
+      return !(names.cons_name.empty() && names.expr_name.empty());
+    }
+
+    if(!mopts.subproblem_name_filters.empty() || !mopts.subproblem_name_filters_excludes.empty()) {
+      for(const string& exclude_string: mopts.subproblem_name_filters_excludes) {
+        if(names.cons_name.find(exclude_string) != string::npos ||
+           names.expr_name.find(exclude_string) != string::npos)
+          return false;
       }
-      return true;
-    } else if(!mopts.subproblem_name_filters.empty() ||
-              !mopts.subproblem_name_filters_excludes.empty()) {
-      for(const string& ann_str : ann_strs) {
-        MiniZinc::Expression* e = MiniZinc::getAnnotation(ci.e()->ann(), ann_str);
-        if(e) {
-          string name = e->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
-          for(const string& exclude_string: mopts.subproblem_name_filters_excludes) {
-            if(name.find(exclude_string) != string::npos) return true;
-          }
-        }
+      for(const string& include_string: mopts.subproblem_name_filters) {
+        if(names.cons_name.find(include_string) != string::npos ||
+           names.expr_name.find(include_string) != string::npos)
+          return true;
       }
-      for(const string& ann_str : ann_strs) {
-        MiniZinc::Expression* e = MiniZinc::getAnnotation(ci.e()->ann(), ann_str);
-        if(e) {
-          string name = e->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
-          for(const string& exclude_string: mopts.subproblem_name_filters) {
-            if(name.find(exclude_string) != string::npos) return false;
-          }
-        }
-      }
-      return !mopts.subproblem_name_filters.empty();
-    } else if(!mopts.subproblem_path_filters.empty() ||
-              !mopts.subproblem_path_filters_excludes.empty()) {
+      return mopts.subproblem_name_filters.empty();
+    }
+
+    if(!mopts.subproblem_path_filters.empty() || !mopts.subproblem_path_filters_excludes.empty()) {
       const string& path = nameToPath.at(name);
       // excludes
       for(const string& exfil : mopts.subproblem_path_filters_excludes) {
-        if(path.find(exfil) != string::npos) return true;
+        if(path.find(exfil) != string::npos) return false;
       }
       // includes
       for(const string& fil : mopts.subproblem_path_filters) {
-        if(path.find(fil) != string::npos) return false;
+        if(path.find(fil) != string::npos) return true;
       }
-      return !mopts.subproblem_path_filters.empty();
-    } else {
-      return false;
+      return mopts.subproblem_path_filters.empty();
     }
+
+    return true;
   }
 
   FznSubProblem::FznSubProblem(
@@ -150,14 +164,16 @@ namespace HierMUS {
 
     size_t con_id = 0;
     unsigned int hard_cons = 0;
+    unsigned int ignored_cons = 0;
     unsigned int soft_cons = 0;
 
     for(auto cit = fzn_model->begin_constraints(); cit != fzn_model->end_constraints(); ++cit) {
       MiniZinc::ConstraintI& ci = *cit;
       string name = leaf_names[con_id];
+      bool background = isBackgroundConstraint(ci, name);
       if(isBackgroundConstraint(ci, name)) {
         hard_cons++;
-      } else {
+      } else if(isFilteredIn(ci, name)) {
         if(leaf_names.size() <= con_id) {
           std::cerr << "FznSubProblem:\tError: Path file does not match FlatZinc\n";
           exit(EXIT_FAILURE);
@@ -180,6 +196,13 @@ namespace HierMUS {
           last.con_id = utils::join(cons, "#");
         }
         soft_cons++;
+      } else { // Not background, not include by filter
+        if(mopts.subproblem_filter_mode == FILTER_FOREGROUND) {
+          hard_cons++;
+        } else { // FILTER_EXCLUSIVE
+          ignored_cons++;
+          ci.remove();
+        }
       }
       con_id++;
     }
@@ -204,7 +227,7 @@ namespace HierMUS {
 
     cs = tree.getCounts();
     //if(mopts.verbose_subsolve) {
-    std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tBuilt tree in "
+    std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tignored cons: " << ignored_cons << "\tBuilt tree in "
       << std::fixed << std::setprecision(5) << wallClockTime() - start_build
       << " seconds.\n";
     //}
@@ -243,7 +266,7 @@ namespace HierMUS {
   bool FznSubProblem::check(const Selection& b) {
     double beginCheck = wallClockTime();
     set<string> leaves = getLeaves(b);
-    // Mark all constraints as removed;
+    // Mark all onstraints as removed;
     for(auto& kv : constraints) { kv.second->remove(); }
     // Activate the selected constraints
     for(const string& l : leaves) { constraints[l]->unremove(); }
