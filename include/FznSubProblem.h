@@ -35,6 +35,8 @@ namespace HierMUS {
       MiniZinc::Model* fzn_model;
 
       bool last_sat;
+      bool has_shrunk;
+      std::set<std::string> shrunk;
 
       std::unordered_map<std::string, MiniZinc::ConstraintI*> constraints;
       std::unordered_map<std::string, std::string> nameToPath;
@@ -53,7 +55,13 @@ namespace HierMUS {
       void printSol(const Selection& b);
       void printLongSol(const Selection& b);
       void printHtml(const Selection& b);
+
       bool check(const Selection& b);
+
+      bool hasShrunk() { return has_shrunk; }
+      void setShrunk(const std::vector<int>&);
+      std::set<string> getShrunk();
+
       bool provedSAT();
   };
 }

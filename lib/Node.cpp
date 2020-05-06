@@ -29,7 +29,7 @@ namespace HierMUS {
     return children.back().addPath(splitpath, p+1);
   }
 
-  MapNode& MapNode::addPath(std::string path) {
+  MapNode& MapNode::addPath(std::string& path) {
     vector<string> splitpath = utils::split(path, MAJOR_SEP);
     return addPath(splitpath, 0);
   }

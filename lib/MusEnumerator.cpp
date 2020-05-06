@@ -28,9 +28,17 @@ namespace HierMUS {
       case SH_QX:      return qx(m, c);
       case SH_MAP_LIN: return linear_shrink_with_map(m, c);
       case SH_LIN:     return linear_shrink(m, c);
+      case SH_NATIVE:  return native_shrink(m, c);
     }
     assert(false);
     return false;
+  }
+
+  bool MusEnumerator::native_shrink(Selection& model, const set<MapNode*>& criticals) {
+    assert(subProblem.hasShrunk());
+    auto con_ids = subProblem.getShrunk();
+    model = subsetMap->convertConIds(con_ids);
+    return true;
   }
 
   bool MusEnumerator::linear_shrink(Selection& model, const set<MapNode*>& criticals) { 

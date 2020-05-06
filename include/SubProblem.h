@@ -22,6 +22,8 @@ namespace HierMUS {
       virtual ~SubProblem();
       virtual void printSol(const Selection& b) = 0;
       virtual bool check(const Selection& b) = 0;
+      virtual bool hasShrunk() { return false; }
+      virtual std::set<std::string> getShrunk() { return {}; }
       virtual bool provedSAT() = 0;
       virtual MapNode& getTree();
 

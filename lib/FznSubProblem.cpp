@@ -4,6 +4,12 @@
 #include <iomanip>
 #include <set>
 
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <io.h>
+#include <stdio.h>
+
 #include <minizinc/file_utils.hh>
 #include <minizinc/solver.hh>
 
@@ -15,6 +21,36 @@
 #ifdef _MSC_VER
 #undef ERROR
 #endif
+
+
+static int saved_stdout;
+static int saved_stderr;
+static int null_file;
+
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+
+#ifdef _MSC_VER
+#define NULL_PATH "nul"
+#else // POSIX
+#define NULL_PATH "/dev/null"
+#endif
+
+inline void silence_output_start() {
+  saved_stdout = _dup(STDOUT_FILENO);
+  saved_stderr = _dup(STDOUT_FILENO);
+  null_file = open(NULL_PATH, O_WRONLY, 0600);
+
+  _dup2(null_file, STDOUT_FILENO);
+  _dup2(null_file, STDERR_FILENO);
+}
+
+inline void silence_output_end() {
+  _dup2(saved_stdout, STDOUT_FILENO);
+  _dup2(saved_stderr, STDERR_FILENO);
+  close(null_file);
+}
 
 namespace HierMUS {
   using std::string;
@@ -84,7 +120,7 @@ namespace HierMUS {
 
   FznSubProblem::FznSubProblem(
       string fznpath, string pathfilepath,
-      MUSEnumOptions& mo) : SubProblem(mo), last_sat{false}, fzn_file (fznpath) {
+      MUSEnumOptions& mo) : SubProblem(mo), last_sat{false}, has_shrunk{false} {
     double start_build = wallClockTime();
     ifstream pathstream(pathfilepath);
     if(!pathstream.is_open()) {
@@ -240,8 +276,23 @@ namespace HierMUS {
     return entries;
   }
 
+  inline
+  std::set<string> FznSubProblem::getShrunk() {
+    assert(hasShrunk());
+    return shrunk;
+  }
+
+  void FznSubProblem::setShrunk(const std::vector<int>& solver_mus) {
+    has_shrunk = true;
+    shrunk.clear();
+    for(int idx : solver_mus) {
+      shrunk.insert(leaf_names[idx]);
+    }
+  }
+
   bool FznSubProblem::check(const Selection& b) {
     double beginCheck = wallClockTime();
+    has_shrunk = false;
     set<string> leaves = getLeaves(b);
     // Mark all constraints as removed;
     for(auto& kv : constraints) { kv.second->remove(); }
@@ -271,10 +322,14 @@ namespace HierMUS {
         std::cerr << "\t" << log.str() << "\n";
         exit(EXIT_FAILURE);
     }
+
+    silence_output_start();
+
     MiniZinc::SolverFactory* sf = solver.getSF();
     MiniZinc::SolverInstanceBase* si = sf->createSI(fzn_env, log, solver.getSI_OPT());
     si->setSolns2Out(&s2o);
     si->processFlatZinc();
+
 
     MiniZinc::SolverInstance::Status s = MiniZinc::SolverInstance::ERROR;
     try {
@@ -285,7 +340,8 @@ namespace HierMUS {
       exit(EXIT_FAILURE);
     }
 
-    sf->destroySI(si);
+    silence_output_end();
+
     std::string error_log = log.str();
     if(!error_log.empty()) {
       std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << "\n";
@@ -301,6 +357,11 @@ namespace HierMUS {
       res = "S";
     } else if (s == MiniZinc::SolverInstance::UNSAT) {
       res = "U";
+
+      if(si->hasMUS()) {
+        setShrunk(si->getMUS());
+      }
+
     } else if (s == MiniZinc::SolverInstance::ERROR) {
       res = "E";
       string errfilename = "FINDMUS_failed_subproblem.fzn";
@@ -320,6 +381,7 @@ namespace HierMUS {
       std::cout << "\ttook: " << std::fixed << std::setprecision(5) << (wallClockTime() - beginCheck) << " seconds" << std::endl;
     }
 
+    sf->destroySI(si);
     return is_sat;
   }
 

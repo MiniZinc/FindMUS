@@ -397,4 +397,19 @@ namespace HierMUS {
     return solution_set;
   }
 
+  Selection ChuffedSubsetProblem::convertConIds(std::set<string>& con_ids) {
+    Selection shrunk;
+
+    for(MapNode& node : leafNodes) {
+      if(con_ids.find(node.con_id) != con_ids.end()) {
+        shrunk.selected.insert(&node);
+        shrunk.include.insert(ExpandedNode { &node });
+      } else {
+        shrunk.exclude.insert(&node);
+      }
+    }
+
+    return shrunk;
+  }
+
 }

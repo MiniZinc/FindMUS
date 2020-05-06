@@ -200,6 +200,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       else if(alg == "map_lin") mo.map_shrink_alg = SH_MAP_LIN;
       else if(alg == "qx")      mo.map_shrink_alg = SH_QX;
       else if(alg == "map_qx")  mo.map_shrink_alg = SH_MAP_QX;
+      else if(alg == "native")  mo.map_shrink_alg = SH_NATIVE;
       else {
         std::cout << "Incorrect shrink option. Available options are {<lin>, map_lin, qx, map_qx}\n";
         help_short(EXIT_FAILURE);

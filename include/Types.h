@@ -72,7 +72,7 @@ namespace HierMUS {
 
   enum MusAlg { ALG_MARCO, ALG_REMUS }; // Other options have been removed
 
-  enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_MAP_QX };
+  enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_MAP_QX, SH_NATIVE };
 
   enum InitialStructure {
     STR_FLAT,    // Remove all structure
