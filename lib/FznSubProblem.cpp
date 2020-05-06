@@ -7,8 +7,19 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <io.h>
 #include <stdio.h>
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+
+#ifdef _MSC_VER
+#include <io.h>
+#define NULL_PATH "nul"
+#define dup _dup
+#define dup2 _dup2
+#else // POSIX
+#define NULL_PATH "/dev/null"
+#endif
 
 #include <minizinc/file_utils.hh>
 #include <minizinc/solver.hh>
@@ -27,28 +38,19 @@ static int saved_stdout;
 static int saved_stderr;
 static int null_file;
 
-#define STDIN_FILENO 0
-#define STDOUT_FILENO 1
-#define STDERR_FILENO 2
-
-#ifdef _MSC_VER
-#define NULL_PATH "nul"
-#else // POSIX
-#define NULL_PATH "/dev/null"
-#endif
 
 inline void silence_output_start() {
-  saved_stdout = _dup(STDOUT_FILENO);
-  saved_stderr = _dup(STDOUT_FILENO);
+  saved_stdout = dup(STDOUT_FILENO);
+  saved_stderr = dup(STDOUT_FILENO);
   null_file = open(NULL_PATH, O_WRONLY, 0600);
 
-  _dup2(null_file, STDOUT_FILENO);
-  _dup2(null_file, STDERR_FILENO);
+  dup2(null_file, STDOUT_FILENO);
+  dup2(null_file, STDERR_FILENO);
 }
 
 inline void silence_output_end() {
-  _dup2(saved_stdout, STDOUT_FILENO);
-  _dup2(saved_stderr, STDERR_FILENO);
+  dup2(saved_stdout, STDOUT_FILENO);
+  dup2(saved_stderr, STDERR_FILENO);
   close(null_file);
 }
 
