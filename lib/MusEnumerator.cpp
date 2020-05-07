@@ -36,8 +36,11 @@ namespace HierMUS {
 
   bool MusEnumerator::native_shrink(Selection& model, const set<MapNode*>& criticals) {
     assert(subProblem.hasShrunk());
+    if(mopts.verbose_enum) std::cout << "MusEnumerator::native_shrink:\tfrom: " << model;
     auto con_ids = subProblem.getShrunk();
     model = subsetMap->convertConIds(con_ids);
+    if(mopts.verbose_enum) std::cout << "\tto: " << model << "\n";
+
     return true;
   }
 

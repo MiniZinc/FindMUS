@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
+
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
@@ -288,18 +289,47 @@ namespace HierMUS {
     has_shrunk = true;
     shrunk.clear();
     for(int idx : solver_mus) {
-      shrunk.insert(leaf_names[idx]);
+      auto it = solverModelMapping.find(idx);
+      if(it != solverModelMapping.end()) {
+        shrunk.insert(it->second);
+      }
     }
   }
 
   bool FznSubProblem::check(const Selection& b) {
     double beginCheck = wallClockTime();
     has_shrunk = false;
-    set<string> leaves = getLeaves(b);
     // Mark all constraints as removed;
-    for(auto& kv : constraints) { kv.second->remove(); }
+    for(auto& kv : constraints) { 
+      kv.second->remove();
+    }
+
+    int solver_con_id = 0;
+    int con_id = 0;
     // Activate the selected constraints
-    for(const string& l : leaves) { constraints[l]->unremove(); }
+    set<string> leaves = getLeaves(b);
+
+    solverModelMapping.clear();
+
+    for(size_t i=0; i<fzn_model->size(); i++) {
+      if(MiniZinc::ConstraintI* ci = (*fzn_model)[i]->dyn_cast<MiniZinc::ConstraintI>()) {
+        if(!ci->removed()) {
+          // Constraint is part of background
+          solver_con_id++;
+        } else {
+          // Constraint is part of foreground but might not be added
+          string con_id_s = std::to_string(con_id);
+          if(leaves.find(con_id_s) != leaves.end()) {
+            ci->unremove();
+            solverModelMapping[++solver_con_id] = con_id_s;
+          }
+          con_id++;
+        }
+      }
+
+    }
+
+    // for(const string& l : leaves) { constraints[l]->unremove(); }
 
     MiniZinc::MznSolver solver(nullstream, log);
 

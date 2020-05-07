@@ -40,6 +40,7 @@ namespace HierMUS {
 
       std::unordered_map<std::string, MiniZinc::ConstraintI*> constraints;
       std::unordered_map<std::string, std::string> nameToPath;
+      std::unordered_map<int, std::string> solverModelMapping;
       std::string fzn_file;
 
       ConstraintSet getConstraintSet(const Selection& b);
