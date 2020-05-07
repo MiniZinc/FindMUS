@@ -1,6 +1,7 @@
 #include <minizinc/file_utils.hh>
 
 #include "Options.h"
+#include <vector>
 
 namespace HierMUS {
 
@@ -111,10 +112,13 @@ void help_long(void) {
       << "     Consider functional constraints as part of MUSes\n"
       << "   --hard-domains\n"
       << "     Consider domain constraints as part of the background\n"
-      << "   --named-only\n"
-      << "     Only consider constraints annotated with string annotations\n"
-      << "   --filter-named <names>    --filter-named-exclude <names>\n"
+      << "   --filter-mode fg,ex\n"
+      << "     Change filter mode (Default: fg)\n"
+      << "       fg: Foreground, excluded items go to the background\n"
+      << "       ex: Exclusive, excluded items are omitted entirely\n"
+      << "   --filter-named <names>   --filter-named-exclude <names>\n"
       << "     Include/exclude constraints with names that match <sep> separated <names>\n"
+      << "     A special wildcard string of \"*\" matches all named constraints\n"
       << "   --filter-path <paths>    --filter-path-exclude <paths>\n"
       << "     Include/exclude based on <paths>\n"
       << "   --filter-sep <sep>\n"
@@ -268,21 +272,39 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
     } else if(args[i] ==  "--hard-domains") {
       mo.subproblem_hard_domain_constraints = true;
     } else if(args[i] ==  "--named-only") {
-      mo.subproblem_named_only = true;
+      std::cerr << "Warning: --named-only is deprecated, use \"--filter-named *\" instead\n";
+      mo.subproblem_name_filters.clear();
+      mo.subproblem_name_filters.emplace_back("*");
     } else if(args[i] ==  "--filter-sep") {
       dro.filter_sep = args[++i][0];
+    } else if(args[i] == "--filter-mode") {
+      std::string mode = args[++i];
+      if(mode == "fg")      mo.subproblem_filter_mode = FILTER_FOREGROUND;
+      else if(mode == "ex") mo.subproblem_filter_mode = FILTER_EXCLUSIVE;
+      else {
+        std::cout << "Invalid filter mode. Available options are {fg, ex}\n";
+        help_short(EXIT_FAILURE);
+      }
     } else if(!string(args[i]).compare(0, 8, "--filter")) {
       std::string arg = args[i];
       std::string csfilter = args[++i];
       vector<string> filters = utils::split(csfilter, dro.filter_sep);
       if(arg == "--filter-named-exclude") {
-        mo.subproblem_name_filters_excludes.insert(filters.begin(), filters.end());
+        mo.subproblem_name_filters_excludes.insert(
+            mo.subproblem_name_filters_excludes.end(),
+            filters.begin(), filters.end());
       } else if(arg == "--filter-named") {
-        mo.subproblem_name_filters.insert(filters.begin(), filters.end());
+        mo.subproblem_name_filters.insert(
+            mo.subproblem_name_filters.end(),
+            filters.begin(), filters.end());
       } else if(arg == "--filter-path-exclude") {
-        mo.subproblem_path_filters_excludes.insert(filters.begin(), filters.end());
+        mo.subproblem_path_filters_excludes.insert(
+            mo.subproblem_path_filters_excludes.end(),
+            filters.begin(), filters.end());
       } else if(arg == "--filter-path") {
-        mo.subproblem_path_filters.insert(filters.begin(), filters.end());
+        mo.subproblem_path_filters.insert(
+            mo.subproblem_path_filters.end(),
+            filters.begin(), filters.end());
       }
     } else if(args[i] ==  "--dump-dot") {
       dro.dump_dot_path = args[++i];
@@ -368,9 +390,17 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
   if(!mo.subproblem_name_filters_excludes.empty()) {
     if(!mo.subproblem_name_filters.empty()) {
       for(const std::string& exclude : mo.subproblem_name_filters_excludes) {
-        if(mo.subproblem_name_filters.find(exclude) != mo.subproblem_name_filters.end()) {
-          mo.subproblem_name_filters.erase(exclude);
-          mo.subproblem_name_filters_excludes.erase(exclude);
+        if(find(mo.subproblem_name_filters.begin(),
+                mo.subproblem_name_filters.end(),
+                exclude) != mo.subproblem_name_filters.end()) {
+          mo.subproblem_name_filters.erase(
+              std::remove(mo.subproblem_name_filters.begin(),
+                mo.subproblem_name_filters.end(), exclude),
+              mo.subproblem_name_filters.end());
+          mo.subproblem_name_filters_excludes.erase(
+              std::remove(mo.subproblem_name_filters_excludes.begin(),
+                mo.subproblem_name_filters_excludes.end(), exclude),
+              mo.subproblem_name_filters_excludes.end());
         }
       }
     }
