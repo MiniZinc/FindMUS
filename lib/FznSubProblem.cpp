@@ -344,7 +344,8 @@ namespace HierMUS {
           string con_id_s = std::to_string(con_id);
           if(leaves.find(con_id_s) != leaves.end()) {
             ci->unremove();
-            solverModelMapping[++solver_con_id] = con_id_s;
+            solverModelMapping[solver_con_id] = con_id_s;
+            solver_con_id++;
           }
         }
         con_id++;
@@ -388,13 +389,16 @@ namespace HierMUS {
     MiniZinc::SolverInstance::Status s = MiniZinc::SolverInstance::ERROR;
     try {
       s = si->solve();
+      silence_output_end();
     } catch (const MiniZinc::InternalError& err) {
+      silence_output_end();
       std::cerr << "FznSubproblem:\tException during sub-solving: "
                 << err.msg() << ": " << err.what() << std::endl;
       exit(EXIT_FAILURE);
+    } catch (...) {
+      std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving\n";
+      exit(EXIT_FAILURE);
     }
-
-    silence_output_end();
 
     std::string error_log = log.str();
     if(!error_log.empty()) {
@@ -403,6 +407,7 @@ namespace HierMUS {
       exit(EXIT_FAILURE);
     }
 
+    static int unsat_c = 0;
     string res;
     bool is_sat = s != MiniZinc::SolverInstance::UNSAT;
     last_sat = false;
