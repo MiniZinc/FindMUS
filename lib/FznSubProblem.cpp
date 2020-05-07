@@ -323,10 +323,9 @@ namespace HierMUS {
             ci->unremove();
             solverModelMapping[++solver_con_id] = con_id_s;
           }
-          con_id++;
         }
+        con_id++;
       }
-
     }
 
     // for(const string& l : leaves) { constraints[l]->unremove(); }
