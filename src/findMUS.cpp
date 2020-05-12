@@ -4,9 +4,11 @@
 #include <iomanip>
 #include <csignal>
 
+
 #include "HierMUSEnumer.h"
 #include "OldMUSEnumer.h"
 
+#include "NamePathMap.h"
 #include "FznSubProblem.h"
 #include "Options.h"
 
@@ -176,8 +178,8 @@ SubProblem* createProblem(DriverOptions& dro,
     {
       std::ifstream checkpath(dro.pathpath);
       if(!checkpath.is_open()) {
-        std::cerr << "Path file "<< dro.pathpath << " cannot be opened.\n";
-        OptionsHelper::help_short(EXIT_FAILURE);
+        std::cerr << "Warning: Path file "<< dro.pathpath << " not found. Compile with --output-paths to produce .paths file. Using flat hierarchy.\n";
+        dro.pathpath = "";
       }
     }
     problem = new FznSubProblem(dro.fznpath, dro.pathpath, mo);

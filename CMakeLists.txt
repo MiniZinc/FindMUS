@@ -41,6 +41,7 @@ add_library(hiermus
   lib/SubsetMap.cpp
   lib/ChuffedSubsetMap.cpp
   lib/Options.cpp
+  lib/NamePathMap.cpp
 
   include/SubProblem.h
   include/Node.h
@@ -57,6 +58,7 @@ add_library(hiermus
   include/Selection.h
   include/ChuffedSubsetMap.h
   include/Options.h
+  include/NamePathMap.h
 )
 
 if(libminizinc_FOUND)

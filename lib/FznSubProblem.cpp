@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <set>
+#include <limits>
 
 #include <minizinc/file_utils.hh>
 #include <minizinc/solver.hh>
@@ -30,7 +31,7 @@ namespace HierMUS {
   std::ostream& NullSolns2Out::getOutput() { return nullstream; }
 
   bool FznSubProblem::isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name) {
-    if(nameToPath.at(name) == "NOPATH") return true;
+    if(nameToPath.getPath(name) == "NOPATH") return true;
     if(mopts.subproblem_hard_functional_constraints &&
        ci.e()->ann().containsCall(MiniZinc::constants().ann.defines_var))
        return true;
@@ -67,7 +68,7 @@ namespace HierMUS {
       return !mopts.subproblem_name_filters.empty();
     } else if(!mopts.subproblem_path_filters.empty() ||
               !mopts.subproblem_path_filters_excludes.empty()) {
-      const string& path = nameToPath.at(name);
+      const string& path = nameToPath.getPath(name);
       // excludes
       for(const string& exfil : mopts.subproblem_path_filters_excludes) {
         if(path.find(exfil) != string::npos) return true;
@@ -83,26 +84,9 @@ namespace HierMUS {
   }
 
   FznSubProblem::FznSubProblem(
-      string fznpath, string pathfilepath,
-      MUSEnumOptions& mo) : SubProblem(mo), last_sat{false}, fzn_file (fznpath) {
+      const string& fznpath, const string& pathpath,
+      MUSEnumOptions& mo) : SubProblem(mo), last_sat{false}, nameToPath{pathpath}, fzn_file (fznpath) {
     double start_build = wallClockTime();
-    ifstream pathstream(pathfilepath);
-    if(!pathstream.is_open()) {
-      std::cerr << "FznSubproblem:\tCan't open pathfile: " << pathfilepath << "\n";
-      exit(EXIT_FAILURE);
-    }
-    string line;
-    while(std::getline(pathstream, line)) {
-      vector<string> entry = utils::split(line, '\t', true);
-      if(isdigit(entry[0][0])) {
-        string leaf_name = entry[0];
-        leaf_names.push_back(leaf_name);
-        if(entry.size()==3)
-          nameToPath[leaf_name] = entry[2];
-        else
-          nameToPath[leaf_name] = "NOPATH";
-      }
-    }
 
     MiniZinc::GCLock lock;
     vector<string> includes;
@@ -148,30 +132,31 @@ namespace HierMUS {
     }
     fzn_model->compact();
 
+    size_t n_cons = nameToPath.hasNCons() ? nameToPath.getNCons() : std::numeric_limits<size_t>::max();
     size_t con_id = 0;
     unsigned int hard_cons = 0;
     unsigned int soft_cons = 0;
 
     for(auto cit = fzn_model->begin_constraints(); cit != fzn_model->end_constraints(); ++cit) {
       MiniZinc::ConstraintI& ci = *cit;
-      string name = leaf_names[con_id];
+      string name = nameToPath.getName(con_id);
       if(isBackgroundConstraint(ci, name)) {
         hard_cons++;
       } else {
-        if(leaf_names.size() <= con_id) {
+        if(n_cons <= con_id) {
           std::cerr << "FznSubProblem:\tError: Path file does not match FlatZinc\n";
           exit(EXIT_FAILURE);
         }
         constraints[name] = &ci;
         if(mopts.subproblem_structure == STR_FLAT) {
-          tree.children.push_back(MapNode(nameToPath[name], name));
+          tree.children.push_back(MapNode(nameToPath.getPath(name), name));
         } else {
           string path;
           if(mopts.subproblem_structure != STR_NORMAL) { // Not STR_FLAT and not STR_NORMAL
-            path = utils::generalizeLabel(nameToPath[name], mopts.subproblem_structure == STR_IDX_MIX || mopts.subproblem_structure == STR_IDX,
+            path = utils::generalizeLabel(nameToPath.getPath(name), mopts.subproblem_structure == STR_IDX_MIX || mopts.subproblem_structure == STR_IDX,
                                                             mopts.subproblem_structure == STR_GEN_MIX || mopts.subproblem_structure == STR_IDX_MIX);
           } else {
-            path = nameToPath[name];
+            path = nameToPath.getPath(name);
           }
           MapNode& last = tree.addPath(path);
           stringstream ss;
@@ -216,7 +201,7 @@ namespace HierMUS {
     set<string> leaf_names = getLeaves(b);
     ConstraintSet entries;
     for(const string& leaf_name : leaf_names) {
-      string path = nameToPath[leaf_name];
+      string path = nameToPath.getPath(leaf_name);
       ConstraintInfo n;
       n.leaf_name = leaf_name;
       n.setAnnotatedNamesFrom(constraints[leaf_name]);
