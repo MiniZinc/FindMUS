@@ -2,6 +2,7 @@
 #define __HIERMUS_FZNPROBLEM_H_
 
 #include "SubProblem.h"
+#include "NamePathMap.h"
 #include "Types.h"
 #include "path_utils.h"
 
@@ -39,7 +40,7 @@ namespace HierMUS {
       std::set<std::string> shrunk;
 
       std::unordered_map<std::string, MiniZinc::ConstraintI*> constraints;
-      std::unordered_map<std::string, std::string> nameToPath;
+      NamePathMap nameToPath;
       std::unordered_map<int, std::string> solverModelMapping;
       std::string fzn_file;
 
@@ -49,7 +50,7 @@ namespace HierMUS {
       void saveFzn(const Selection& b, const string& filename);
 
     public:
-      FznSubProblem(std::string fznpath, std::string pathfilepath, MUSEnumOptions& mo);
+      FznSubProblem(const std::string& fznpath, const std::string& pathpath, MUSEnumOptions& mo);
       ~FznSubProblem() {
         delete fzn_model;
       }
