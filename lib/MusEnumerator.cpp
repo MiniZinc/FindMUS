@@ -41,11 +41,25 @@ namespace HierMUS {
       exit(EXIT_FAILURE);
     }
     if(mopts.verbose_enum) std::cout << "MusEnumerator::native_shrink:\tfrom: " << model;
-    auto con_ids = subProblem.getShrunk();
-    model = subsetMap->convertConIds(con_ids);
-    if(mopts.verbose_enum) std::cout << "\tto: " << model << "\n";
 
+    set<MapNode*> selected_copy = model.selected;
+    auto con_ids = subProblem.getShrunk();
+    for(MapNode* mn : selected_copy) {
+      set<string> leaves;
+      getLeaves(*mn, leaves);
+
+      if(!any_of(con_ids.begin(), con_ids.end(), [&](const string& s) { return leaves.find(s) != leaves.end(); })) {
+        model.selected.erase(mn);
+      }
+    }
+
+    updateIncludeExclude(model);
+    if(mopts.verbose_enum) std::cout << "\tto: " << model << "\n";
     return true;
+
+    //// This just works on the flat leaf nodes
+    //model = subsetMap->convertConIds(con_ids);
+    //return true;
   }
 
   bool MusEnumerator::linear_shrink(Selection& model, const set<MapNode*>& criticals) { 
