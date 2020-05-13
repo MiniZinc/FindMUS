@@ -347,6 +347,10 @@ namespace HierMUS {
     args.push_back("--solver");
     args.push_back(mopts.subproblem_solver);
 
+    if(mopts.map_shrink_alg == SH_NATIVE) {
+      args.push_back("--diagnose");
+    }
+
     mopts.adjustSolverTimeout();
     args.push_back("--solver-time-limit");
     args.push_back(std::to_string(mopts.subproblem_solver_time_limit));

@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
     writeDotFile(dro, problem);
     exit(EXIT_SUCCESS);
   }
-  
+
   // Create MUS Enumerator
   MusEnumerator* me;
   if (dro.use_new_enumer) {
@@ -231,6 +231,10 @@ int main(int argc, char **argv) {
   } else {
     me = new OldMUSEnumer(*problem, mo);
   }
+
+  // Sanity checks
+  auto shrink_alg = mo.map_shrink_alg;
+  mo.map_shrink_alg = SH_MAP_QX; // Temporarily change shrink alg
 
   // Is the model unsat to begin with?
   if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
@@ -250,6 +254,8 @@ int main(int argc, char **argv) {
       << "Try using --soft-defines." << std::endl;
     return EXIT_FAILURE;
   }
+
+  mo.map_shrink_alg = shrink_alg; // Restore shrink alg
 
   // Print suggestion if using gen/hint
   if(mo.subproblem_structure == STR_GEN) {
