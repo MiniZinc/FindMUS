@@ -127,6 +127,7 @@ SubProblem* createProblem(DriverOptions& dro,
 
       if(dro.compile_domains) args.push_back("-g");
       if(dro.compile_verbose) args.push_back("--verbose");
+      if(dro.compile_stats) args.push_back("-s");
 
       args.push_back("-o");
       args.push_back(dro.fznpath);

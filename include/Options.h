@@ -31,6 +31,7 @@ public:
   bool list_solvers_json = false;
 
   bool compile_verbose = false;
+  bool compile_stats = false;
   bool compile_domains = false;
 
   DriverOptions() {

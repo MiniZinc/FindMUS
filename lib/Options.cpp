@@ -316,6 +316,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       dro.compile_verbose = true;
     } else if(args[i] ==  "--verbose-compile") {
       dro.compile_verbose = true;
+    } else if(args[i] == "-s") {
+      dro.compile_stats = true;
     } else if(args[i] == "--domains" || args[i] ==  "-g") {
       dro.compile_domains = true;
     } else if(args[i] ==  "--verbose-enum") {
