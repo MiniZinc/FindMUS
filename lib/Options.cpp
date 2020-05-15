@@ -198,13 +198,16 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       }
     } else if(args[i][0] == '-' && args[i][1] == 'D') {
       dro.input_files.push_back(args[i]);
-    } else if(args[i] ==  "--shrink-alg") {
+    } else if(args[i] == "--shrink-frontier") {
+      mo.map_shrink_frontier = true;
+    } else if(args[i] == "--native-shrink") {
+      mo.subproblem_native_shrink = true;
+    } else if(args[i] == "--shrink-alg") {
       std::string alg = args[++i];
       if(alg == "lin")          mo.map_shrink_alg = SH_LIN;
       else if(alg == "map_lin") mo.map_shrink_alg = SH_MAP_LIN;
       else if(alg == "qx")      mo.map_shrink_alg = SH_QX;
       else if(alg == "map_qx")  mo.map_shrink_alg = SH_MAP_QX;
-      else if(alg == "native")  mo.map_shrink_alg = SH_NATIVE;
       else {
         std::cout << "Incorrect shrink option. Available options are {<lin>, map_lin, qx, map_qx}\n";
         help_short(EXIT_FAILURE);
@@ -272,7 +275,6 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
     } else if(args[i] ==  "--hard-domains") {
       mo.subproblem_hard_domain_constraints = true;
     } else if(args[i] ==  "--named-only") {
-      std::cerr << "Warning: --named-only is deprecated, use \"--filter-named *\" instead\n";
       mo.subproblem_name_filters.clear();
       mo.subproblem_name_filters.emplace_back("*");
     } else if(args[i] ==  "--filter-sep") {

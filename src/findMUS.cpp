@@ -234,8 +234,8 @@ int main(int argc, char **argv) {
   }
 
   // Sanity checks
-  auto shrink_alg = mo.map_shrink_alg;
-  mo.map_shrink_alg = SH_MAP_QX; // Temporarily change shrink alg
+  auto native_shrink = mo.subproblem_native_shrink;
+  mo.subproblem_native_shrink = false; // Disable use of --diagnose flag for sanity check
 
   // Is the model unsat to begin with?
   if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  mo.map_shrink_alg = shrink_alg; // Restore shrink alg
+  mo.subproblem_native_shrink = native_shrink; // Restore native setting
 
   // Print suggestion if using gen/hint
   if(mo.subproblem_structure == STR_GEN) {

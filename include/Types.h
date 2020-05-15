@@ -137,5 +137,12 @@ namespace HierMUS {
     std::string getHTMLSummary(void);
   };
 
+  struct ShrunkSet {
+    std::set<std::string> con_ids;
+    bool minimal;
+
+    ShrunkSet() : minimal{false} {};
+  };
+
 }
 #endif

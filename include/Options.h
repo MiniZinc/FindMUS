@@ -68,6 +68,7 @@ public:
 
   InitialStructure subproblem_structure = STR_NORMAL;
   Binarize subproblem_binarize = BIN_ALL;
+  bool subproblem_native_shrink = false;
 
   string subproblem_solver = "org.gecode.gecode";
   string subproblem_solver_flags = "";
@@ -80,6 +81,7 @@ public:
 
   MusAlg map_enumeration_alg = ALG_MARCO;
   ShrinkAlg map_shrink_alg = SH_MAP_QX;
+  bool map_shrink_frontier = false;
   bool map_enum_focus_mode = true;
 
   Statistics& stats;

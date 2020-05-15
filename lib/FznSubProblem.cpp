@@ -40,12 +40,13 @@ static int saved_stdout;
 static int saved_stderr;
 static int null_file;
 
-
-inline void silence_output_start() {
+inline void silence_init() {
   saved_stdout = dup(STDOUT_FILENO);
   saved_stderr = dup(STDOUT_FILENO);
   null_file = open(NULL_PATH, O_WRONLY, 0600);
+}
 
+inline void silence_output_start() {
   dup2(null_file, STDOUT_FILENO);
   dup2(null_file, STDERR_FILENO);
 }
@@ -53,7 +54,6 @@ inline void silence_output_start() {
 inline void silence_output_end() {
   dup2(saved_stdout, STDOUT_FILENO);
   dup2(saved_stderr, STDERR_FILENO);
-  close(null_file);
 }
 
 namespace HierMUS {
@@ -138,7 +138,9 @@ namespace HierMUS {
 
   FznSubProblem::FznSubProblem(
       const string& fznpath, const string& pathpath,
-      MUSEnumOptions& mo) : SubProblem(mo), last_sat{false}, nameToPath{pathpath}, fzn_file (fznpath) {
+      MUSEnumOptions& mo) : SubProblem(mo), last_sat{false}, shrunk{}, nameToPath{pathpath}, fzn_file (fznpath) {
+    silence_init();
+
     double start_build = wallClockTime();
 
     MiniZinc::GCLock lock;
@@ -288,25 +290,28 @@ namespace HierMUS {
   }
 
   inline
-  std::set<string> FznSubProblem::getShrunk() {
-    assert(hasShrunk());
+  ShrunkSet FznSubProblem::getShrunk() {
+    assert(!shrunk.con_ids.empty());
     return shrunk;
   }
 
-  void FznSubProblem::setShrunk(const std::vector<int>& solver_mus) {
-    has_shrunk = true;
-    shrunk.clear();
+  void FznSubProblem::setShrunk(const std::vector<int>& solver_mus, bool min) {
+    shrunk.minimal = min;
+    shrunk.con_ids.clear();
     for(int idx : solver_mus) {
       auto it = solverModelMapping.find(idx);
       if(it != solverModelMapping.end()) {
-        shrunk.insert(it->second);
+        shrunk.con_ids.insert(it->second);
       }
     }
   }
 
   bool FznSubProblem::check(const Selection& b) {
     double beginCheck = wallClockTime();
-    has_shrunk = false;
+
+    shrunk.minimal = false;
+    shrunk.con_ids.clear();
+
     // Mark all constraints as removed;
     for(auto& kv : constraints) { 
       kv.second->remove();
@@ -347,7 +352,7 @@ namespace HierMUS {
     args.push_back("--solver");
     args.push_back(mopts.subproblem_solver);
 
-    if(mopts.map_shrink_alg == SH_NATIVE) {
+    if(mopts.subproblem_native_shrink) {
       args.push_back("--diagnose");
     }
 
@@ -385,6 +390,7 @@ namespace HierMUS {
                 << err.msg() << ": " << err.what() << std::endl;
       exit(EXIT_FAILURE);
     } catch (...) {
+      silence_output_end();
       std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving\n";
       exit(EXIT_FAILURE);
     }
@@ -406,8 +412,10 @@ namespace HierMUS {
     } else if (s == MiniZinc::SolverInstance::UNSAT) {
       res = "U";
 
-      if(si->hasMUS()) {
-        setShrunk(si->getMUS());
+      auto statusMUS = si->getMUSStatus();
+
+      if(statusMUS != MiniZinc::SolverInstance::MUS_NONE) {
+        setShrunk(si->getMUS(), statusMUS == MiniZinc::SolverInstance::MUS_MINIMAL);
       }
 
     } else if (s == MiniZinc::SolverInstance::ERROR) {
@@ -426,7 +434,9 @@ namespace HierMUS {
       } else {
         std::cout << "ncons: " << std::setw(8) << leaves.size();
       }
-      std::cout << "\ttook: " << std::fixed << std::setprecision(5) << (wallClockTime() - beginCheck) << " seconds" << std::endl;
+      std::cout << "\ttook: " << std::fixed << std::setprecision(5) << (wallClockTime() - beginCheck) << " seconds";
+      std::cout << "\tmus: " << "(" << !shrunk.con_ids.empty() << ","  << shrunk.minimal << ")" << std::endl;
+
     }
 
     sf->destroySI(si);

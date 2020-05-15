@@ -28,46 +28,57 @@ namespace HierMUS {
       case SH_QX:      return qx(m, c);
       case SH_MAP_LIN: return linear_shrink_with_map(m, c);
       case SH_LIN:     return linear_shrink(m, c);
-      case SH_NATIVE:  return native_shrink(m, c);
     }
     assert(false);
     return false;
   }
 
-  bool MusEnumerator::native_shrink(Selection& model, const set<MapNode*>& criticals) {
-    assert(subProblem.hasShrunk());
-    if(!subProblem.hasShrunk()) {
+  bool MusEnumerator::process_native(Selection& model) {
+    if(!mopts.subproblem_native_shrink) return false;
+
+    ShrunkSet shrunk = subProblem.getShrunk();
+
+    if(shrunk.con_ids.empty()) {
       std::cerr << "MusEnumerator::native_shrink: Not supported.\n";
       exit(EXIT_FAILURE);
     }
-    if(mopts.verbose_enum) std::cout << "MusEnumerator::native_shrink:\tfrom: " << model;
 
-    set<MapNode*> selected_copy = model.selected;
-    auto con_ids = subProblem.getShrunk();
-    for(MapNode* mn : selected_copy) {
-      set<string> leaves;
-      getLeaves(*mn, leaves);
+    if(mopts.verbose_enum) std::cout << "MusEnumerator::native_shrink\n"; //:\tfrom: " << model;
 
-      if(!any_of(con_ids.begin(), con_ids.end(), [&](const string& s) { return leaves.find(s) != leaves.end(); })) {
-        model.selected.erase(mn);
+    set<string>& con_ids = shrunk.con_ids;
+    if(mopts.map_shrink_frontier) {
+      set<MapNode*> selected_copy = model.selected;
+
+      for(MapNode* mn : selected_copy) {
+        set<string> leaves;
+        getLeaves(*mn, leaves);
+
+        if(!any_of(con_ids.begin(), con_ids.end(), [&](const string& s) { return leaves.find(s) != leaves.end(); })) {
+          model.selected.erase(mn);
+        }
       }
+
+      updateIncludeExclude(model);
+
+      return false;
     }
 
-    updateIncludeExclude(model);
-    if(mopts.verbose_enum) std::cout << "\tto: " << model << "\n";
-    return true;
+    // This just works on the flat leaf nodes
+    model = subsetMap->convertConIds(con_ids);
 
-    //// This just works on the flat leaf nodes
-    //model = subsetMap->convertConIds(con_ids);
-    //return true;
+    return shrunk.minimal;
   }
 
   bool MusEnumerator::linear_shrink(Selection& model, const set<MapNode*>& criticals) { 
+    if(process_native(model)) return true;
+
     set<MapNode*> selected_copy = model.selected;
     for(MapNode* mn : selected_copy) {
       if(model.selected.size() == 1) break;
       if(mopts.timedOut()) return false;
       if(criticals.find(mn) != criticals.end()) continue;
+      if(model.selected.find(mn) == model.selected.end()) continue;
+
       model.selected.erase(mn);
       stats.madeSatCheck();
       if(subProblem.check(model)) {
@@ -75,6 +86,7 @@ namespace HierMUS {
         model.selected.insert(mn);
       } else {
         stats.foundUnSatSet();
+        if(process_native(model)) return true;
       }
     }
     updateIncludeExclude(model);
@@ -107,6 +119,8 @@ namespace HierMUS {
   }
 
 #define QXTimeOut OptionalSelection()
+#define QXEarlyMin(S) OptionalSelection(S, true, true);
+#define QXEarlyNonMin(S) OptionalSelection(S, true, false);
 
   OptionalSelection MusEnumerator::qx_back(Selection B, size_t D, Selection C,
                                            const set<MapNode*>& criticals) {
@@ -116,6 +130,12 @@ namespace HierMUS {
       stats.madeSatCheck();
       if(!subProblem.check(B)) {
         stats.foundUnSatSet();
+
+        if(mopts.subproblem_native_shrink) {
+          if(process_native(B)) return QXEarlyMin(B);
+          return QXEarlyNonMin(B);
+        }
+
         return empty_sel(C);
       } else {
         stats.foundSatSet();
@@ -124,7 +144,6 @@ namespace HierMUS {
     if(C.selected.size() == 1) return C;
 
     Selection C1, C2;
-    //sel_split(mopts, C, C1, C2);
     sel_split(C, C1, C2);
 
     OptionalSelection D2, D1;
@@ -132,24 +151,28 @@ namespace HierMUS {
       D2 = C2;
     } else {
       D2 = qx_back(sel_union(B, C1), C1.selected.size(), C2, criticals);
-      if(!D2.has_value()) return QXTimeOut;
+      if(D2.timedout || D2.early_return) return D2;
     }
 
     if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
       D1 = C1;
     } else {
       D1 = qx_back(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
-      if(!D1.has_value()) return QXTimeOut;
+      if(D1.timedout || D1.early_return) return D1;
     }
 
     return sel_union(D1.get(),D2.get());
   }
 
   bool MusEnumerator::qx(Selection& model, const set<MapNode*>& criticals) {
-    Selection B;
-    OptionalSelection res = qx_back(B, 0, model, criticals);
+    if (process_native(model)) return true;
 
-    if(!res.has_value()) { return false; }
+    OptionalSelection res{model};
+    do {
+      res = qx_back({}, 0, res.get(), criticals);
+      if(res.timedout) return false;
+    } while(res.early_return && !res.is_min);
+
     model = res.get();
 
     updateIncludeExclude(model);
@@ -158,115 +181,7 @@ namespace HierMUS {
 
 #define QXLOG(X) if(mopts.verbose_enum) std::cout << string(indent*2, ' ') << "QX: " << X << std::endl;
 
-static int indent=0;
-  /* OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
-                                                    const set<MapNode*>& criticals) {
-    QXLOG("START"); indent++;
-    if(mopts.timedOut()) return QXTimeOut;
-
-    if(D>0 && !B.selected.empty()) {
-      stats.madeMapCall();
-      bool known_sat = subsetMap->knownSat(B);
-      if(!known_sat) {
-        stats.madeSatCheck();
-        known_sat = subProblem.check(B);
-      }
-
-      if(known_sat) {
-        stats.foundSatSet();
-        subsetMap->blockSubsets(B);
-      } else {
-        stats.foundUnSatSet();
-        subsetMap->blockSupersets(B);
-        QXLOG("Returning empty"); indent--;
-        return empty_sel(C);
-      }
-    }
-    if(C.selected.size() == 1) { 
-      QXLOG("returning C <- |C| == 1"); indent--;
-      return C;
-    }
-
-    Selection C1, C2;
-    stats.madeMapCall();
-    C1 = subsetMap->getRandomSelection(C, B, true);
-    if(C1.selected.empty()) {
-      QXLOG("returning C <- |C1| == 0"); indent--;
-
-      return C;
-    }
-    C2 = sel_complement(C, C1);
-
-    OptionalSelection D2, D1;
-    if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
-      D2 = C2;
-    } else {
-      D2 = qx_back_with_map(sel_union(B, C1), C1.selected.size(), C2, criticals);
-      if(!D2.has_value()) return QXTimeOut;
-    }
-
-    if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
-      D1 = C1;
-    } else {
-      D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
-      if(!D1.has_value()) return QXTimeOut;
-    }
-
-    QXLOG("returning D1 U D2"); indent--;
-    return sel_union(D1.get(),D2.get());
-  } */
-
-  /* OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
-                                                    const set<MapNode*>& criticals) {
-    QXLOG("START"); indent++;
-    if(mopts.timedOut()) return QXTimeOut;
-
-    if(D>0 && !B.selected.empty()) {
-      stats.madeSatCheck();
-      if(subProblem.check(B)) {
-        stats.foundSatSet();
-        subsetMap->blockSubsets(B);
-      } else {
-        stats.foundUnSatSet();
-        subsetMap->blockSupersets(B);
-        QXLOG("Returning empty"); indent--;
-        return empty_sel(C);
-      }
-    }
-    if(C.selected.size() == 1) { 
-      QXLOG("returning C <- |C| == 1"); indent--;
-      return C;
-    }
-
-    Selection C1, C2;
-    stats.madeMapCall();
-    C1 = subsetMap->getRandomSelection(C, B, true);
-    if(C1.selected.empty()) {
-      QXLOG("returning C <- |C1| == 0"); indent--;
-
-      return C;
-    }
-    C2 = sel_complement(C, C1);
-
-    OptionalSelection D2, D1;
-    if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
-      D2 = C2;
-    } else {
-      D2 = qx_back_with_map(sel_union(B, C1), C1.selected.size(), C2, criticals);
-      if(!D2.has_value()) return QXTimeOut;
-    }
-
-    if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
-      D1 = C1;
-    } else {
-      D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
-      if(!D1.has_value()) return QXTimeOut;
-    }
-
-    QXLOG("returning D1 U D2"); indent--;
-    return sel_union(D1.get(),D2.get());
-  } */
-
+  static int indent=0;
 
   OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
                                                     const set<MapNode*>& criticals) {
@@ -309,14 +224,14 @@ static int indent=0;
       D2 = C2;
     } else {
       D2 = qx_back_with_map(sel_union(B, C1), C1.selected.size(), C2, criticals);
-      if(!D2.has_value()) return QXTimeOut;
+      if(D2.timedout || D2.early_return) return D2;
     }
 
     if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
       D1 = C1;
     } else {
       D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
-      if(!D1.has_value()) return QXTimeOut;
+      if(D1.timedout || D1.early_return) return D1;
     }
 
     QXLOG("returning D1 U D2"); indent--;
@@ -327,7 +242,7 @@ static int indent=0;
     Selection B;
     OptionalSelection res = qx_back_with_map(B, 0, model, criticals);
 
-    if(!res.has_value()) { return false; }
+    if(!res.timedout) { return false; }
     model = res.get();
 
     updateIncludeExclude(model);
