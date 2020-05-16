@@ -52,9 +52,6 @@ public:
 
   bool restarts_enabled = false;
 
-  //ParamSet sense = PSET_MZN; // Default mode for commandline
-  ParamSet sense = PSET_HINT; // Default mode for commandline
-
   // FznSubProblem
   string mzn_stdlib_dir;
   bool subproblem_hard_functional_constraints = true;
@@ -126,6 +123,7 @@ void help_short(int exit_code = EXIT_SUCCESS);
 void help_long(void);
 void parse(DriverOptions& d, MUSEnumOptions& m, int argc, char**argv);
 void parse(DriverOptions& d, MUSEnumOptions& m, const std::vector<std::string>& args);
+vector<string> expandParamSet(const vector<string>& in_args);
 }
 
 }

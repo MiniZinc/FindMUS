@@ -14,11 +14,13 @@ namespace HierMUS {
   using std::string;
   using std::vector;
 
-  bool run_test(const vector<string>& args, string path) {
+  bool run_test(size_t id, const vector<string>& args, string path) {
     Statistics stats;
     DriverOptions dro;
     MUSEnumOptions mo(stats);
-    OptionsHelper::parse(dro, mo, args);
+
+    auto n_args = OptionsHelper::expandParamSet(args);
+    OptionsHelper::parse(dro, mo, n_args);
 
     FileSP filesp(mo, path);
 
@@ -41,18 +43,18 @@ namespace HierMUS {
     if (stats.nmuses != filesp.muses.size()) result = "MISSED";
 
     const Statistics& mstats = me.getStatistics();
-    std::cout << utils::join({
+    std::cout << id << ": " << utils::join({
         path, (result == "PASS" ? "PASS" : ("FAIL("+result+")")),
         std::to_string(mstats.map_calls),
         std::to_string(mstats.sat_calls),
         std::to_string(stats.nmuses),
-        utils::join(args, " "),
+        utils::join(n_args, " "),
         }, "\t") << std::endl;
 
     return result == "PASS";
   }
 
-  int run_tests() {
+  int run_tests(vector<size_t> ids) {
     vector<vector<string> > test_args = {
       {"--paramset", "fzn", "--no-binarize"},
       {"--paramset", "fzn", "--shrink-alg", "lin"},
@@ -75,26 +77,56 @@ namespace HierMUS {
 
     vector<struct tpair> tests;
 
-    for(int sf=0; sf<test_args.size(); sf++)
-      for(int ta=0; ta<test_args.size(); ta++)
+    for(int sf=0; sf<test_args.size(); sf++) {
+      for(int ta=0; ta<test_args.size(); ta++) {
         tests.push_back( { ta, sf } );
+      }
+    }
 
     bool group_by_args = false;
     if(group_by_args) {
       std::sort(tests.begin(), tests.end(), [](const auto& a, const auto& b) {return a.args < b.args;});
     }
 
+    if(ids.empty()) {
+      for(int i=0; i<tests.size(); i++) {
+        ids.push_back(i);
+      }
+    }
+
     bool all_pass = true;
-    for(auto& t: tests) {
-      bool result = run_test(test_args[t.args], spec_files[t.spec]);
+    vector<string> fails;
+
+    for(size_t id : ids) {
+      auto& t = tests.at(id);
+      bool result = run_test(id, test_args[t.args], spec_files[t.spec]);
+      if(!result) fails.push_back(std::to_string(id));
       all_pass = all_pass && result;
     }
+
+    std::cout << "Passed: (" << ids.size() - fails.size() << "/" << ids.size() << ")\t";
+    std::cout << "Failed: (" << fails.size() << "/" << ids.size() << "):\t";
+    if(!fails.empty()) {
+      std::cout << utils::join(fails, " ");
+    }
+    std::cout << std::endl;
 
     return all_pass;
   }
 }
 
 int main(int argc, char** argv) {
-  return HierMUS::run_tests();
+  std::vector<size_t> ids;
+  size_t i = 1;
+  while(i < argc) {
+    std::string s = std::string(argv[i]);
+    auto tests = utils::split(s, ',');
+    for(auto& t : tests) {
+      ids.push_back(std::stoi(t));
+    }
+    i++;
+  }
+
+  return HierMUS::run_tests(ids);
 }
 

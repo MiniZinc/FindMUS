@@ -34,9 +34,9 @@ void help_long(void) {
       << " Driver Options:\n"
       << "  --paramset hint,mzn,fzn. Default: hint\n"
       << "    Use preset parameter sets:\n"
-      << "      hint: --structure gen --shrink-alg map_lin --binarize all --depth mzn\n"
-      << "      mzn: --shrink-alg map_qx --binarize all --depth mzn\n"
-      << "      fzn: --shrink-alg map_qx --binarize all --depth fzn\n"
+      << "      hint: --structure gen --shrink-alg map_lin --depth mzn\n"
+      << "      mzn: --shrink-alg map_qx --depth mzn\n"
+      << "      fzn: --shrink-alg map_qx --depth fzn\n"
       << "  -n <n>   --nmuses <n>\n"
       << "    Number of MUSes to find\n"
       << "  -a\n"
@@ -148,27 +148,6 @@ void help_long(void) {
   exit(EXIT_FAILURE);
 }
 
-
-void setParamSet(ParamSet ps, MUSEnumOptions& mo) {
-  mo.sense = ps;
-  if(ps == PSET_HINT) {
-    mo.subproblem_structure = STR_GEN;
-    mo.map_shrink_alg = SH_MAP_LIN;
-    mo.subproblem_binarize = BIN_ALL;
-    mo.map_depth = DEPTH_INSTANCE;
-  } else if(ps == PSET_MZN) {
-    mo.subproblem_structure = STR_NORMAL;
-    mo.map_shrink_alg = SH_MAP_QX;
-    mo.subproblem_binarize = BIN_ALL;
-    mo.map_depth = DEPTH_INSTANCE;
-  } else if(ps == PSET_FZN) {
-    mo.subproblem_structure = STR_NORMAL;
-    mo.map_shrink_alg = SH_MAP_QX;
-    mo.subproblem_binarize = BIN_ALL;
-    mo.map_depth = DEPTH_PROGRAM;
-  }
-}
-
 void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
   std::vector<std::string> args;
   for(int i=1; i<argc; i++) args.push_back(argv[i]);
@@ -176,26 +155,48 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
   parse(dro, mo, args);
 }
 
-void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string>& args) {
-  setParamSet(PSET_HINT, mo);
+vector<string> expandParamSet(const vector<string>& in_args) {
+  vector<string> args;
 
-  // std::cout << "Args: " << utils::join(args, " ") << std::endl;
-
-  for(int i=0; i<args.size(); i++) {
-    if(args[i] == "--help") {
-      help_long();
-    } else if(args[i] ==  "--paramset") {
-      std::string s = args[++i];
+  for(int i=0; i<in_args.size(); i++) {
+    if(in_args[i] == "--paramset") {
+      const string& s = in_args[++i];
       if(s == "hint") {
-        setParamSet(PSET_HINT, mo);
+        args.push_back("--structure"); args.push_back("gen");
+        args.push_back("--shrink-alg"); args.push_back("map_lin");
+        args.push_back("--depth"); args.push_back("mzn");
       } else if(s == "mzn") {
-        setParamSet(PSET_MZN, mo);
+        args.push_back("--structure"); args.push_back("normal");
+        args.push_back("--shrink-alg"); args.push_back("map_qx");
+        args.push_back("--depth"); args.push_back("mzn");
       } else if(s == "fzn") { 
-        setParamSet(PSET_FZN, mo);
+        args.push_back("--structure"); args.push_back("normal");
+        args.push_back("--shrink-alg"); args.push_back("map_qx");
+        args.push_back("--depth"); args.push_back("fzn");
       } else {
         std::cout << "Unknown paramset. Available options are {hint, mzn, fzn}\n";
         help_short(EXIT_FAILURE);
       }
+
+    } else {
+      args.push_back(in_args[i]);
+    }
+  }
+
+  return args;
+}
+
+void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string>& in_args) {
+  vector<string> args = expandParamSet(in_args);
+
+  for(int i=0; i<args.size(); i++) {
+    if(args[i] == "--help") {
+      help_long();
+    } else if(args[i] == "--print-args") {
+      std::cout << "Args: " << utils::join(args, " ") << std::endl;
+    } else if(args[i] == "--paramset") {
+      std::cout << "Paramset argument should have been expanded. This should not happen.\n";
+      help_short(EXIT_FAILURE);
     } else if(args[i][0] == '-' && args[i][1] == 'D') {
       dro.input_files.push_back(args[i]);
     } else if(args[i] == "--shrink-frontier") {

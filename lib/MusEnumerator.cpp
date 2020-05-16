@@ -118,8 +118,8 @@ namespace HierMUS {
     return true;
   }
 
-#define QXTimeOut OptionalSelection()
-#define QXEarlyMin(S) OptionalSelection(S, true, true);
+#define QXTimeOut        OptionalSelection()
+#define QXEarlyMin(S)    OptionalSelection(S, true, true);
 #define QXEarlyNonMin(S) OptionalSelection(S, true, false);
 
   OptionalSelection MusEnumerator::qx_back(Selection B, size_t D, Selection C,
