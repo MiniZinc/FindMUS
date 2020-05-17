@@ -242,7 +242,7 @@ namespace HierMUS {
     Selection B;
     OptionalSelection res = qx_back_with_map(B, 0, model, criticals);
 
-    if(!res.timedout) { return false; }
+    if(res.timedout) { return false; }
     model = res.get();
 
     updateIncludeExclude(model);
