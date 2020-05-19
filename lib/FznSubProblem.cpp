@@ -42,7 +42,7 @@ static int null_file;
 
 inline void silence_init() {
   saved_stdout = dup(STDOUT_FILENO);
-  saved_stderr = dup(STDOUT_FILENO);
+  saved_stderr = dup(STDERR_FILENO);
   null_file = open(NULL_PATH, O_WRONLY, 0600);
 }
 
