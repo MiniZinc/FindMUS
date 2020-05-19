@@ -107,6 +107,8 @@ void help_long(void) {
       << "    Pass flags <f> to solver for SAT checking. Default: \"-time 1000\"\n"
       << "  --solver-timelimit <ms>, --subsolver-timelimit\n"
       << "    Hard time limit for solver in milliseconds. Default: 1100\n"
+      << "  --native-shrink\n"
+      << "    Request unsat sets from the subsolver (--diagnose must be supported by solver)\n"
       << "  Subproblem filtering options:\n"
       << "   --soft-defines\n"
       << "     Consider functional constraints as part of MUSes\n"

@@ -94,12 +94,15 @@ namespace HierMUS {
   }
 
   bool MusEnumerator::linear_shrink_with_map(Selection& model, const set<MapNode*>&) {
+    if(process_native(model)) return true;
+
     Selection u = model;
     do {
       subsetMap->pushTempBlockSupersets(u);
       stats.madeMapCall();
       Selection m = subsetMap->getSelection(u);
       subsetMap->popTempBlock();
+
       if(m.selected.empty()) break;
       if(mopts.timedOut()) return false;
 
@@ -109,6 +112,7 @@ namespace HierMUS {
         subsetMap->blockSubsets(m);
       } else {
         stats.foundUnSatSet();
+        if(process_native(m)) return true;
         u = m;
       }
     } while(true);
@@ -174,7 +178,6 @@ namespace HierMUS {
     } while(res.early_return && !res.is_min);
 
     model = res.get();
-
     updateIncludeExclude(model);
     return true;
   }
@@ -197,8 +200,14 @@ namespace HierMUS {
           subsetMap->blockSubsets(B);
         } else {
           stats.foundUnSatSet();
+
+          if(mopts.subproblem_native_shrink) {
+            QXLOG("Returning native unsat set"); indent--;
+            if(process_native(B)) return QXEarlyMin(B);
+            return QXEarlyNonMin(B);
+          }
+
           subsetMap->blockSupersets(B);
-          QXLOG("Returning empty"); indent--;
           return empty_sel(C);
         }
       }
@@ -239,12 +248,15 @@ namespace HierMUS {
   }
 
   bool MusEnumerator::qx_with_map(Selection& model, const set<MapNode*>& criticals) {
-    Selection B;
-    OptionalSelection res = qx_back_with_map(B, 0, model, criticals);
+    if (process_native(model)) return true;
 
-    if(res.timedout) { return false; }
+    OptionalSelection res{model};
+    do {
+      res = qx_back_with_map({}, 0, res.get(), criticals);
+      if(res.timedout) return false;
+    } while(res.early_return && !res.is_min);
+
     model = res.get();
-
     updateIncludeExclude(model);
     return true;
   }
