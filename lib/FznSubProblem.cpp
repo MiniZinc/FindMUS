@@ -389,6 +389,11 @@ namespace HierMUS {
       std::cerr << "FznSubproblem:\tException during sub-solving: "
                 << err.msg() << ": " << err.what() << std::endl;
       exit(EXIT_FAILURE);
+    } catch (const std::runtime_error& err) {
+      silence_output_end();
+      std::cerr << "FznSubproblem:\tCaught runtime error:\n";
+      std::cerr << "\t" << err.what() << "\n";
+      exit(EXIT_FAILURE);
     } catch (...) {
       silence_output_end();
       std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving\n";
