@@ -13,6 +13,7 @@ void help_short(int exit_code) {
             << "                 [--paramset {hint, mzn, fzn}]\n"
             << "                 [--structure {normal, flat, gen, mix, idx, idxmix}]\n"
             << "                 [--no-binarize]\n"
+            << "                 [--adapt-timelimit]\n"
             << "                 [--depth {mzn, fzn, i}\n"
             << "                 [--verbose-{enum,map,subsolve} <v>]\n"
             << "                 [--verbose-compile]\n"
@@ -104,8 +105,11 @@ void help_long(void) {
       << "    Use solver <s> for SAT checking. Default: \"fzn-gecode\"\n"
       << "  --solver-flags <f>\n"
       << "    Pass flags <f> to solver for SAT checking. Default: \"-time 1000\"\n"
+      << "  --adapt-timelimit\n"
+      << "    Base solver timelimit on solve time for sanity checks.\n"
+      << "    Maximum timelimit is provided by --solver-timelimit option\n"
       << "  --solver-timelimit <ms>, --subsolver-timelimit\n"
-      << "    Hard time limit for solver in milliseconds. Default: 1100\n"
+      << "    Hard time limit for solver in milliseconds. Default: 1000\n"
       << "  Subproblem filtering options:\n"
       << "   --soft-defines\n"
       << "     Consider functional constraints as part of MUSes\n"
@@ -248,6 +252,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       mo.subproblem_solver_flags = args[++i];
     } else if(args[i] == "--subsolver-timelimit" || args[i] ==  "--solver-timelimit") {
       mo.subproblem_solver_time_limit = std::stoi(args[++i]);
+    } else if(args[i] == "--adapt-timelimit") {
+      mo.subproblem_adapt_time_limit = true;
     } else if(args[i] ==  "--depth") {
       std::string a = args[++i];
       if(isdigit(a[0])) {
