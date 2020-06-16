@@ -48,6 +48,7 @@ public:
   unsigned int verbose_subsolve = 0;
 
   double timelimit = -1;
+  bool print_leftover = true;
 
   bool restarts_enabled = false;
 

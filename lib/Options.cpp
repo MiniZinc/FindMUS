@@ -61,6 +61,8 @@ void help_long(void) {
       << "    Explicit path to paths file\n"
       << "  -t <ms>\n"
       << "    Stop after <ms> seconds. Default: -1 (no timelimit)\n"
+      << "  --no-leftover \n"
+      << "    Do not print leftover candidate on timeout\n"
       << "  --frequent-stats\n"
       << "    Output high-level stats after each MUS (for logging)\n"
       << "  --no-progress\n"
@@ -238,6 +240,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       mo.map_enum_focus_mode = false; // Don't use focus mode
     } else if(args[i] ==  "-t") {
       mo.timelimit = std::stof(args[++i]);
+    } else if(args[i] == "--no-leftover") {
+      mo.print_leftover = false;
     } else if(args[i] ==  "--seed") {
       mo.setRandSeed(std::stoi(args[++i]));
     } else if(args[i] ==  "--remus") {
