@@ -49,6 +49,7 @@ public:
   unsigned int verbose_subsolve = 0;
 
   double timelimit = -1;
+  bool print_leftover = true;
 
   bool restarts_enabled = false;
 
@@ -70,6 +71,7 @@ public:
   string subproblem_solver = "org.gecode.gecode";
   string subproblem_solver_flags = "";
   int subproblem_solver_time_limit = 1000;
+  bool subproblem_adapt_time_limit = false;
   SubProblemOutputFormat subproblem_output_format = OUT_NORMAL;
 
   // SubsetMap

@@ -96,9 +96,11 @@ namespace HierMUS {
       std::cout << "FindMUS finishing early: ";
       if(candidates.empty()) {
         std::cout << "No remaining candidates.\n";
-      } else {
+      } else if(mopts.print_leftover) {
         std::cout << "Last (non-minimal) candidate:\n";
         subProblem.printSol(candidates.back());
+      } else {
+        std::cout << "Remaining candidate not printed (--no-leftover)\n";
       }
       return;
     }

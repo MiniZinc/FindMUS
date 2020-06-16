@@ -237,6 +237,7 @@ int main(int argc, char **argv) {
   auto native_shrink = mo.subproblem_native_shrink;
   mo.subproblem_native_shrink = false; // Disable use of --diagnose flag for sanity check
 
+  double check_unsat_starttime = wallClockTime();
   // Is the model unsat to begin with?
   if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
     if(problem->provedSAT()) {
@@ -248,6 +249,7 @@ int main(int argc, char **argv) {
     }
     return EXIT_FAILURE;
   }
+  double check_unsat_time = wallClockTime() - check_unsat_starttime;
 
   // Is the background satisfiable:
   if(!problem->check(Selection())) {
@@ -257,6 +259,13 @@ int main(int argc, char **argv) {
   }
 
   mo.subproblem_native_shrink = native_shrink; // Restore native setting
+  if(mo.subproblem_adapt_time_limit) {
+    double scaled_unsat_time = (1.5 * 1000 * check_unsat_time);
+    mo.subproblem_solver_time_limit = scaled_unsat_time < mo.subproblem_solver_time_limit
+                                      ? scaled_unsat_time
+                                      : mo.subproblem_solver_time_limit;
+    std::cout << "%% Adapting solver time limit to: " << mo.subproblem_solver_time_limit << "\n";
+  }
 
   // Print suggestion if using gen/hint
   if(mo.subproblem_structure == STR_GEN) {

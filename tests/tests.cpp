@@ -85,7 +85,7 @@ namespace HierMUS {
 
     bool group_by_args = false;
     if(group_by_args) {
-      std::sort(tests.begin(), tests.end(), [](const auto& a, const auto& b) {return a.args < b.args;});
+      std::sort(tests.begin(), tests.end(), [](const tpair& a, const tpair& b) {return a.args < b.args;});
     }
 
     if(ids.empty()) {
