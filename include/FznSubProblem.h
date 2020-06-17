@@ -31,25 +31,29 @@ namespace HierMUS {
       std::ofstream nullstream;
       std::stringstream log;
 
-      MiniZinc::Env fzn_env;
       NullSolns2Out s2o;
+
+      MiniZinc::Env fzn_env;
       MiniZinc::Model* fzn_model;
+
+      MiniZinc::Env oracle_env;
+      MiniZinc::Model* oracle_model;
+      std::unordered_map<std::string, MiniZinc::VarDecl*> oracle_cons;
 
       bool last_sat;
 
       std::unordered_map<std::string, MiniZinc::ConstraintI*> constraints;
       NamePathMap nameToPath;
-      std::string fzn_file;
 
+      void init_fzn_model(const string& fznpath);
+      void init_oracle_model(const string& oraclepath, int ncons, vector<string>& background_cons);
       ConstraintSet getConstraintSet(const Selection& b);
       bool isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name);
       void saveFzn(const Selection& b, const string& filename);
 
     public:
-      FznSubProblem(const std::string& fznpath, const std::string& pathpath, MUSEnumOptions& mo);
-      ~FznSubProblem() {
-        delete fzn_model;
-      }
+      FznSubProblem(const std::string& fznpath, const std::string& pathpath, MUSEnumOptions& mo, const std::string& oraclepath);
+      ~FznSubProblem() { delete fzn_model; if(oracle_model) delete oracle_model; }
 
       void printSol(const Selection& b);
       void printLongSol(const Selection& b);

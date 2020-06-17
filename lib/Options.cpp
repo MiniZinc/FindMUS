@@ -367,6 +367,13 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
         }
         dro.pathpath = p;
       }
+      if(p.substr(p.size()-3, 3) == "log") {
+        if(!dro.oraclepath.empty()) {
+          std::cerr << "No support for multiple oracle (.log) input files: " << p << "\n";
+          help_short(EXIT_FAILURE);
+        }
+        dro.oraclepath = p;
+      }
     } else {
       std::cerr << "Unknown file: " << p << std::endl;
       help_short(EXIT_FAILURE);

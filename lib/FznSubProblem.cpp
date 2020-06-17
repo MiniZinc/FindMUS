@@ -83,15 +83,94 @@ namespace HierMUS {
     }
   }
 
-  FznSubProblem::FznSubProblem(
-      const string& fznpath, const string& pathpath,
-      MUSEnumOptions& mo) : SubProblem(mo), last_sat{false}, nameToPath{pathpath}, fzn_file (fznpath) {
-    double start_build = wallClockTime();
+  void FznSubProblem::init_oracle_model(const string& oraclepath, int ncons, vector<string>& background_cons) {
+    using MiniZinc::Model;
+    using MiniZinc::TypeInst;
+    using MiniZinc::Type;
+    using MiniZinc::VarDecl;
+    using MiniZinc::VarDeclI;
+    using MiniZinc::ConstraintI;
+    using MiniZinc::Expression;
+    using MiniZinc::Location;
+    using MiniZinc::Call;
+    using MiniZinc::ArrayLit;
+    using MiniZinc::Id;
+    using MiniZinc::SolveI;
 
+    ifstream oracle_log(oraclepath);
+    if (!oracle_log.is_open()) return;
+
+    vector<vector<string>> muses_strings;
+    string line;
+
+    while(std::getline(oracle_log, line)) {
+      if(line.size() > 4 && line.substr(0,4) == "MUS:") {
+        vector<string> cons = utils::split(line.substr(5, line.size()), ' ');
+        muses_strings.emplace_back(cons);
+      }
+    }
+
+    set<string> bg_con_set(background_cons.begin(), background_cons.end());
+
+    MiniZinc::GCLock lock;
+
+    oracle_model = new Model();
+
+    // Add variables
+    for(int i=0; i<ncons; i++) {
+      string name = std::to_string(i);
+      if(bg_con_set.find(name) == bg_con_set.end()) {
+        TypeInst* ti = new TypeInst(Location().introduce(), Type::varbool(), {}, nullptr);
+        VarDecl* vd = new VarDecl(Location().introduce(), ti, "c" + std::to_string(i), MiniZinc::Constants().lit_false);
+        oracle_cons[std::to_string(i)] = vd;
+        oracle_model->addItem(new VarDeclI(Location().introduce(), vd));
+      }
+    }
+
+    // Add blocking clauses
+    for(const vector<string>& mus : muses_strings) {
+      vector<Expression*> empty;
+      auto pos = new ArrayLit(Location().introduce(), empty);
+
+      vector<Expression*> ids;
+      for(const string& con : mus) {
+        ids.push_back(oracle_cons.at(con)->id());
+      }
+      auto neg = new ArrayLit(Location().introduce(), ids);
+
+      vector<Expression*> args = {pos, neg};
+      Call* clause = new Call(Location().introduce(), MiniZinc::Constants().ids.bool_clause, args);
+      oracle_model->addItem(new ConstraintI(Location(), clause));
+    }
+    oracle_model->addItem(SolveI::sat(Location().introduce()));
+
+    oracle_env.model(oracle_model);
+    //vector<MiniZinc::TypeError> typeErrors;
+    //try {
+    //  MiniZinc::typecheck(oracle_env, oracle_model, typeErrors, true, true, true);
+    //} catch (MiniZinc::TypeError& e) {
+    //  typeErrors.push_back(e);
+    //}
+    //if(typeErrors.size() > 0) {
+    //  for(unsigned int i=0; i<typeErrors.size(); i++) {
+    //    std::cerr << typeErrors[i].loc() << ":" << std::endl;
+    //    std::cerr << typeErrors[i].what() << ":" << typeErrors[i].msg() << std::endl;
+    //  }
+    //  exit(EXIT_FAILURE);
+    //}
+
+    // MiniZinc::registerBuiltins(fzn_env);
+    oracle_env.swap();
+
+    //MiniZinc::populateOutput(oracle_env);
+    oracle_env.model(oracle_model);
+  }
+
+  void FznSubProblem::init_fzn_model(const string& fznpath) {
     MiniZinc::GCLock lock;
     vector<string> includes;
 
-    includes.push_back(mo.mzn_stdlib_dir + "/std/");
+    includes.push_back(mopts.mzn_stdlib_dir + "/std/");
 
     fzn_model = MiniZinc::parse(fzn_env, {fznpath}, {}, "", "", includes, false, false, false, std::cerr);
     MiniZinc::SolveI* si = fzn_model->solveItem();
@@ -118,6 +197,15 @@ namespace HierMUS {
     MiniZinc::populateOutput(fzn_env);
     fzn_env.model(fzn_model);
     s2o.initFromEnv(&fzn_env);
+  }
+
+  FznSubProblem::FznSubProblem(
+      const string& fznpath, const string& pathpath,
+      MUSEnumOptions& mo, const string& oraclepath = "")
+      : SubProblem(mo), last_sat{false}, nameToPath{pathpath}, fzn_model{ nullptr }, oracle_model{ nullptr } {
+    double start_build = wallClockTime();
+
+    init_fzn_model(fznpath);
 
     for(auto it = fzn_model->begin(); it != fzn_model->end(); ++it) {
       //if((*it)->isa<MiniZinc::IncludeI>() || (*it)->isa<MiniZinc::FunctionI>()) { (*it)->remove(); }
@@ -137,11 +225,14 @@ namespace HierMUS {
     unsigned int hard_cons = 0;
     unsigned int soft_cons = 0;
 
+    vector<string> background_cons;
+
     for(auto cit = fzn_model->begin_constraints(); cit != fzn_model->end_constraints(); ++cit) {
       MiniZinc::ConstraintI& ci = *cit;
       string name = nameToPath.getName(con_id);
       if(isBackgroundConstraint(ci, name)) {
         hard_cons++;
+        background_cons.emplace_back(name);
       } else {
         if(n_cons <= con_id) {
           std::cerr << "FznSubProblem:\tError: Path file does not match FlatZinc\n";
@@ -169,7 +260,6 @@ namespace HierMUS {
       con_id++;
     }
 
-
     counts cs = tree.getCounts();
     int nbranches;
     do {
@@ -188,6 +278,9 @@ namespace HierMUS {
     }
 
     cs = tree.getCounts();
+
+    init_oracle_model(oraclepath, hard_cons + soft_cons, background_cons);
+
     //if(mopts.verbose_subsolve) {
     std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tBuilt tree in "
       << std::fixed << std::setprecision(5) << wallClockTime() - start_build
@@ -228,11 +321,8 @@ namespace HierMUS {
   bool FznSubProblem::check(const Selection& b) {
     double beginCheck = wallClockTime();
     set<string> leaves = getLeaves(b);
-    // Mark all constraints as removed;
-    for(auto& kv : constraints) { kv.second->remove(); }
-    // Activate the selected constraints
-    for(const string& l : leaves) { constraints[l]->unremove(); }
 
+    // Build solver
     MiniZinc::MznSolver solver(nullstream, log);
 
     // Build arguments for MznSolver
@@ -247,6 +337,26 @@ namespace HierMUS {
     vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
     args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
 
+
+    MiniZinc::SolverInstance::Status s = MiniZinc::SolverInstance::ERROR;
+    MiniZinc::Env* check_env = nullptr;
+
+    if(!oracle_model) {
+      // Mark all constraints as removed;
+      for(auto& kv : constraints) { kv.second->remove(); }
+      // Activate the selected constraints
+      for(const string& l : leaves) { constraints[l]->unremove(); }
+
+      check_env = &fzn_env;
+    } else {
+      // Mark all constraints as removed;
+      for(auto& kv : oracle_cons) { kv.second->e(MiniZinc::Constants().lit_false); }
+      // Activate the selected constraints
+      for(const string& l : leaves) { oracle_cons.at(l)->e(MiniZinc::Constants().lit_true); }
+
+      check_env = &oracle_env;
+    }
+
     std::vector<string> args_vec(args);
     switch (solver.processOptions(args_vec)) {
       case 0:
@@ -256,12 +366,12 @@ namespace HierMUS {
         std::cerr << "\t" << log.str() << "\n";
         exit(EXIT_FAILURE);
     }
+
     MiniZinc::SolverFactory* sf = solver.getSF();
-    MiniZinc::SolverInstanceBase* si = sf->createSI(fzn_env, log, solver.getSI_OPT());
+    MiniZinc::SolverInstanceBase* si = sf->createSI(*check_env, log, solver.getSI_OPT());
     si->setSolns2Out(&s2o);
     si->processFlatZinc();
 
-    MiniZinc::SolverInstance::Status s = MiniZinc::SolverInstance::ERROR;
     try {
       s = si->solve();
     } catch (const MiniZinc::InternalError& err) {
@@ -271,6 +381,7 @@ namespace HierMUS {
     }
 
     sf->destroySI(si);
+
     std::string error_log = log.str();
     if(!error_log.empty()) {
       std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << "\n";

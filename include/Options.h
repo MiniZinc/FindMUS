@@ -13,6 +13,7 @@ public:
   vector<string> input_files; // Support mzn and dzn files
   string fznpath;
   string pathpath;
+  string oraclepath;
   int maxmuses = 1; // Start in focus_mode
   bool frequent_stats = false;
   bool output_progress = true;

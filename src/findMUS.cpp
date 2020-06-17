@@ -171,6 +171,13 @@ SubProblem* createProblem(DriverOptions& dro,
         OptionsHelper::help_short(EXIT_FAILURE);
       }
     }
+    if(!dro.oraclepath.empty()) {
+      std::ifstream checkpath(dro.oraclepath);
+      if(!checkpath.is_open()) {
+        std::cerr << "Warning: Oracle file "<< dro.oraclepath << " not found.\n";
+        dro.pathpath = "";
+      }
+    }
     if(dro.pathpath.empty()) {
       string base = dro.fznpath.substr(0,dro.fznpath.length()-4);
       dro.pathpath = base + ".paths";
@@ -182,7 +189,7 @@ SubProblem* createProblem(DriverOptions& dro,
         dro.pathpath = "";
       }
     }
-    problem = new FznSubProblem(dro.fznpath, dro.pathpath, mo);
+    problem = new FznSubProblem(dro.fznpath, dro.pathpath, mo, dro.oraclepath);
   }
   return problem;
 }
