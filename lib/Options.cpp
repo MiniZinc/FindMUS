@@ -105,6 +105,8 @@ void help_long(void) {
       << " Subproblem: Solving options\n"
       << "  --solver <s>, --subsolver <s>\n"
       << "    Use solver <s> for SAT checking. Default: \"fzn-gecode\"\n"
+      << "  --oracle-only\n"
+      << "    If provided with oracle log, treat it as a full enumeration\n"
       << "  --solver-flags <f>\n"
       << "    Pass flags <f> to solver for SAT checking. Default: \"-time 1000\"\n"
       << "  --adapt-timelimit\n"
@@ -252,6 +254,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       dro.list_solvers_json = true;
     } else if(args[i] == "--subsolver" || args[i] ==  "--solver") {
       mo.subproblem_solver = args[++i];
+    } else if(args[i] == "--oracle-only") {
+      mo.oracle_only = true;
     } else if(args[i] ==  "--solver-flags") {
       mo.subproblem_solver_flags = args[++i];
     } else if(args[i] == "--subsolver-timelimit" || args[i] ==  "--solver-timelimit") {

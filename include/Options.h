@@ -14,6 +14,7 @@ public:
   string fznpath;
   string pathpath;
   string oraclepath;
+
   int maxmuses = 1; // Start in focus_mode
   bool frequent_stats = false;
   bool output_progress = true;
@@ -61,6 +62,8 @@ public:
   bool subproblem_hard_functional_constraints = true;
   bool subproblem_hard_domain_constraints = false; // This should be false until context-find is implemented!
   bool subproblem_named_only = false;
+  bool oracle_only = false;
+
   std::set<string> subproblem_name_filters;
   std::set<string> subproblem_name_filters_excludes;
   std::set<string> subproblem_path_filters;

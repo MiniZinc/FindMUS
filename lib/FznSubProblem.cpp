@@ -26,6 +26,53 @@ namespace HierMUS {
   using std::set;
   using std::unordered_map;
 
+  void SetTrie::add_set(const vector<string>& set, int i) {
+    if(i == set.size()) return;
+    const string& val = set[i];
+    bool term = i == set.size()-1;
+
+    for(SetTrie& child : children) {
+      if(child.value == val) {
+        if(term) child.terminal = term;
+        else child.add_set(set, i+1);
+        return;
+      }
+    }
+    children.emplace_back(val, term);
+    if(!term) {
+      children.back().add_set(set, i+1);
+    }
+  }
+
+  bool SetTrie::contains_subset(const vector<string>& set, int i) {
+    if(i == set.size()) return false;
+    const string& val = set[i];
+    bool found = false;
+
+    for(SetTrie& child : children) {
+      if(child.value == val) {
+        found = child.terminal ? true : child.contains_subset(set, i+1);
+        break;
+      }
+    }
+    return found ? true : contains_subset(set, i+1);
+  }
+
+  void SetTrie::add_set(const vector<string>& set) {
+    vector<string> sorted_set (set.begin(), set.end());
+    std::sort(sorted_set.begin(), sorted_set.end());
+    // std::cout << "Add set: {" << utils::join(sorted_set, ", ") << "}\n";
+    add_set(sorted_set, 0);
+  }
+
+  bool SetTrie::contains_subset(const vector<string>& set) {
+    vector<string> sorted_set (set.begin(), set.end());
+    std::sort(sorted_set.begin(), sorted_set.end());
+    bool b = contains_subset(sorted_set, 0);
+    //std::cout << "contains_subset: {" << utils::join(sorted_set, ", ") << "} = " << b << "\n";
+    return b;
+  }
+
   NullSolns2Out::NullSolns2Out() : Solns2Out(nullstream, nullstream, "") {}
   NullSolns2Out::~NullSolns2Out() {}
   std::ostream& NullSolns2Out::getOutput() { return nullstream; }
@@ -84,86 +131,16 @@ namespace HierMUS {
   }
 
   void FznSubProblem::init_oracle_model(const string& oraclepath, int ncons, vector<string>& background_cons) {
-    using MiniZinc::Model;
-    using MiniZinc::TypeInst;
-    using MiniZinc::Type;
-    using MiniZinc::VarDecl;
-    using MiniZinc::VarDeclI;
-    using MiniZinc::ConstraintI;
-    using MiniZinc::Expression;
-    using MiniZinc::Location;
-    using MiniZinc::Call;
-    using MiniZinc::ArrayLit;
-    using MiniZinc::Id;
-    using MiniZinc::SolveI;
-
     ifstream oracle_log(oraclepath);
     if (!oracle_log.is_open()) return;
 
-    vector<vector<string>> muses_strings;
     string line;
-
     while(std::getline(oracle_log, line)) {
       if(line.size() > 4 && line.substr(0,4) == "MUS:") {
         vector<string> cons = utils::split(line.substr(5, line.size()), ' ');
-        muses_strings.emplace_back(cons);
+        oracle.add_set(cons);
       }
     }
-
-    set<string> bg_con_set(background_cons.begin(), background_cons.end());
-
-    MiniZinc::GCLock lock;
-
-    oracle_model = new Model();
-
-    // Add variables
-    for(int i=0; i<ncons; i++) {
-      string name = std::to_string(i);
-      if(bg_con_set.find(name) == bg_con_set.end()) {
-        TypeInst* ti = new TypeInst(Location().introduce(), Type::varbool(), {}, nullptr);
-        VarDecl* vd = new VarDecl(Location().introduce(), ti, "c" + std::to_string(i), MiniZinc::Constants().lit_false);
-        oracle_cons[std::to_string(i)] = vd;
-        oracle_model->addItem(new VarDeclI(Location().introduce(), vd));
-      }
-    }
-
-    // Add blocking clauses
-    for(const vector<string>& mus : muses_strings) {
-      vector<Expression*> empty;
-      auto pos = new ArrayLit(Location().introduce(), empty);
-
-      vector<Expression*> ids;
-      for(const string& con : mus) {
-        ids.push_back(oracle_cons.at(con)->id());
-      }
-      auto neg = new ArrayLit(Location().introduce(), ids);
-
-      vector<Expression*> args = {pos, neg};
-      Call* clause = new Call(Location().introduce(), MiniZinc::Constants().ids.bool_clause, args);
-      oracle_model->addItem(new ConstraintI(Location(), clause));
-    }
-    oracle_model->addItem(SolveI::sat(Location().introduce()));
-
-    oracle_env.model(oracle_model);
-    //vector<MiniZinc::TypeError> typeErrors;
-    //try {
-    //  MiniZinc::typecheck(oracle_env, oracle_model, typeErrors, true, true, true);
-    //} catch (MiniZinc::TypeError& e) {
-    //  typeErrors.push_back(e);
-    //}
-    //if(typeErrors.size() > 0) {
-    //  for(unsigned int i=0; i<typeErrors.size(); i++) {
-    //    std::cerr << typeErrors[i].loc() << ":" << std::endl;
-    //    std::cerr << typeErrors[i].what() << ":" << typeErrors[i].msg() << std::endl;
-    //  }
-    //  exit(EXIT_FAILURE);
-    //}
-
-    // MiniZinc::registerBuiltins(fzn_env);
-    oracle_env.swap();
-
-    //MiniZinc::populateOutput(oracle_env);
-    oracle_env.model(oracle_model);
   }
 
   void FznSubProblem::init_fzn_model(const string& fznpath) {
@@ -202,7 +179,7 @@ namespace HierMUS {
   FznSubProblem::FznSubProblem(
       const string& fznpath, const string& pathpath,
       MUSEnumOptions& mo, const string& oraclepath = "")
-      : SubProblem(mo), last_sat{false}, nameToPath{pathpath}, fzn_model{ nullptr }, oracle_model{ nullptr } {
+      : SubProblem(mo), last_sat{false}, nameToPath{pathpath}, fzn_model{ nullptr }, oracle{ "root", false } {
     double start_build = wallClockTime();
 
     init_fzn_model(fznpath);
@@ -322,71 +299,66 @@ namespace HierMUS {
     double beginCheck = wallClockTime();
     set<string> leaves = getLeaves(b);
 
-    // Build solver
-    MiniZinc::MznSolver solver(nullstream, log);
-
-    // Build arguments for MznSolver
-    vector<string> args;
-    args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
-    args.push_back("--solver");
-    args.push_back(mopts.subproblem_solver);
-
-    mopts.adjustSolverTimeout();
-    args.push_back("--solver-time-limit");
-    args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
-    vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
-    args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
 
 
     MiniZinc::SolverInstance::Status s = MiniZinc::SolverInstance::ERROR;
-    MiniZinc::Env* check_env = nullptr;
 
-    if(!oracle_model) {
+    if(!oracle.children.empty()) {
+      vector<string> leaves_vec(leaves.begin(), leaves.end());
+      s = oracle.contains_subset(leaves_vec) ? MiniZinc::SolverInstance::UNSAT : MiniZinc::SolverInstance::SAT;
+    }
+
+    if(!mopts.oracle_only && s != MiniZinc::SolverInstance::UNSAT) {
+      // Build solver
+      MiniZinc::MznSolver solver(nullstream, log);
+
+      // Build arguments for MznSolver
+      vector<string> args;
+      args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
+      args.push_back("--solver");
+      args.push_back(mopts.subproblem_solver);
+
+      mopts.adjustSolverTimeout();
+      args.push_back("--solver-time-limit");
+      args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
+      vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
+      args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
       // Mark all constraints as removed;
       for(auto& kv : constraints) { kv.second->remove(); }
       // Activate the selected constraints
       for(const string& l : leaves) { constraints[l]->unremove(); }
 
-      check_env = &fzn_env;
-    } else {
-      // Mark all constraints as removed;
-      for(auto& kv : oracle_cons) { kv.second->e(MiniZinc::Constants().lit_false); }
-      // Activate the selected constraints
-      for(const string& l : leaves) { oracle_cons.at(l)->e(MiniZinc::Constants().lit_true); }
+      std::vector<string> args_vec(args);
+      switch (solver.processOptions(args_vec)) {
+        case 0:
+          break;
+        default:
+          std::cerr << "FznSubProblem:\tError creating solver with args:\t" << utils::join(args, " ") << std::endl;
+          std::cerr << "\t" << log.str() << "\n";
+          exit(EXIT_FAILURE);
+      }
 
-      check_env = &oracle_env;
-    }
+      MiniZinc::SolverFactory* sf = solver.getSF();
+      MiniZinc::SolverInstanceBase* si = sf->createSI(fzn_env, log, solver.getSI_OPT());
+      si->setSolns2Out(&s2o);
+      si->processFlatZinc();
 
-    std::vector<string> args_vec(args);
-    switch (solver.processOptions(args_vec)) {
-      case 0:
-        break;
-      default:
-        std::cerr << "FznSubProblem:\tError creating solver with args:\t" << utils::join(args, " ") << std::endl;
-        std::cerr << "\t" << log.str() << "\n";
+      try {
+        s = si->solve();
+      } catch (const MiniZinc::InternalError& err) {
+        std::cerr << "FznSubproblem:\tException during sub-solving: "
+          << err.msg() << ": " << err.what() << std::endl;
         exit(EXIT_FAILURE);
-    }
+      }
 
-    MiniZinc::SolverFactory* sf = solver.getSF();
-    MiniZinc::SolverInstanceBase* si = sf->createSI(*check_env, log, solver.getSI_OPT());
-    si->setSolns2Out(&s2o);
-    si->processFlatZinc();
+      sf->destroySI(si);
 
-    try {
-      s = si->solve();
-    } catch (const MiniZinc::InternalError& err) {
-      std::cerr << "FznSubproblem:\tException during sub-solving: "
-                << err.msg() << ": " << err.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    sf->destroySI(si);
-
-    std::string error_log = log.str();
-    if(!error_log.empty()) {
-      std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << "\n";
-      log.clear();
-      exit(EXIT_FAILURE);
+      std::string error_log = log.str();
+      if(!error_log.empty()) {
+        std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << "\n";
+        log.clear();
+        exit(EXIT_FAILURE);
+      }
     }
 
     string res;

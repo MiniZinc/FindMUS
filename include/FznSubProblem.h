@@ -26,6 +26,22 @@ namespace HierMUS {
       virtual std::ostream& getOutput();
   };
 
+  class SetTrie {
+    private:
+      void add_set(const vector<string>& set, int i);
+      bool contains_subset(const vector<string>& set, int i);
+
+    public:
+      bool terminal;
+      string value;
+      vector<SetTrie> children;
+
+      SetTrie(string v, bool t) : value{v}, terminal{t} {}
+
+      void add_set(const vector<string>& set);
+      bool contains_subset(const vector<string>& set);
+  };
+
   class FznSubProblem : public SubProblem {
     private:
       std::ofstream nullstream;
@@ -36,9 +52,7 @@ namespace HierMUS {
       MiniZinc::Env fzn_env;
       MiniZinc::Model* fzn_model;
 
-      MiniZinc::Env oracle_env;
-      MiniZinc::Model* oracle_model;
-      std::unordered_map<std::string, MiniZinc::VarDecl*> oracle_cons;
+      SetTrie oracle;
 
       bool last_sat;
 
@@ -53,7 +67,7 @@ namespace HierMUS {
 
     public:
       FznSubProblem(const std::string& fznpath, const std::string& pathpath, MUSEnumOptions& mo, const std::string& oraclepath);
-      ~FznSubProblem() { delete fzn_model; if(oracle_model) delete oracle_model; }
+      ~FznSubProblem() { delete fzn_model; }
 
       void printSol(const Selection& b);
       void printLongSol(const Selection& b);
