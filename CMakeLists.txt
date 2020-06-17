@@ -36,6 +36,7 @@ add_library(hiermus
   lib/HierMUSEnumer.cpp
   lib/OldMUSEnumer.cpp
   lib/FznSubProblem.cpp
+  lib/SetTrie.cpp
   lib/Types.cpp
   lib/Selection.cpp
   lib/SubsetMap.cpp
@@ -54,6 +55,7 @@ add_library(hiermus
   include/HierMUSEnumer.h
   include/OldMUSEnumer.h
   include/FznSubProblem.h
+  include/SetTrie.h
   include/Types.h
   include/Selection.h
   include/ChuffedSubsetMap.h

@@ -1,6 +1,7 @@
 #ifndef __HIERMUS_FZNPROBLEM_H_
 #define __HIERMUS_FZNPROBLEM_H_
 
+#include "SetTrie.h"
 #include "SubProblem.h"
 #include "NamePathMap.h"
 #include "Types.h"
@@ -24,22 +25,6 @@ namespace HierMUS {
       NullSolns2Out();
       virtual ~NullSolns2Out();
       virtual std::ostream& getOutput();
-  };
-
-  class SetTrie {
-    private:
-      void add_set(const vector<string>& set, int i);
-      bool contains_subset(const vector<string>& set, int i);
-
-    public:
-      bool terminal;
-      string value;
-      vector<SetTrie> children;
-
-      SetTrie(string v, bool t) : value{v}, terminal{t} {}
-
-      void add_set(const vector<string>& set);
-      bool contains_subset(const vector<string>& set);
   };
 
   class FznSubProblem : public SubProblem {

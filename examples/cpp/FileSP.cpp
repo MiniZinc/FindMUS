@@ -15,14 +15,6 @@ namespace HierMUS {
   using std::string;
   using std::set;
 
-  inline
-  bool is_subset(const set<string>& mus, const set<string>& sel) {
-    for(const string& s : mus) {
-      if(sel.find(s) == sel.end()) return false;
-    }
-    return true;
-  }
-
   void FileSP::init(std::istream& is) {
     vector<MapNode> nodes;
     set<string> has_parent;
@@ -70,6 +62,8 @@ namespace HierMUS {
           mus.insert(name);
         }
         muses.push_back(mus);
+        vector<string> mus_vec (mus.begin(), mus.end());
+        oracle.add_set(mus_vec);
       }
     }
 
@@ -93,11 +87,11 @@ namespace HierMUS {
     }
   }
 
-  FileSP::FileSP(MUSEnumOptions& mo, std::istream& is) : SubProblem(mo) {
+  FileSP::FileSP(MUSEnumOptions& mo, std::istream& is) : SubProblem(mo), oracle("root", false) {
     init(is);
   }
 
-  FileSP::FileSP(MUSEnumOptions& mo, string file_path) : SubProblem(mo) {
+  FileSP::FileSP(MUSEnumOptions& mo, string file_path) : SubProblem(mo), oracle("root", false) {
     std::ifstream is (file_path);
     if(!is.is_open()) {
       std::cerr << "Can't open file" << file_path << "\n";
@@ -118,15 +112,12 @@ namespace HierMUS {
     bool sol = true;
     if(!s.selected.empty()) {
       set<string> leaves = getLeaves(s);
-      for(const set<string>& mus : muses) {
-        if(is_subset(mus, leaves)) {
-          sol = false;
-          break;
-        }
-      }
+      vector<string> leaves_vec (leaves.begin(), leaves.end());
+      sol = !oracle.contains_subset(leaves_vec);
     }
     if(mopts.verbose_subsolve)
       std::cout << "FileSP::check(" << s << ") :" << sol<<"\n";
+
     return sol;
   }
 
