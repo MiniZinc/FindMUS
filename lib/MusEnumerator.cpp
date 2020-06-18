@@ -26,6 +26,7 @@ namespace HierMUS {
     switch (mopts.map_shrink_alg) {
       case SH_MAP_QX:  return qx_with_map(m, c);
       case SH_QX:      return qx(m, c);
+      case SH_QX2:     return qx2(m, c);
       case SH_MAP_LIN: return linear_shrink_with_map(m, c);
       case SH_LIN:     return linear_shrink(m, c);
     }
@@ -127,117 +128,60 @@ namespace HierMUS {
     return true;
   }
 
-#define QXLOG(X) if(mopts.verbose_enum) std::cout << string(indent*2, ' ') << "QX: " << X << std::endl;
+  OptionalSelection MusEnumerator::qx2_back(Selection B, size_t D, Selection C,
+                                            const set<MapNode*>& criticals) {
+    if(mopts.timedOut()) return QXTimeOut;
+
+    if(D>0) {
+      stats.madeMapCall();
+      if(!subsetMap->getSelection(B).selected.empty()) {
+        stats.madeSatCheck();
+        if(!subProblem.check(B)) {
+          stats.foundUnSatSet();
+          return empty_sel(C);
+        } else {
+          stats.foundSatSet();
+          subsetMap->blockSubsets(B);
+        }
+      }
+    }
+    if(C.selected.size() == 1) return C;
+
+    Selection C1, C2;
+    //sel_split(mopts, C, C1, C2);
+    sel_split(C, C1, C2);
+
+    OptionalSelection D2, D1;
+    if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
+      D2 = C2;
+    } else {
+      D2 = qx2_back(sel_union(B, C1), C1.selected.size(), C2, criticals);
+      if(!D2.has_value()) return QXTimeOut;
+    }
+
+    if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
+      D1 = C1;
+    } else {
+      D1 = qx2_back(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
+      if(!D1.has_value()) return QXTimeOut;
+    }
+
+    return sel_union(D1.get(),D2.get());
+  }
+
+  bool MusEnumerator::qx2(Selection& model, const set<MapNode*>& criticals) {
+    Selection B;
+    OptionalSelection res = qx2_back(B, 0, model, criticals);
+
+    if(!res.has_value()) { return false; }
+    model = res.get();
+
+    updateIncludeExclude(model);
+    return true;
+  }
 
 static int indent=0;
-  /* OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
-                                                    const set<MapNode*>& criticals) {
-    QXLOG("START"); indent++;
-    if(mopts.timedOut()) return QXTimeOut;
-
-    if(D>0 && !B.selected.empty()) {
-      stats.madeMapCall();
-      bool known_sat = subsetMap->knownSat(B);
-      if(!known_sat) {
-        stats.madeSatCheck();
-        known_sat = subProblem.check(B);
-      }
-
-      if(known_sat) {
-        stats.foundSatSet();
-        subsetMap->blockSubsets(B);
-      } else {
-        stats.foundUnSatSet();
-        subsetMap->blockSupersets(B);
-        QXLOG("Returning empty"); indent--;
-        return empty_sel(C);
-      }
-    }
-    if(C.selected.size() == 1) { 
-      QXLOG("returning C <- |C| == 1"); indent--;
-      return C;
-    }
-
-    Selection C1, C2;
-    stats.madeMapCall();
-    C1 = subsetMap->getRandomSelection(C, B, true);
-    if(C1.selected.empty()) {
-      QXLOG("returning C <- |C1| == 0"); indent--;
-
-      return C;
-    }
-    C2 = sel_complement(C, C1);
-
-    OptionalSelection D2, D1;
-    if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
-      D2 = C2;
-    } else {
-      D2 = qx_back_with_map(sel_union(B, C1), C1.selected.size(), C2, criticals);
-      if(!D2.has_value()) return QXTimeOut;
-    }
-
-    if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
-      D1 = C1;
-    } else {
-      D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
-      if(!D1.has_value()) return QXTimeOut;
-    }
-
-    QXLOG("returning D1 U D2"); indent--;
-    return sel_union(D1.get(),D2.get());
-  } */
-
-  /* OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
-                                                    const set<MapNode*>& criticals) {
-    QXLOG("START"); indent++;
-    if(mopts.timedOut()) return QXTimeOut;
-
-    if(D>0 && !B.selected.empty()) {
-      stats.madeSatCheck();
-      if(subProblem.check(B)) {
-        stats.foundSatSet();
-        subsetMap->blockSubsets(B);
-      } else {
-        stats.foundUnSatSet();
-        subsetMap->blockSupersets(B);
-        QXLOG("Returning empty"); indent--;
-        return empty_sel(C);
-      }
-    }
-    if(C.selected.size() == 1) { 
-      QXLOG("returning C <- |C| == 1"); indent--;
-      return C;
-    }
-
-    Selection C1, C2;
-    stats.madeMapCall();
-    C1 = subsetMap->getRandomSelection(C, B, true);
-    if(C1.selected.empty()) {
-      QXLOG("returning C <- |C1| == 0"); indent--;
-
-      return C;
-    }
-    C2 = sel_complement(C, C1);
-
-    OptionalSelection D2, D1;
-    if(C2.selected.size() == 1 && is_subset(C2, criticals)) {
-      D2 = C2;
-    } else {
-      D2 = qx_back_with_map(sel_union(B, C1), C1.selected.size(), C2, criticals);
-      if(!D2.has_value()) return QXTimeOut;
-    }
-
-    if(C1.selected.size() == 1 && is_subset(C1, criticals)) {
-      D1 = C1;
-    } else {
-      D1 = qx_back_with_map(sel_union(B, D2.get()), D2.get().selected.size(), C1, criticals);
-      if(!D1.has_value()) return QXTimeOut;
-    }
-
-    QXLOG("returning D1 U D2"); indent--;
-    return sel_union(D1.get(),D2.get());
-  } */
-
+#define QXLOG(X) if(mopts.verbose_enum) std::cout << string(indent*2, ' ') << "QX: " << X << std::endl;
 
   OptionalSelection MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
                                                     const set<MapNode*>& criticals) {
@@ -270,10 +214,11 @@ static int indent=0;
     C1 = subsetMap->getRandomSelection(C, B, true);
     if(C1.selected.empty()) {
       QXLOG("returning C <- |C1| == 0"); indent--;
-
       return C;
     }
     C2 = sel_complement(C, C1);
+
+    // std::cout << "Part: |C| = " << C.selected.size() << " |C1| = " << C1.selected.size() << " |C2| = " << C2.selected.size() << "\n";
 
     OptionalSelection D2, D1;
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {

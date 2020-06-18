@@ -57,6 +57,7 @@ namespace HierMUS {
       {"--paramset", "fzn", "--no-binarize"},
       {"--paramset", "fzn", "--shrink-alg", "lin"},
       {"--paramset", "fzn", "--shrink-alg", "qx"},
+      {"--paramset", "fzn", "--shrink-alg", "qx2"},
       {"--paramset", "fzn", "--shrink-alg", "map_lin"},
       {"--paramset", "fzn", "--no-binarize", "--structure", "flat", "--remus", "--shrink-alg", "map_lin"},
     };
@@ -75,7 +76,7 @@ namespace HierMUS {
 
     vector<struct tpair> tests;
 
-    for(int sf=0; sf<test_args.size(); sf++)
+    for(int sf=0; sf<spec_files.size(); sf++)
       for(int ta=0; ta<test_args.size(); ta++)
         tests.push_back( { ta, sf } );
 
