@@ -16,6 +16,9 @@ include(cmake-helpers/configure_libminizinc.cmake)
 message("-- Configuring: Chuffed")
 include(cmake-helpers/configure_chuffed.cmake)
 
+message("-- Configuring: Minisat")
+include(cmake-helpers/configure_minisat.cmake)
+
 #### #### #### #### #### #### ####
 
 include_directories("include" ${CMAKE_BINARY_DIR})
@@ -41,6 +44,7 @@ add_library(hiermus
   lib/Selection.cpp
   lib/SubsetMap.cpp
   lib/ChuffedSubsetMap.cpp
+  lib/MinisatSubsetMap.cpp
   lib/Options.cpp
   lib/NamePathMap.cpp
 
@@ -59,13 +63,14 @@ add_library(hiermus
   include/Types.h
   include/Selection.h
   include/ChuffedSubsetMap.h
+  include/MinisatSubsetMap.h
   include/Options.h
   include/NamePathMap.h
 )
 
 if(libminizinc_FOUND)
     add_executable(findMUS src/findMUS.cpp)
-    target_link_libraries(findMUS hiermus chuffed_fzn chuffed mzn ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(findMUS hiermus chuffed_fzn chuffed minisat-lib-static mzn ${CMAKE_THREAD_LIBS_INIT})
 
     if(BUILD_FINDMUS_EXAMPLES)
       target_include_directories(findMUS PRIVATE examples/cpp)
