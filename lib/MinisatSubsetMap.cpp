@@ -19,11 +19,11 @@ namespace HierMUS {
   void MinisatSubsetMap::setMaximal(bool max_mode) {
     if(max_mode) {
       for(int i=0; i<leaves_top; i++) {
-        solver.setPolarity(leaves[i], Minisat::l_True);
+        solver.setPolarity(leaves[i], Minisat::l_False);
       }
     } else {
       for(int i=0; i<leaves_top; i++) {
-        solver.setPolarity(leaves[i], mopts.getRandBool() ? Minisat::l_True : Minisat::l_False);
+        solver.setPolarity(leaves[i], mopts.getRandBool() ? Minisat::l_False : Minisat::l_True);
       }
     }
   }
@@ -50,7 +50,7 @@ namespace HierMUS {
   }
 
   void createVars(Minisat::Solver& solver, Minisat::vec<Minisat::Var>& arr, size_t nvars) {
-    for(int i=0; i<nvars; i++) arr.push(solver.newVar());
+    for(int i=0; i<nvars; i++) arr.push(solver.newVar(Minisat::l_False, true));
   }
 
   MinisatSubsetMap::MinisatSubsetMap(SubProblem* prob, MUSEnumOptions& mo)
@@ -200,10 +200,10 @@ namespace HierMUS {
   bool simplifyVec(Minisat::Solver& solver, Minisat::vec<Minisat::Lit>& ps) {
     int i, j;
     for (i = j = 0; i < ps.size(); i++) {
-      if (solver.value(ps[i]) == Minisat::l_True) {
+      if (solver.modelValue(ps[i]) == Minisat::l_True) {
         return false;
       }
-      if (solver.value(ps[i]) == Minisat::l_Undef) {
+      if (solver.modelValue(ps[i]) == Minisat::l_Undef) {
         ps[j++] = ps[i];
       }
     }
@@ -267,7 +267,7 @@ namespace HierMUS {
     }
 
     if(tempBlocking) {
-      int control = solver.newVar();
+      int control = solver.newVar(Minisat::l_Undef, false);
       Minisat::Lit conLit = mkLit(control);
       tempStack.push_back(conLit);
       blockClause.push(~conLit);
@@ -289,28 +289,13 @@ namespace HierMUS {
     }
 
     if(tempBlocking) {
-      int control = solver.newVar();
+      int control = solver.newVar(Minisat::l_Undef, false);
       Minisat::Lit conLit = mkLit(control);
       tempStack.push_back(conLit);
       blockClause.push(~conLit);
     }
 
     block(blockClause);
-  }
-
-  void MinisatSubsetMap::print(std::ostream&) {
-    solution_set = {};
-    solution_set.exclude = solution_template.exclude;
-
-    for(const ExpandedNode& en : solution_template.include) {
-      if ((en.child->var.isLeaf && solver.value(en.child->var.leaf) == Minisat::l_True) || solver.value(en.child->var.conj) == Minisat::l_True) {
-        solution_set.selected.insert(en.child);
-        solution_set.exclude.erase(en.child);
-        solution_set.include.insert(ExpandedNode(en.child));  // New Selection so parent can be discarded
-      } else {
-        solution_set.exclude.insert(en.child);
-      }
-    }
   }
 
   Selection MinisatSubsetMap::getRootSelector() {
@@ -347,7 +332,7 @@ namespace HierMUS {
       atLeastOne.push(enode.child->var.isLeaf ? mkLit(enode.child->var.leaf) : mkLit(enode.child->var.conj));
     }
 
-    Minisat::Var control = solver.newVar();
+    Minisat::Var control = solver.newVar(Minisat::l_Undef, false);
     Minisat::Lit conLit = mkLit(control);
     atLeastOne.push(~conLit);
     for(MapNode* node : forceInclude) {
@@ -371,7 +356,32 @@ namespace HierMUS {
     if(mopts.verbose_map) std::cout << " }\n";
 
     auto start_time = std::chrono::system_clock::now();
-    solver.solve(all_assumptions);
+    bool r = solver.solve(all_assumptions);
+
+
+    //std::cout << "\n";
+    //std::cout << "nAssigns(): " <<  solver.nVars() << "\n";
+    //std::cout << "nVars(): " <<  solver.nVars() << "\n";
+    //std::cout << "nClauses(): " <<  solver.nVars() << "\n";
+    //std::cout << "nLearnt(): " <<  solver.nVars() << "\n";
+    //std::cout << "nFreeVars(): " <<  solver.nVars() << "\n";
+    //solver.printStats();
+    //std::cout << "\n";
+
+    solution_set = {};
+    solution_set.exclude = solution_template.exclude;
+
+    if(!r) return solution_set;
+
+    for(const ExpandedNode& en : solution_template.include) {
+      if ((en.child->var.isLeaf && solver.modelValue(en.child->var.leaf) == Minisat::l_True) || solver.modelValue(en.child->var.conj) == Minisat::l_True) {
+        solution_set.selected.insert(en.child);
+        solution_set.exclude.erase(en.child);
+        solution_set.include.insert(ExpandedNode(en.child));  // New Selection so parent can be discarded
+      } else {
+        solution_set.exclude.insert(en.child);
+      }
+    }
 
     if(mopts.verbose_map) { std::cout << "SubsetMap:\tSolve took " << std::fixed << std::setprecision(5) << (std::chrono::system_clock::now() - start_time).count() << " seconds. Returning: " << solution_set << ". \n"; }
 
