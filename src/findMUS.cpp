@@ -4,6 +4,10 @@
 #include <iomanip>
 #include <csignal>
 
+#ifdef WIN32
+#include <windows.h>
+#undef ERROR
+#endif
 
 #include "HierMUSEnumer.h"
 #include "OldMUSEnumer.h"
@@ -22,7 +26,6 @@
 
 using namespace HierMUS;
 using std::string;
-
 
 namespace FindMUSState {
 static bool sigint = false;
@@ -58,7 +61,7 @@ static void regHandler() {
 
 static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   regHandler();
-  double start_time = wallClockTime();
+  std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
   Statistics& stats = me.getStatistics();
   if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
   int start_sat_calls = 0;
@@ -74,7 +77,7 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
 
     int sat_calls_d = stats.sat_calls - start_sat_calls;
     if(dro.frequent_stats)
-      std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
+      std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << (std::chrono::system_clock::now() - start_time).count()
                 << "\tnmuses: " << stats.nmuses << "\t" << stats << "\tdsat: " << sat_calls_d <<"\n";
     start_sat_calls = stats.sat_calls;
   }
@@ -84,7 +87,7 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   }
 
   if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
-  std::cout << "Total Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
+  std::cout << "Total Time: " << std::fixed << std::setprecision(5) << (std::chrono::system_clock::now() - start_time).count()
             << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
 }
 }
@@ -239,7 +242,7 @@ int main(int argc, char **argv) {
     me = new OldMUSEnumer(*problem, mo);
   }
 
-  double check_unsat_starttime = wallClockTime();
+  std::chrono::time_point<std::chrono::system_clock> check_unsat_starttime = std::chrono::system_clock::now();
   // Is the model unsat to begin with?
   if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
     if(problem->provedSAT()) {
@@ -251,7 +254,7 @@ int main(int argc, char **argv) {
     }
     return EXIT_FAILURE;
   }
-  double check_unsat_time = wallClockTime() - check_unsat_starttime;
+  std::chrono::duration<double> check_unsat_time = std::chrono::system_clock::now() - check_unsat_starttime;
 
   // Is the background satisfiable:
   if(!problem->check(Selection())) {
@@ -261,7 +264,7 @@ int main(int argc, char **argv) {
   }
 
   if(mo.subproblem_adapt_time_limit) {
-    double scaled_unsat_time = (1.5 * 1000 * check_unsat_time);
+    double scaled_unsat_time = (1.5 * 1000 * check_unsat_time.count());
     mo.subproblem_solver_time_limit = scaled_unsat_time < mo.subproblem_solver_time_limit
                                       ? scaled_unsat_time
                                       : mo.subproblem_solver_time_limit;

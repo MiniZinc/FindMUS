@@ -180,7 +180,7 @@ namespace HierMUS {
       const string& fznpath, const string& pathpath,
       MUSEnumOptions& mo, const string& oraclepath = "")
       : SubProblem(mo), last_sat{false}, nameToPath{pathpath}, fzn_model{ nullptr }, oracle{ "root", false } {
-    double start_build = wallClockTime();
+    std::chrono::time_point<std::chrono::system_clock> start_build = std::chrono::system_clock::now();
 
     init_fzn_model(fznpath);
 
@@ -260,7 +260,7 @@ namespace HierMUS {
 
     //if(mopts.verbose_subsolve) {
     std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tBuilt tree in "
-      << std::fixed << std::setprecision(5) << wallClockTime() - start_build
+      << std::fixed << std::setprecision(5) << (std::chrono::system_clock::now() - start_build).count()
       << " seconds.\n";
     //}
   }
@@ -296,7 +296,7 @@ namespace HierMUS {
   }
 
   bool FznSubProblem::check(const Selection& b) {
-    double beginCheck = wallClockTime();
+    std::chrono::time_point<std::chrono::system_clock> beginCheck = std::chrono::system_clock::now();
     set<string> leaves = getLeaves(b);
 
 
@@ -385,7 +385,7 @@ namespace HierMUS {
       } else {
         std::cout << "ncons: " << std::setw(8) << leaves.size();
       }
-      std::cout << "\ttook: " << std::fixed << std::setprecision(5) << (wallClockTime() - beginCheck) << " seconds" << std::endl;
+      std::cout << "\ttook: " << std::fixed << std::setprecision(5) << (std::chrono::system_clock::now() - beginCheck).count() << " seconds" << std::endl;
     }
 
     return is_sat;

@@ -1,6 +1,8 @@
 #ifndef __HIERMUS_MINISAT_SUBSETMAP_H_
 #define __HIERMUS_MINISAT_SUBSETMAP_H_
 
+#include <minisat/core/Solver.h>
+
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -13,13 +15,34 @@
 
 namespace HierMUS {
 
-  class MinisatSubsetProblem : public SubsetMap, public Problem {
+  class MinisatSubsetMap : public SubsetMap {
+    private:
+      Minisat::vec<Minisat::Var> leaves;
+      Minisat::vec<Minisat::Var> conjs;
+      Minisat::vec<Minisat::Var> disjs;
+      Minisat::vec<Minisat::Var> eqs;
+
+      std::vector<MapNode> leafNodes;
+      std::vector<MapNode> branchNodes;
+
+      std::vector<Minisat::Lit> tempStack;
+
+      MapNode root;
+
+      Minisat::Solver solver;
+
+      int leaves_top;
+      int branches_top;
+
+      Selection solution_set;
+      Selection solution_template;
+
     private:
       MapNode addConnections(const MapNode& node, unsigned int depth = 0);
 
     public:
-      MinisatSubsetProblem(SubProblem* prob, MUSEnumOptions& mo);
-      ~MinisatSubsetProblem() {  }
+      MinisatSubsetMap(SubProblem* prob, MUSEnumOptions& mo);
+      ~MinisatSubsetMap() { }
 
       void pushTempBlockSupersets(const Selection& selection);
       void pushTempBlockSubsets(const Selection& selection);
@@ -34,7 +57,7 @@ namespace HierMUS {
       Selection getRootSelector();
       Selection getLeavesSelector();
 
-      void block(vec<Lit>& blockClause);
+      void block(Minisat::vec<Minisat::Lit>& blockClause);
       void blockSupersets(const Selection& selection);
       void blockSubsets(const Selection& selection);
   };

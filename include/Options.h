@@ -5,6 +5,7 @@
 
 #include <string>
 #include <random>
+#include <chrono>
 
 namespace HierMUS {
 
@@ -49,7 +50,7 @@ public:
   unsigned int verbose_enum = 0;
   unsigned int verbose_subsolve = 0;
 
-  double timelimit = -1;
+  std::chrono::duration<double> timelimit;
   bool print_leftover = true;
 
   bool restarts_enabled = false;
@@ -104,20 +105,20 @@ public:
   }
 
   bool timedOut() {
-    if(timelimit < 0) return false;
-    stats.last_time = wallClockTime();
-    return (stats.last_time - stats.start_time > (timelimit / 1000));
+    if(timelimit.count() < 0) return false;
+    stats.last_time = std::chrono::system_clock::now();
+    return (stats.last_time - stats.start_time).count() > timelimit.count();
   }
 
   void adjustSolverTimeout() {
-    if(timelimit < 0) return;
-    double time = wallClockTime();
-    double elapsedTime = time - stats.start_time;
-    double remainingTime = timelimit - elapsedTime;
+    if(timelimit.count() < 0) return;
+    std::chrono::time_point<std::chrono::system_clock> time = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsedTime = time - stats.start_time;
+    std::chrono::duration<double> remainingTime = timelimit - elapsedTime;
 
-    if(remainingTime < (subproblem_solver_time_limit)) {
-      std::cerr << "Options: Tightening timeout to: " << (remainingTime) << " (ms)" << std::endl;
-      subproblem_solver_time_limit = int(std::ceil(remainingTime));
+    if(remainingTime.count() < (subproblem_solver_time_limit)) {
+      std::cerr << "Options: Tightening timeout to: " << (remainingTime.count()) << " (ms)" << std::endl;
+      subproblem_solver_time_limit = int(std::ceil(remainingTime.count()));
     }
   }
 };

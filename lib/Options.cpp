@@ -243,7 +243,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       dro.maxmuses = 0; // Find all MUSes
       mo.map_enum_focus_mode = false; // Don't use focus mode
     } else if(args[i] ==  "-t") {
-      mo.timelimit = std::stof(args[++i]);
+      mo.timelimit = std::chrono::duration<double>(std::stof(args[++i]));
     } else if(args[i] == "--no-leftover") {
       mo.print_leftover = false;
     } else if(args[i] ==  "--seed") {

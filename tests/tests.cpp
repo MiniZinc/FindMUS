@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdlib>
 #include <sstream>
+#include <chrono>
 
 #include "HierMUSEnumer.h"
 #include "FznSubProblem.h"
@@ -27,7 +28,6 @@ namespace HierMUS {
 
     string result = "PASS";
 
-    double start_time = wallClockTime();
     while (!mo.timedOut() && me.search()) {
       const Selection& s = me.getCurrentMUS();
       if (filesp.isMUS(s)) {

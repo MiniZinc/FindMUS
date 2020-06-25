@@ -2,7 +2,7 @@
 #include <string>
 
 #include "MusEnumerator.h"
-#include "ChuffedSubsetMap.h"
+#include "MinisatSubsetMap.h"
 
 namespace HierMUS {
   using std::string;
@@ -251,7 +251,7 @@ static int indent=0;
   }
 
   MusEnumerator::MusEnumerator(SubProblem& prob, MUSEnumOptions& mo, SubsetMap* m) :
-    mopts(mo), subsetMap(m ? m : new ChuffedSubsetProblem(&prob, mo)), subProblem(prob) {}
+    mopts(mo), subsetMap(m ? m : new MinisatSubsetMap(&prob, mo)), subProblem(prob) {}
   MusEnumerator::~MusEnumerator() {}
 
   void MusEnumerator::setUnsatCallback(std::function<void(const Selection&)> cb) {

@@ -1,8 +1,3 @@
-#include <chuffed/core/options.h>
-#include <chuffed/core/engine.h>
-#include <chuffed/flatzinc/flatzinc.h>
-#include <chuffed/vars/modelling.h>
-
 #include <vector>
 #include <string>
 #include <iomanip>
