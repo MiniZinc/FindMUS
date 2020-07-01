@@ -284,10 +284,10 @@ namespace HierMUS {
   }
 
   Selection MinisatSubsetMap::getSelection() {
-    return getSelection(getLeavesSelector(), true);
+    return getSelection(getLeavesSelector());
   }
 
-  Selection MinisatSubsetMap::getSelection(const Selection& selection, bool blockSat /* = true */ ) {
+  Selection MinisatSubsetMap::getSelection(const Selection& selection) {
     if(!consistent) {
       if(mopts.verbose_map) { std::cout << "SubsetMap:\tInconsistent. Returning: {}. \n"; }
       return {};  // Return empty Selection
