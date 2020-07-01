@@ -74,7 +74,7 @@ public:
 
   string subproblem_solver = "org.gecode.gecode";
   string subproblem_solver_flags = "";
-  int subproblem_solver_time_limit = 1000;
+  std::chrono::duration<double> subproblem_solver_time_limit = std::chrono::seconds(1);
   bool subproblem_adapt_time_limit = false;
   SubProblemOutputFormat subproblem_output_format = OUT_NORMAL;
 
@@ -92,7 +92,8 @@ public:
   std::default_random_engine rand_generator;
   std::uniform_int_distribution<int> rand_bin;
 
-  MUSEnumOptions(Statistics& s) : stats(s), rand_seed((int)time(NULL)), rand_generator(rand_seed), rand_bin(0,1) {}
+  MUSEnumOptions() = delete;
+  MUSEnumOptions(Statistics& s) : timelimit{-1}, stats(s), rand_seed((int)time(NULL)), rand_generator(rand_seed), rand_bin(0,1) {}
   MUSEnumOptions& operator=(const MUSEnumOptions& mo) =  delete;
 
   void setRandSeed(int s) {
@@ -107,18 +108,20 @@ public:
   bool timedOut() {
     if(timelimit.count() < 0) return false;
     stats.last_time = std::chrono::system_clock::now();
-    return (stats.last_time - stats.start_time).count() > timelimit.count();
+    std::chrono::duration<double> dur = stats.last_time - stats.start_time;
+    return dur > timelimit;
   }
 
   void adjustSolverTimeout() {
     if(timelimit.count() < 0) return;
-    std::chrono::time_point<std::chrono::system_clock> time = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsedTime = time - stats.start_time;
+    std::chrono::duration<double> elapsedTime = std::chrono::system_clock::now() - stats.start_time;
     std::chrono::duration<double> remainingTime = timelimit - elapsedTime;
 
-    if(remainingTime.count() < (subproblem_solver_time_limit)) {
-      std::cerr << "Options: Tightening timeout to: " << (remainingTime.count()) << " (ms)" << std::endl;
-      subproblem_solver_time_limit = int(std::ceil(remainingTime.count()));
+    if(remainingTime.count() < 0) return;
+
+    if(remainingTime < subproblem_solver_time_limit) {
+      std::cerr << "Options: Tightening timeout to: " << remainingTime.count() << " seconds" << std::endl;
+      subproblem_solver_time_limit = remainingTime;
     }
   }
 };

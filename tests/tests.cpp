@@ -54,12 +54,12 @@ namespace HierMUS {
 
   int run_tests() {
     vector<vector<string> > test_args = {
-      {"-t", "100000", "--paramset", "fzn", "--no-binarize"},
-      {"-t", "100000", "--paramset", "fzn", "--shrink-alg", "lin"},
-      {"-t", "100000", "--paramset", "fzn", "--shrink-alg", "qx"},
-      {"-t", "100000", "--paramset", "fzn", "--shrink-alg", "qx2"},
-      {"-t", "100000", "--paramset", "fzn", "--shrink-alg", "map_lin"},
-      {"-t", "100000", "--paramset", "fzn", "--no-binarize", "--structure", "flat", "--remus", "--shrink-alg", "map_lin"},
+      {"-t", "1000", "--paramset", "fzn", "--no-binarize"},
+      {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "lin"},
+      {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "qx"},
+      {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "qx2"},
+      {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "map_lin"},
+      {"-t", "1000", "--paramset", "fzn", "--no-binarize", "--structure", "flat", "--remus", "--shrink-alg", "map_lin"},
     };
     vector<string> spec_files = {
       "../examples/specs/dep.mus",

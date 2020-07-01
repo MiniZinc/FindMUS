@@ -243,7 +243,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       dro.maxmuses = 0; // Find all MUSes
       mo.map_enum_focus_mode = false; // Don't use focus mode
     } else if(args[i] ==  "-t") {
-      mo.timelimit = std::chrono::duration<double>(std::stof(args[++i]));
+      mo.timelimit = std::chrono::duration<double>(std::chrono::milliseconds(std::stoi(args[++i])));
     } else if(args[i] == "--no-leftover") {
       mo.print_leftover = false;
     } else if(args[i] ==  "--seed") {
@@ -261,7 +261,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
     } else if(args[i] ==  "--solver-flags") {
       mo.subproblem_solver_flags = args[++i];
     } else if(args[i] == "--subsolver-timelimit" || args[i] ==  "--solver-timelimit") {
-      mo.subproblem_solver_time_limit = std::stoi(args[++i]);
+      mo.subproblem_solver_time_limit = std::chrono::duration<double>(std::chrono::milliseconds(std::stoi(args[++i])));
     } else if(args[i] == "--adapt-timelimit") {
       mo.subproblem_adapt_time_limit = true;
     } else if(args[i] ==  "--depth") {

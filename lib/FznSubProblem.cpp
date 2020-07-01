@@ -180,7 +180,7 @@ namespace HierMUS {
       const string& fznpath, const string& pathpath,
       MUSEnumOptions& mo, const string& oraclepath = "")
       : SubProblem(mo), last_sat{false}, nameToPath{pathpath}, fzn_model{ nullptr }, oracle{ "root", false } {
-    std::chrono::time_point<std::chrono::system_clock> start_build = std::chrono::system_clock::now();
+    auto start_build = std::chrono::system_clock::now();
 
     init_fzn_model(fznpath);
 
@@ -259,9 +259,9 @@ namespace HierMUS {
     init_oracle_model(oraclepath, hard_cons + soft_cons, background_cons);
 
     //if(mopts.verbose_subsolve) {
+    std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_build;
     std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tBuilt tree in "
-      << std::fixed << std::setprecision(5) << (std::chrono::system_clock::now() - start_build).count()
-      << " seconds.\n";
+      << std::fixed << std::setprecision(5) << dur.count() << " seconds.\n";
     //}
   }
 
@@ -299,8 +299,6 @@ namespace HierMUS {
     std::chrono::time_point<std::chrono::system_clock> beginCheck = std::chrono::system_clock::now();
     set<string> leaves = getLeaves(b);
 
-
-
     MiniZinc::SolverInstance::Status s = MiniZinc::SolverInstance::ERROR;
 
     if(!oracle.children.empty()) {
@@ -320,7 +318,7 @@ namespace HierMUS {
 
       mopts.adjustSolverTimeout();
       args.push_back("--solver-time-limit");
-      args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
+      args.push_back(std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(mopts.subproblem_solver_time_limit).count()));
       vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
       args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
       // Mark all constraints as removed;
@@ -385,7 +383,8 @@ namespace HierMUS {
       } else {
         std::cout << "ncons: " << std::setw(8) << leaves.size();
       }
-      std::cout << "\ttook: " << std::fixed << std::setprecision(5) << (std::chrono::system_clock::now() - beginCheck).count() << " seconds" << std::endl;
+      std::chrono::duration<double> dur = std::chrono::system_clock::now() - beginCheck;
+      std::cout << "\ttook: " << std::fixed << std::setprecision(5) << dur.count() << " seconds" << std::endl;
     }
 
     return is_sat;

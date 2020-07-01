@@ -76,9 +76,11 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
     }
 
     int sat_calls_d = stats.sat_calls - start_sat_calls;
-    if(dro.frequent_stats)
-      std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << (std::chrono::system_clock::now() - start_time).count()
+    if(dro.frequent_stats) {
+      std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_time;
+      std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << dur.count()
                 << "\tnmuses: " << stats.nmuses << "\t" << stats << "\tdsat: " << sat_calls_d <<"\n";
+    }
     start_sat_calls = stats.sat_calls;
   }
 
@@ -87,7 +89,8 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   }
 
   if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
-  std::cout << "Total Time: " << std::fixed << std::setprecision(5) << (std::chrono::system_clock::now() - start_time).count()
+  std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_time;
+  std::cout << "Total Time: " << std::fixed << std::setprecision(5) << dur.count()
             << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
 }
 }
@@ -264,11 +267,11 @@ int main(int argc, char **argv) {
   }
 
   if(mo.subproblem_adapt_time_limit) {
-    double scaled_unsat_time = (1.5 * 1000 * check_unsat_time.count());
-    mo.subproblem_solver_time_limit = scaled_unsat_time < mo.subproblem_solver_time_limit
+    auto scaled_unsat_time = 1.5 * check_unsat_time;
+    mo.subproblem_solver_time_limit = scaled_unsat_time.count() < mo.subproblem_solver_time_limit.count()
                                       ? scaled_unsat_time
                                       : mo.subproblem_solver_time_limit;
-    std::cout << "%% Adapting solver time limit to: " << mo.subproblem_solver_time_limit << "\n";
+    std::cout << "%% Adapting solver time limit to: " << std::chrono::duration_cast<std::chrono::seconds>(mo.subproblem_solver_time_limit).count() << "\n";
   }
 
   // Print suggestion if using gen/hint
