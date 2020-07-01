@@ -40,7 +40,7 @@ namespace HierMUS {
     };
     bool isLeaf;
 
-    HierVar() : conj(NULL), disj(NULL), eq(NULL), isLeaf(false) {}
+    HierVar() : conj(0), disj(0), eq(0), isLeaf(false) {}
     HierVar(SolverVar lv) : leaf(lv), isLeaf(true) {}
     HierVar(SolverVar c, SolverVar d, SolverVar e) : conj(c), disj(d), eq(e), isLeaf(false) {}
   };
