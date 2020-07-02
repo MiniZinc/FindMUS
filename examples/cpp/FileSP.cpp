@@ -39,7 +39,7 @@ namespace HierMUS {
           if(nodes[i].path == parent_name) { pi = i; break; }
         }
         if(pi == -1) {
-          pi = nodes.size();
+          pi = static_cast<int>(nodes.size());
           nodes.emplace_back(parent_name);
         }
         string child_name;
@@ -49,7 +49,7 @@ namespace HierMUS {
             if(nodes[i].path == child_name) { ci = i; break; }
           }
           if(ci == -1) {
-            ci = nodes.size();
+            ci = static_cast<int>(nodes.size());
             nodes.emplace_back(child_name);
           }
           nodes[pi].children.push_back(nodes[ci]);

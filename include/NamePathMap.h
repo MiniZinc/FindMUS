@@ -32,7 +32,7 @@ namespace HierMUS {
         // TODO: NCons should typically be known earlier
         if(!has_pathfile) {
           if(leaf_names.size() < i+1)
-            leaf_names.resize(1.5*(i+1));
+            leaf_names.resize(static_cast<int>(1.5*(i+1)));
 
           if(leaf_names[i].empty()) {
             leaf_names[i] = std::to_string(i);

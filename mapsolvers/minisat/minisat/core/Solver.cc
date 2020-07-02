@@ -555,7 +555,7 @@ CRef Solver::propagate()
 
         NextClause:;
         }
-        ws.shrink(i - j);
+        ws.shrink(static_cast<int>(i - j));
     }
     propagations += num_props;
     simpDB_props -= num_props;
@@ -863,7 +863,7 @@ lbool Solver::solve_()
     int curr_restarts = 0;
     while (status == l_Undef){
         double rest_base = luby_restart ? luby(restart_inc, curr_restarts) : pow(restart_inc, curr_restarts);
-        status = search(rest_base * restart_first);
+        status = search(static_cast<int>(rest_base * restart_first));
         if (!withinBudget()) break;
         curr_restarts++;
     }
