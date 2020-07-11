@@ -331,8 +331,6 @@ namespace HierMUS {
   }
 
   bool FznSubProblem::check(const Selection& b) {
-    silence_output_start();
-
     MiniZinc::SolverInstance::Status s = MiniZinc::SolverInstance::ERROR;
 
     std::chrono::time_point<std::chrono::system_clock> beginCheck = std::chrono::system_clock::now();
@@ -344,6 +342,7 @@ namespace HierMUS {
     }
 
     if(!mopts.oracle_only && s != MiniZinc::SolverInstance::UNSAT) {
+      silence_output_start();
       // Build solver
       MiniZinc::MznSolver solver(nullstream, log);
 
