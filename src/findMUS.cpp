@@ -122,7 +122,12 @@ SubProblem* createProblem(DriverOptions& dro,
     }
     if(dro.fznpath.empty()) {
       MiniZinc::MznSolver solver(std::cerr, std::cerr);
-      vector<string> args { "-c", "--solver", mo.subproblem_solver };
+      vector<string> args {
+        "--stdlib-dir", mo.mzn_stdlib_dir,
+        "-c",
+        "--solver", mo.subproblem_solver
+      };
+
       args.insert(args.end(), dro.input_files.begin(), dro.input_files.end());
 
       temp_files.reserve(2);
