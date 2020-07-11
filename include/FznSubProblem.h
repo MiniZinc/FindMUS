@@ -1,6 +1,7 @@
 #ifndef __HIERMUS_FZNPROBLEM_H_
 #define __HIERMUS_FZNPROBLEM_H_
 
+#include "SetTrie.h"
 #include "SubProblem.h"
 #include "NamePathMap.h"
 #include "Types.h"
@@ -31,9 +32,12 @@ namespace HierMUS {
       std::ofstream nullstream;
       std::stringstream log;
 
-      MiniZinc::Env fzn_env;
       NullSolns2Out s2o;
+
+      MiniZinc::Env fzn_env;
       MiniZinc::Model* fzn_model;
+
+      SetTrie oracle;
 
       bool last_sat;
       ShrunkSet shrunk;
@@ -41,18 +45,17 @@ namespace HierMUS {
       std::unordered_map<std::string, MiniZinc::ConstraintI*> constraints;
       NamePathMap nameToPath;
       std::unordered_map<int, std::string> solverModelMapping;
-      std::string fzn_file;
 
+      void init_fzn_model(const string& fznpath);
+      void init_oracle_model(const string& oraclepath, int ncons, vector<string>& background_cons);
       ConstraintSet getConstraintSet(const Selection& b);
       bool isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name);
       bool isFilteredIn(const MiniZinc::ConstraintI& ci, const string& name);
       void saveFzn(const Selection& b, const string& filename);
 
     public:
-      FznSubProblem(const std::string& fznpath, const std::string& pathpath, MUSEnumOptions& mo);
-      ~FznSubProblem() {
-        delete fzn_model;
-      }
+      FznSubProblem(const std::string& fznpath, const std::string& pathpath, MUSEnumOptions& mo, const std::string& oraclepath);
+      ~FznSubProblem() { delete fzn_model; }
 
       void printSol(const Selection& b);
       void printLongSol(const Selection& b);

@@ -1,16 +1,19 @@
 #ifndef __HIERMUS_NODE_H_
 #define __HIERMUS_NODE_H_
 
-#include <chuffed/vars/modelling.h>
 
 #include <string>
 #include <vector>
 #include <functional>
 #include <sstream>
 #include <iostream>
+#include <set>
 
 #include <unordered_map>
 #include "string_utils.h"
+
+
+#define SolverVar int
 
 namespace HierMUS {
   using std::string;
@@ -28,18 +31,18 @@ namespace HierMUS {
 
   struct HierVar {
     union {
-      BoolView* leaf;
+      SolverVar leaf;
       struct {
-        BoolView* conj;
-        BoolView* disj;
-        BoolView* eq;
+        SolverVar conj;
+        SolverVar disj;
+        SolverVar eq;
       };
     };
     bool isLeaf;
 
-    HierVar() : conj(NULL), disj(NULL), eq(NULL), isLeaf(false) {}
-    HierVar(BoolView* lv) : leaf(lv), isLeaf(true) {}
-    HierVar(BoolView* c, BoolView* d, BoolView* e) : conj(c), disj(d), eq(e), isLeaf(false) {}
+    HierVar() : conj(0), disj(0), eq(0), isLeaf(false) {}
+    HierVar(SolverVar lv) : leaf(lv), isLeaf(true) {}
+    HierVar(SolverVar c, SolverVar d, SolverVar e) : conj(c), disj(d), eq(e), isLeaf(false) {}
   };
 
   struct MapNode {

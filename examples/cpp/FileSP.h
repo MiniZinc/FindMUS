@@ -6,6 +6,7 @@
 #include <string>
 
 #include "SubProblem.h"
+#include "SetTrie.h"
 #include "Types.h"
 
 namespace HierMUS {
@@ -20,6 +21,7 @@ namespace HierMUS {
       bool provedSAT() { return false; } ;
 
       // These are public for tests
+      SetTrie oracle;
       std::vector<std::set<std::string>> muses;
       bool isMUS(const Selection& b);
   };

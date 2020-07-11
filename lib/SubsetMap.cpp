@@ -1,8 +1,3 @@
-#include <chuffed/core/options.h>
-#include <chuffed/core/engine.h>
-#include <chuffed/flatzinc/flatzinc.h>
-#include <chuffed/vars/modelling.h>
-
 #include <vector>
 #include <string>
 #include <iomanip>
@@ -34,10 +29,6 @@ namespace HierMUS {
     if(strictSubset) { popTempBlock(); }
     setMaximal(true);
     return std::move(s);
-  }
-
-  bool SubsetMap::knownSat(const Selection& selection) {
-    return getSelection(selection, false).selected.empty();
   }
 
 }

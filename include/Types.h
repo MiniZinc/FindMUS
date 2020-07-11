@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <chrono>
 
 #include "Node.h"
 #include "Selection.h"
@@ -13,8 +14,9 @@
 namespace HierMUS {
 
   struct Statistics {
-    double start_time;
-    double last_time;
+
+    std::chrono::time_point<std::chrono::system_clock> start_time;
+    std::chrono::time_point<std::chrono::system_clock> last_time;
 
     int sat_calls = 0;
     int map_calls = 0;
@@ -28,7 +30,7 @@ namespace HierMUS {
 
     int nmuses = 0;
 
-    Statistics() : start_time{wallClockTime()}, last_time{start_time} {}
+    Statistics() : start_time{std::chrono::system_clock::now()}, last_time{start_time} {}
 
     inline void addCounts(counts& tc) {
       treecounts = tc;
@@ -66,7 +68,7 @@ namespace HierMUS {
 
   enum MusAlg { ALG_MARCO, ALG_REMUS }; // Other options have been removed
 
-  enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_MAP_QX, SH_NATIVE };
+  enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_QX2, SH_MAP_QX, SH_NATIVE };
 
   enum InitialStructure {
     STR_FLAT,    // Remove all structure

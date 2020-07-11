@@ -136,17 +136,24 @@ namespace HierMUS {
     return true;
   }
 
-  FznSubProblem::FznSubProblem(
-      const string& fznpath, const string& pathpath,
-      MUSEnumOptions& mo) : SubProblem(mo), last_sat{false}, shrunk{}, nameToPath{pathpath}, fzn_file (fznpath) {
-    silence_init();
+  void FznSubProblem::init_oracle_model(const string& oraclepath, int ncons, vector<string>& background_cons) {
+    ifstream oracle_log(oraclepath);
+    if (!oracle_log.is_open()) return;
 
-    double start_build = wallClockTime();
+    string line;
+    while(std::getline(oracle_log, line)) {
+      if(line.size() > 4 && line.substr(0,4) == "MUS:") {
+        vector<string> cons = utils::split(line.substr(5, line.size()), ' ');
+        oracle.add_set(cons);
+      }
+    }
+  }
 
+  void FznSubProblem::init_fzn_model(const string& fznpath) {
     MiniZinc::GCLock lock;
     vector<string> includes;
 
-    includes.push_back(mo.mzn_stdlib_dir + "/std/");
+    includes.push_back(mopts.mzn_stdlib_dir + "/std/");
 
     fzn_model = MiniZinc::parse(fzn_env, {fznpath}, {}, "", "", includes, false, false, false, std::cerr);
     MiniZinc::SolveI* si = fzn_model->solveItem();
@@ -173,6 +180,17 @@ namespace HierMUS {
     MiniZinc::populateOutput(fzn_env);
     fzn_env.model(fzn_model);
     s2o.initFromEnv(&fzn_env);
+  }
+
+  FznSubProblem::FznSubProblem(
+      const string& fznpath, const string& pathpath,
+      MUSEnumOptions& mo, const string& oraclepath = "")
+      : SubProblem(mo), last_sat{false}, shrunk{}, nameToPath{pathpath}, fzn_model{ nullptr }, oracle{ "root", false } {
+
+    silence_init();
+    auto start_build = std::chrono::system_clock::now();
+
+    init_fzn_model(fznpath);
 
     for(auto it = fzn_model->begin(); it != fzn_model->end(); ++it) {
       //if((*it)->isa<MiniZinc::IncludeI>() || (*it)->isa<MiniZinc::FunctionI>()) { (*it)->remove(); }
@@ -193,12 +211,15 @@ namespace HierMUS {
     unsigned int ignored_cons = 0;
     unsigned int soft_cons = 0;
 
+    vector<string> background_cons;
+
     for(auto cit = fzn_model->begin_constraints(); cit != fzn_model->end_constraints(); ++cit) {
       MiniZinc::ConstraintI& ci = *cit;
       string name = nameToPath.getName(con_id);
       bool background = isBackgroundConstraint(ci, name);
       if(isBackgroundConstraint(ci, name)) {
         hard_cons++;
+        background_cons.emplace_back(name);
       } else if(isFilteredIn(ci, name)) {
         if(n_cons <= con_id) {
           std::cerr << "FznSubProblem:\tError: Path file does not match FlatZinc\n";
@@ -225,6 +246,7 @@ namespace HierMUS {
       } else { // Not background, not include by filter
         if(mopts.subproblem_filter_mode == FILTER_FOREGROUND) {
           hard_cons++;
+          background_cons.emplace_back(name);
         } else { // FILTER_EXCLUSIVE
           ignored_cons++;
           ci.remove();
@@ -232,7 +254,6 @@ namespace HierMUS {
       }
       con_id++;
     }
-
 
     counts cs = tree.getCounts();
     int nbranches;
@@ -252,10 +273,13 @@ namespace HierMUS {
     }
 
     cs = tree.getCounts();
+
+    init_oracle_model(oraclepath, hard_cons + soft_cons, background_cons);
+
     //if(mopts.verbose_subsolve) {
-    std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tignored cons: " << ignored_cons << "\tBuilt tree in "
-      << std::fixed << std::setprecision(5) << wallClockTime() - start_build
-      << " seconds.\n";
+    std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_build;
+    std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tBuilt tree in "
+      << std::fixed << std::setprecision(5) << dur.count() << " seconds.\n";
     //}
   }
 
@@ -307,104 +331,121 @@ namespace HierMUS {
   }
 
   bool FznSubProblem::check(const Selection& b) {
-    double beginCheck = wallClockTime();
-
-    shrunk.minimal = false;
-    shrunk.con_ids.clear();
-
-    // Mark all constraints as removed;
-    for(auto& kv : constraints) { 
-      kv.second->remove();
-    }
-
-    int solver_con_id = 0;
-    int con_id = 0;
-    // Activate the selected constraints
-    set<string> leaves = getLeaves(b);
-
-    solverModelMapping.clear();
-
-    for(size_t i=0; i<fzn_model->size(); i++) {
-      if(MiniZinc::ConstraintI* ci = (*fzn_model)[i]->dyn_cast<MiniZinc::ConstraintI>()) {
-        if(!ci->removed()) {
-          // Constraint is part of background
-          solver_con_id++;
-        } else {
-          // Constraint is part of foreground but might not be added
-          string con_id_s = std::to_string(con_id);
-          if(leaves.find(con_id_s) != leaves.end()) {
-            ci->unremove();
-            solverModelMapping[solver_con_id] = con_id_s;
-            solver_con_id++;
-          }
-        }
-        con_id++;
-      }
-    }
-
-    // for(const string& l : leaves) { constraints[l]->unremove(); }
-
-    MiniZinc::MznSolver solver(nullstream, log);
-
-    // Build arguments for MznSolver
-    vector<string> args;
-    args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
-    args.push_back("--solver");
-    args.push_back(mopts.subproblem_solver);
-
-    if(mopts.subproblem_native_shrink) {
-      args.push_back("--diagnose");
-    }
-
-    mopts.adjustSolverTimeout();
-    args.push_back("--solver-time-limit");
-    args.push_back(std::to_string(mopts.subproblem_solver_time_limit));
-    vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
-    args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
-
-    std::vector<string> args_vec(args);
-    switch (solver.processOptions(args_vec)) {
-      case 0:
-        break;
-      default:
-        std::cerr << "FznSubProblem:\tError creating solver with args:\t" << utils::join(args, " ") << std::endl;
-        std::cerr << "\t" << log.str() << "\n";
-        exit(EXIT_FAILURE);
-    }
-
     silence_output_start();
 
-    MiniZinc::SolverFactory* sf = solver.getSF();
-    MiniZinc::SolverInstanceBase* si = sf->createSI(fzn_env, log, solver.getSI_OPT());
-    si->setSolns2Out(&s2o);
-    si->processFlatZinc();
-
-
     MiniZinc::SolverInstance::Status s = MiniZinc::SolverInstance::ERROR;
-    try {
-      s = si->solve();
-      silence_output_end();
-    } catch (const MiniZinc::InternalError& err) {
-      silence_output_end();
-      std::cerr << "FznSubproblem:\tException during sub-solving: "
-                << err.msg() << ": " << err.what() << std::endl;
-      exit(EXIT_FAILURE);
-    } catch (const std::runtime_error& err) {
-      silence_output_end();
-      std::cerr << "FznSubproblem:\tCaught runtime error:\n";
-      std::cerr << "\t" << err.what() << "\n";
-      exit(EXIT_FAILURE);
-    } catch (...) {
-      silence_output_end();
-      std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving\n";
-      exit(EXIT_FAILURE);
+
+    std::chrono::time_point<std::chrono::system_clock> beginCheck = std::chrono::system_clock::now();
+    set<string> leaves = getLeaves(b);
+
+    if(!oracle.children.empty()) {
+      vector<string> leaves_vec(leaves.begin(), leaves.end());
+      s = oracle.contains_subset(leaves_vec) ? MiniZinc::SolverInstance::UNSAT : MiniZinc::SolverInstance::SAT;
     }
 
-    std::string error_log = log.str();
-    if(!error_log.empty()) {
-      std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << "\n";
-      log.clear();
-      exit(EXIT_FAILURE);
+    if(!mopts.oracle_only && s != MiniZinc::SolverInstance::UNSAT) {
+      // Build solver
+      MiniZinc::MznSolver solver(nullstream, log);
+
+      // Build arguments for MznSolver
+      vector<string> args;
+      args.push_back("minizinc"); // Make sure MznSolver knows to run in minizinc driver mode
+      args.push_back("--solver");
+      args.push_back(mopts.subproblem_solver);
+      if(mopts.subproblem_native_shrink) {
+        args.push_back("--diagnose");
+      }
+
+      mopts.adjustSolverTimeout();
+      args.push_back("--solver-time-limit");
+      args.push_back(std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(mopts.subproblem_solver_time_limit).count()));
+      vector<string> split_extra_args = utils::split(mopts.subproblem_solver_flags, ' ');
+      args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
+      shrunk.minimal = false;
+      shrunk.con_ids.clear();
+
+      // Mark all constraints as removed;
+      for(auto& kv : constraints) { 
+        kv.second->remove();
+      }
+
+      int solver_con_id = 0;
+      int con_id = 0;
+      // Activate the selected constraints
+      set<string> leaves = getLeaves(b);
+
+      solverModelMapping.clear();
+
+      for(size_t i=0; i<fzn_model->size(); i++) {
+        if(MiniZinc::ConstraintI* ci = (*fzn_model)[i]->dyn_cast<MiniZinc::ConstraintI>()) {
+          if(!ci->removed()) {
+            // Constraint is part of background
+            solver_con_id++;
+          } else {
+            // Constraint is part of foreground but might not be added
+            string con_id_s = std::to_string(con_id);
+            if(leaves.find(con_id_s) != leaves.end()) {
+              ci->unremove();
+              solverModelMapping[solver_con_id] = con_id_s;
+              solver_con_id++;
+            }
+          }
+          con_id++;
+        }
+      }
+
+      std::vector<string> args_vec(args);
+      switch (solver.processOptions(args_vec)) {
+        case 0:
+          break;
+        default:
+          std::cerr << "FznSubProblem:\tError creating solver with args:\t" << utils::join(args, " ") << std::endl;
+          std::cerr << "\t" << log.str() << "\n";
+          exit(EXIT_FAILURE);
+      }
+
+      MiniZinc::SolverFactory* sf = solver.getSF();
+      MiniZinc::SolverInstanceBase* si = sf->createSI(fzn_env, log, solver.getSI_OPT());
+      si->setSolns2Out(&s2o);
+      si->processFlatZinc();
+
+      try {
+        s = si->solve();
+        silence_output_end();
+      } catch (const MiniZinc::InternalError& err) {
+        silence_output_end();
+        std::cerr << "FznSubproblem:\tException during sub-solving: "
+                  << err.msg() << ": " << err.what() << std::endl;
+        exit(EXIT_FAILURE);
+      } catch (const std::runtime_error& err) {
+        silence_output_end();
+        std::cerr << "FznSubproblem:\tCaught runtime error:\n";
+        std::cerr << "\t" << err.what() << "\n";
+        exit(EXIT_FAILURE);
+      } catch (...) {
+        silence_output_end();
+        std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving\n";
+        exit(EXIT_FAILURE);
+      }
+
+#ifdef MZN_SUPPORTS_SHRINK
+      if(s == MiniZinc::SolverInstance::UNSAT) {
+        auto statusMUS = si->getMUSStatus();
+
+        if(statusMUS != MiniZinc::SolverInstance::MUS_NONE) {
+          setShrunk(si->getMUS(), statusMUS == MiniZinc::SolverInstance::MUS_MINIMAL);
+        }
+      }
+#endif
+
+      std::string error_log = log.str();
+      if(!error_log.empty()) {
+        std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << "\n";
+        log.clear();
+        exit(EXIT_FAILURE);
+      }
+
+      sf->destroySI(si);
     }
 
     static int unsat_c = 0;
@@ -416,13 +457,6 @@ namespace HierMUS {
       res = "S";
     } else if (s == MiniZinc::SolverInstance::UNSAT) {
       res = "U";
-
-      auto statusMUS = si->getMUSStatus();
-
-      if(statusMUS != MiniZinc::SolverInstance::MUS_NONE) {
-        setShrunk(si->getMUS(), statusMUS == MiniZinc::SolverInstance::MUS_MINIMAL);
-      }
-
     } else if (s == MiniZinc::SolverInstance::ERROR) {
       res = "E";
       string errfilename = "FINDMUS_failed_subproblem.fzn";
@@ -439,12 +473,11 @@ namespace HierMUS {
       } else {
         std::cout << "ncons: " << std::setw(8) << leaves.size();
       }
-      std::cout << "\ttook: " << std::fixed << std::setprecision(5) << (wallClockTime() - beginCheck) << " seconds";
+      std::chrono::duration<double> dur = std::chrono::system_clock::now() - beginCheck;
+      std::cout << "\ttook: " << std::fixed << std::setprecision(5) << dur.count() << " seconds";
       std::cout << "\tmus: " << "(" << !shrunk.con_ids.empty() << ","  << shrunk.minimal << ")" << std::endl;
-
     }
 
-    sf->destroySI(si);
     return is_sat;
   }
 

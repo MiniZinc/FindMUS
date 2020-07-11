@@ -84,11 +84,12 @@ void help_long(void) {
       << "    Include the given data assignment in the model.\n"
       << "\n"
       << " Enumeration Options:\n"
-      << "  --shrink-alg lin,map_lin,qx,map_qx\tdefault: lin\n"
+      << "  --shrink-alg lin,map_lin,qx,qx2,map_qx\tdefault: lin\n"
       << "    Shrink algorithm to use:\n"
       << "      lin:     linear shrink\n"
       << "      map_lin: linear shrink recording intermediate results in map\n"
       << "      qx:      use QuickXplain for shrink\n"
+      << "      qx2:     use QuickXplain for shrink (use map for sat)\n"
       << "      map_qx:  use advanced map driven QuickXplain\n"
       << "  --depth mzn,fzn,<n>\tdefault: 1\n"
       << "    Enumerate MUSes at the level of:\n"
@@ -106,6 +107,8 @@ void help_long(void) {
       << " Subproblem: Solving options\n"
       << "  --solver <s>, --subsolver <s>\n"
       << "    Use solver <s> for SAT checking. Default: \"fzn-gecode\"\n"
+      << "  --oracle-only\n"
+      << "    If provided with oracle log, treat it as a full enumeration\n"
       << "  --solver-flags <f>\n"
       << "    Pass flags <f> to solver for SAT checking. Default: \"-time 1000\"\n"
       << "  --adapt-timelimit\n"
@@ -216,6 +219,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       if(alg == "lin")          mo.map_shrink_alg = SH_LIN;
       else if(alg == "map_lin") mo.map_shrink_alg = SH_MAP_LIN;
       else if(alg == "qx")      mo.map_shrink_alg = SH_QX;
+      else if(alg == "qx2")     mo.map_shrink_alg = SH_QX2;
       else if(alg == "map_qx")  mo.map_shrink_alg = SH_MAP_QX;
       else {
         std::cout << "Incorrect shrink option. Available options are {<lin>, map_lin, qx, map_qx}\n";
@@ -250,7 +254,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       dro.maxmuses = 0; // Find all MUSes
       mo.map_enum_focus_mode = false; // Don't use focus mode
     } else if(args[i] ==  "-t") {
-      mo.timelimit = std::stof(args[++i]);
+      mo.timelimit = std::chrono::duration<double>(std::chrono::milliseconds(std::stoi(args[++i])));
     } else if(args[i] == "--no-leftover") {
       mo.print_leftover = false;
     } else if(args[i] ==  "--seed") {
@@ -263,10 +267,12 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       dro.list_solvers_json = true;
     } else if(args[i] == "--subsolver" || args[i] ==  "--solver") {
       mo.subproblem_solver = args[++i];
+    } else if(args[i] == "--oracle-only") {
+      mo.oracle_only = true;
     } else if(args[i] ==  "--solver-flags") {
       mo.subproblem_solver_flags = args[++i];
     } else if(args[i] == "--subsolver-timelimit" || args[i] ==  "--solver-timelimit") {
-      mo.subproblem_solver_time_limit = std::stoi(args[++i]);
+      mo.subproblem_solver_time_limit = std::chrono::duration<double>(std::chrono::milliseconds(std::stoi(args[++i])));
     } else if(args[i] == "--adapt-timelimit") {
       mo.subproblem_adapt_time_limit = true;
     } else if(args[i] ==  "--depth") {
@@ -396,6 +402,13 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
           help_short(EXIT_FAILURE);
         }
         dro.pathpath = p;
+      }
+      if(p.substr(p.size()-3, 3) == "log") {
+        if(!dro.oraclepath.empty()) {
+          std::cerr << "No support for multiple oracle (.log) input files: " << p << "\n";
+          help_short(EXIT_FAILURE);
+        }
+        dro.oraclepath = p;
       }
     } else {
       std::cerr << "Unknown file: " << p << std::endl;

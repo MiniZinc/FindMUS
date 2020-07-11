@@ -4,6 +4,10 @@
 #include <iomanip>
 #include <csignal>
 
+#ifdef WIN32
+#include <windows.h>
+#undef ERROR
+#endif
 
 #include "HierMUSEnumer.h"
 #include "OldMUSEnumer.h"
@@ -22,7 +26,6 @@
 
 using namespace HierMUS;
 using std::string;
-
 
 namespace FindMUSState {
 static bool sigint = false;
@@ -58,7 +61,7 @@ static void regHandler() {
 
 static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   regHandler();
-  double start_time = wallClockTime();
+  std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
   Statistics& stats = me.getStatistics();
   if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
   int start_sat_calls = 0;
@@ -73,9 +76,11 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
     }
 
     int sat_calls_d = stats.sat_calls - start_sat_calls;
-    if(dro.frequent_stats)
-      std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
+    if(dro.frequent_stats) {
+      std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_time;
+      std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << dur.count()
                 << "\tnmuses: " << stats.nmuses << "\t" << stats << "\tdsat: " << sat_calls_d <<"\n";
+    }
     start_sat_calls = stats.sat_calls;
   }
 
@@ -84,7 +89,8 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   }
 
   if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
-  std::cout << "Total Time: " << std::fixed << std::setprecision(5) << wallClockTime() - start_time
+  std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_time;
+  std::cout << "Total Time: " << std::fixed << std::setprecision(5) << dur.count()
             << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
 }
 }
@@ -172,6 +178,13 @@ SubProblem* createProblem(DriverOptions& dro,
         OptionsHelper::help_short(EXIT_FAILURE);
       }
     }
+    if(!dro.oraclepath.empty()) {
+      std::ifstream checkpath(dro.oraclepath);
+      if(!checkpath.is_open()) {
+        std::cerr << "Warning: Oracle file "<< dro.oraclepath << " not found.\n";
+        dro.pathpath = "";
+      }
+    }
     if(dro.pathpath.empty()) {
       string base = dro.fznpath.substr(0,dro.fznpath.length()-4);
       dro.pathpath = base + ".paths";
@@ -183,7 +196,7 @@ SubProblem* createProblem(DriverOptions& dro,
         dro.pathpath = "";
       }
     }
-    problem = new FznSubProblem(dro.fznpath, dro.pathpath, mo);
+    problem = new FznSubProblem(dro.fznpath, dro.pathpath, mo, dro.oraclepath);
   }
   return problem;
 }
@@ -237,7 +250,7 @@ int main(int argc, char **argv) {
   auto native_shrink = mo.subproblem_native_shrink;
   mo.subproblem_native_shrink = false; // Disable use of --diagnose flag for sanity check
 
-  double check_unsat_starttime = wallClockTime();
+  std::chrono::time_point<std::chrono::system_clock> check_unsat_starttime = std::chrono::system_clock::now();
   // Is the model unsat to begin with?
   if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
     if(problem->provedSAT()) {
@@ -249,7 +262,7 @@ int main(int argc, char **argv) {
     }
     return EXIT_FAILURE;
   }
-  double check_unsat_time = wallClockTime() - check_unsat_starttime;
+  std::chrono::duration<double> check_unsat_time = std::chrono::system_clock::now() - check_unsat_starttime;
 
   // Is the background satisfiable:
   if(!problem->check(Selection())) {
@@ -260,11 +273,11 @@ int main(int argc, char **argv) {
 
   mo.subproblem_native_shrink = native_shrink; // Restore native setting
   if(mo.subproblem_adapt_time_limit) {
-    double scaled_unsat_time = (1.5 * 1000 * check_unsat_time);
-    mo.subproblem_solver_time_limit = scaled_unsat_time < mo.subproblem_solver_time_limit
+    auto scaled_unsat_time = 1.5 * check_unsat_time;
+    mo.subproblem_solver_time_limit = scaled_unsat_time.count() < mo.subproblem_solver_time_limit.count()
                                       ? scaled_unsat_time
                                       : mo.subproblem_solver_time_limit;
-    std::cout << "%% Adapting solver time limit to: " << mo.subproblem_solver_time_limit << "\n";
+    std::cout << "%% Adapting solver time limit to: " << std::chrono::duration_cast<std::chrono::seconds>(mo.subproblem_solver_time_limit).count() << "\n";
   }
 
   // Print suggestion if using gen/hint

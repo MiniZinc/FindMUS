@@ -75,14 +75,18 @@ namespace HierMUS {
     private:
       bool process_native(Selection& model);
 
+      bool native_shrink(Selection& model, const std::set<MapNode*>& criticals);
+
       bool linear_shrink(Selection& model, const std::set<MapNode*>& criticals);
       bool linear_shrink_with_map(Selection& model, const std::set<MapNode*>& criticals);
       bool qx(Selection& model, const std::set<MapNode*>& criticals);
-      bool native_shrink(Selection& model, const std::set<MapNode*>& criticals);
+      bool qx2(Selection& model, const std::set<MapNode*>& criticals);
       bool qx_with_map(Selection& model, const std::set<MapNode*>& criticals);
 
       OptionalSelection qx_back(Selection B, size_t D, Selection C,
                                 const std::set<MapNode*>& criticals);
+      OptionalSelection qx2_back(Selection B, size_t D, Selection C,
+                                 const std::set<MapNode*>& criticals);
       OptionalSelection qx_back_with_map(Selection B, size_t D, Selection C,
                                          const std::set<MapNode*>& criticals);
   };

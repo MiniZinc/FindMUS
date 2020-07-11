@@ -16,7 +16,6 @@ variables:
     - unzip -q vendor.zip
     - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:$ACCESS_TOKEN" "https://gitlab.com/api/v4/projects/minizinc%2Fminizinc/jobs/artifacts/develop/download?job=build:$MZNARCH"
     - unzip -q minizinc.zip
-    - git submodule update --init submodules/chuffed_assump
     - rm -rf build
     - mkdir -p build
     - cd build
@@ -56,7 +55,6 @@ build:win64:
     - unzip -q vendor.zip
     - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fminizinc/jobs/artifacts/develop/download?job=build:%MZNARCH%"
     - unzip -q minizinc.zip
-    - git submodule update --init submodules/chuffed_assump
     - if not exist "build" mkdir build
     - cd build
     - cmake -G"%CMAKE_ARCH%" .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%"  -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"

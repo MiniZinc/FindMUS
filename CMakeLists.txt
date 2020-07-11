@@ -13,10 +13,13 @@ include(cmake-helpers/configure_cpp_11.cmake)
 message("-- Configuring: libminzinc")
 include(cmake-helpers/configure_libminizinc.cmake)
 
-message("-- Configuring: Chuffed")
-include(cmake-helpers/configure_chuffed.cmake)
+message("-- Configuring: Minisat")
+include(cmake-helpers/configure_minisat.cmake)
 
 #### #### #### #### #### #### ####
+find_package(ZLIB)
+include_directories(${ZLIB_INCLUDE_DIR})
+include_directories(${minisat_SOURCE_DIR})
 
 include_directories("include" ${CMAKE_BINARY_DIR})
 
@@ -36,10 +39,11 @@ add_library(hiermus
   lib/HierMUSEnumer.cpp
   lib/OldMUSEnumer.cpp
   lib/FznSubProblem.cpp
+  lib/SetTrie.cpp
   lib/Types.cpp
   lib/Selection.cpp
   lib/SubsetMap.cpp
-  lib/ChuffedSubsetMap.cpp
+  lib/MinisatSubsetMap.cpp
   lib/Options.cpp
   lib/NamePathMap.cpp
 
@@ -54,16 +58,19 @@ add_library(hiermus
   include/HierMUSEnumer.h
   include/OldMUSEnumer.h
   include/FznSubProblem.h
+  include/SetTrie.h
   include/Types.h
   include/Selection.h
-  include/ChuffedSubsetMap.h
+  include/MinisatSubsetMap.h
   include/Options.h
   include/NamePathMap.h
 )
 
+target_link_libraries(hiermus minisat-lib-static)
+
 if(libminizinc_FOUND)
     add_executable(findMUS src/findMUS.cpp)
-    target_link_libraries(findMUS hiermus chuffed_fzn chuffed mzn ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(findMUS hiermus mzn ${CMAKE_THREAD_LIBS_INIT})
 
     if(BUILD_FINDMUS_EXAMPLES)
       target_include_directories(findMUS PRIVATE examples/cpp)
@@ -81,7 +88,7 @@ if(libminizinc_FOUND)
     if(BUILD_FINDMUS_TESTS)
       add_executable(tests tests/tests.cpp examples/cpp/FileSP.cpp)
       target_include_directories(tests PRIVATE examples/cpp)
-      target_link_libraries(tests hiermus chuffed_fzn chuffed mzn ${CMAKE_THREAD_LIBS_INIT})
+      target_link_libraries(tests hiermus mzn ${CMAKE_THREAD_LIBS_INIT})
     endif()
 
     INSTALL(TARGETS findMUS

@@ -1,5 +1,6 @@
 #include <iostream>
 
+#define RANDOM_SEL_SPLIT 0
 #if RANDOM_SEL_SPLIT
 #include <random>
 #endif
