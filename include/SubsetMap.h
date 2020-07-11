@@ -50,6 +50,8 @@ namespace HierMUS {
       virtual void blockSupersets(const Selection& selection) = 0;
       virtual void blockSubsets(const Selection& selection) = 0;
 
+      virtual Selection convertConIds(std::set<string>& con_ids) = 0;
+
       bool isConsistent(void) const { return consistent; }
   };
 }

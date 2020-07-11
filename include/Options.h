@@ -34,6 +34,7 @@ public:
   bool list_solvers_json = false;
 
   bool compile_verbose = false;
+  bool compile_stats = false;
   bool compile_domains = false;
 
   DriverOptions() {
@@ -55,22 +56,22 @@ public:
 
   bool restarts_enabled = false;
 
-  //ParamSet sense = PSET_MZN; // Default mode for commandline
-  ParamSet sense = PSET_HINT; // Default mode for commandline
-
   // FznSubProblem
   string mzn_stdlib_dir;
   bool subproblem_hard_functional_constraints = true;
   bool subproblem_hard_domain_constraints = false; // This should be false until context-find is implemented!
+
   bool subproblem_named_only = false;
   bool oracle_only = false;
 
-  std::set<string> subproblem_name_filters;
-  std::set<string> subproblem_name_filters_excludes;
-  std::set<string> subproblem_path_filters;
-  std::set<string> subproblem_path_filters_excludes;
+  FilterMode subproblem_filter_mode = FILTER_FOREGROUND;
+  std::vector<string> subproblem_name_filters;
+  std::vector<string> subproblem_name_filters_excludes;
+  std::vector<string> subproblem_path_filters;
+  std::vector<string> subproblem_path_filters_excludes;
   InitialStructure subproblem_structure = STR_NORMAL;
   Binarize subproblem_binarize = BIN_ALL;
+  bool subproblem_native_shrink = false;
 
   string subproblem_solver = "org.gecode.gecode";
   string subproblem_solver_flags = "";
@@ -84,6 +85,7 @@ public:
 
   MusAlg map_enumeration_alg = ALG_MARCO;
   ShrinkAlg map_shrink_alg = SH_MAP_QX;
+  bool map_shrink_frontier = false;
   bool map_enum_focus_mode = true;
 
   Statistics& stats;
@@ -131,6 +133,7 @@ void help_short(int exit_code = EXIT_SUCCESS);
 void help_long(void);
 void parse(DriverOptions& d, MUSEnumOptions& m, int argc, char**argv);
 void parse(DriverOptions& d, MUSEnumOptions& m, const std::vector<std::string>& args);
+vector<string> expandParamSet(const vector<string>& in_args);
 }
 
 }

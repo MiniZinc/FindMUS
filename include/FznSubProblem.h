@@ -40,14 +40,17 @@ namespace HierMUS {
       SetTrie oracle;
 
       bool last_sat;
+      ShrunkSet shrunk;
 
       std::unordered_map<std::string, MiniZinc::ConstraintI*> constraints;
       NamePathMap nameToPath;
+      std::unordered_map<int, std::string> solverModelMapping;
 
       void init_fzn_model(const string& fznpath);
       void init_oracle_model(const string& oraclepath, int ncons, vector<string>& background_cons);
       ConstraintSet getConstraintSet(const Selection& b);
       bool isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name);
+      bool isFilteredIn(const MiniZinc::ConstraintI& ci, const string& name);
       void saveFzn(const Selection& b, const string& filename);
 
     public:
@@ -57,7 +60,12 @@ namespace HierMUS {
       void printSol(const Selection& b);
       void printLongSol(const Selection& b);
       void printHtml(const Selection& b);
+
       bool check(const Selection& b);
+
+      void setShrunk(const std::vector<int>&, bool min);
+      ShrunkSet getShrunk();
+
       bool provedSAT();
   };
 }

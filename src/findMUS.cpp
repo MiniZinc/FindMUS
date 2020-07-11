@@ -133,6 +133,7 @@ SubProblem* createProblem(DriverOptions& dro,
 
       if(dro.compile_domains) args.push_back("-g");
       if(dro.compile_verbose) args.push_back("--verbose");
+      if(dro.compile_stats) args.push_back("-s");
 
       args.push_back("-o");
       args.push_back(dro.fznpath);
@@ -236,7 +237,7 @@ int main(int argc, char **argv) {
     writeDotFile(dro, problem);
     exit(EXIT_SUCCESS);
   }
-  
+
   // Create MUS Enumerator
   MusEnumerator* me;
   if (dro.use_new_enumer) {
@@ -244,6 +245,10 @@ int main(int argc, char **argv) {
   } else {
     me = new OldMUSEnumer(*problem, mo);
   }
+
+  // Sanity checks
+  auto native_shrink = mo.subproblem_native_shrink;
+  mo.subproblem_native_shrink = false; // Disable use of --diagnose flag for sanity check
 
   std::chrono::time_point<std::chrono::system_clock> check_unsat_starttime = std::chrono::system_clock::now();
   // Is the model unsat to begin with?
@@ -266,6 +271,7 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
+  mo.subproblem_native_shrink = native_shrink; // Restore native setting
   if(mo.subproblem_adapt_time_limit) {
     auto scaled_unsat_time = 1.5 * check_unsat_time;
     mo.subproblem_solver_time_limit = scaled_unsat_time.count() < mo.subproblem_solver_time_limit.count()

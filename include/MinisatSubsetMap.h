@@ -56,6 +56,8 @@ namespace HierMUS {
       Selection getRootSelector();
       Selection getLeavesSelector();
 
+      Selection convertConIds(std::set<string>& con_ids);
+
       void block(Minisat::vec<Minisat::Lit>& blockClause);
       void blockSupersets(const Selection& selection);
       void blockSubsets(const Selection& selection);

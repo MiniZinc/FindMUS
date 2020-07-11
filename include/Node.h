@@ -62,7 +62,8 @@ namespace HierMUS {
     ~MapNode() {}
 
     MapNode& addPath(std::vector<std::string>& splitpath, unsigned int p);
-    MapNode& addPath(std::string path);
+    MapNode& addPath(std::string& path);
+    MapNode& getNode(std::string& path);
     counts getCounts(bool complete = true) const;
     void getCounts(counts& cs, int depth = 1) const;
     void getIncompleteCounts(counts& cs, int depth = 1) const;

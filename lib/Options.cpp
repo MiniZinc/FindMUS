@@ -1,6 +1,7 @@
 #include <minizinc/file_utils.hh>
 
 #include "Options.h"
+#include <vector>
 
 namespace HierMUS {
 
@@ -34,9 +35,9 @@ void help_long(void) {
       << " Driver Options:\n"
       << "  --paramset hint,mzn,fzn. Default: hint\n"
       << "    Use preset parameter sets:\n"
-      << "      hint: --structure gen --shrink-alg map_lin --binarize all --depth mzn\n"
-      << "      mzn: --shrink-alg map_qx --binarize all --depth mzn\n"
-      << "      fzn: --shrink-alg map_qx --binarize all --depth fzn\n"
+      << "      hint: --structure gen --shrink-alg map_lin --depth mzn\n"
+      << "      mzn: --shrink-alg map_qx --depth mzn\n"
+      << "      fzn: --shrink-alg map_qx --depth fzn\n"
       << "  -n <n>   --nmuses <n>\n"
       << "    Number of MUSes to find\n"
       << "  -a\n"
@@ -115,15 +116,20 @@ void help_long(void) {
       << "    Maximum timelimit is provided by --solver-timelimit option\n"
       << "  --solver-timelimit <ms>, --subsolver-timelimit\n"
       << "    Hard time limit for solver in milliseconds. Default: 1000\n"
+      << "  --native-shrink\n"
+      << "    Request unsat sets from the subsolver (--diagnose must be supported by solver)\n"
       << "  Subproblem filtering options:\n"
       << "   --soft-defines\n"
       << "     Consider functional constraints as part of MUSes\n"
       << "   --hard-domains\n"
       << "     Consider domain constraints as part of the background\n"
-      << "   --named-only\n"
-      << "     Only consider constraints annotated with string annotations\n"
-      << "   --filter-named <names>    --filter-named-exclude <names>\n"
+      << "   --filter-mode fg,ex\n"
+      << "     Change filter mode (Default: fg)\n"
+      << "       fg: Foreground, excluded items go to the background\n"
+      << "       ex: Exclusive, excluded items are omitted entirely\n"
+      << "   --filter-named <names>   --filter-named-exclude <names>\n"
       << "     Include/exclude constraints with names that match <sep> separated <names>\n"
+      << "     A special wildcard string of \"*\" matches all named constraints\n"
       << "   --filter-path <paths>    --filter-path-exclude <paths>\n"
       << "     Include/exclude based on <paths>\n"
       << "   --filter-sep <sep>\n"
@@ -153,27 +159,6 @@ void help_long(void) {
   exit(EXIT_FAILURE);
 }
 
-
-void setParamSet(ParamSet ps, MUSEnumOptions& mo) {
-  mo.sense = ps;
-  if(ps == PSET_HINT) {
-    mo.subproblem_structure = STR_GEN;
-    mo.map_shrink_alg = SH_MAP_LIN;
-    mo.subproblem_binarize = BIN_ALL;
-    mo.map_depth = DEPTH_INSTANCE;
-  } else if(ps == PSET_MZN) {
-    mo.subproblem_structure = STR_NORMAL;
-    mo.map_shrink_alg = SH_MAP_QX;
-    mo.subproblem_binarize = BIN_ALL;
-    mo.map_depth = DEPTH_INSTANCE;
-  } else if(ps == PSET_FZN) {
-    mo.subproblem_structure = STR_NORMAL;
-    mo.map_shrink_alg = SH_MAP_QX;
-    mo.subproblem_binarize = BIN_ALL;
-    mo.map_depth = DEPTH_PROGRAM;
-  }
-}
-
 void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
   std::vector<std::string> args;
   for(int i=1; i<argc; i++) args.push_back(argv[i]);
@@ -181,29 +166,55 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, int argc, char**argv) {
   parse(dro, mo, args);
 }
 
-void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string>& args) {
-  setParamSet(PSET_HINT, mo);
+vector<string> expandParamSet(const vector<string>& in_args) {
+  vector<string> args;
 
-  // std::cout << "Args: " << utils::join(args, " ") << std::endl;
-
-  for(int i=0; i<args.size(); i++) {
-    if(args[i] == "--help") {
-      help_long();
-    } else if(args[i] ==  "--paramset") {
-      std::string s = args[++i];
+  for(int i=0; i<in_args.size(); i++) {
+    if(in_args[i] == "--paramset") {
+      const string& s = in_args[++i];
       if(s == "hint") {
-        setParamSet(PSET_HINT, mo);
+        args.push_back("--structure"); args.push_back("gen");
+        args.push_back("--shrink-alg"); args.push_back("map_lin");
+        args.push_back("--depth"); args.push_back("mzn");
       } else if(s == "mzn") {
-        setParamSet(PSET_MZN, mo);
+        args.push_back("--structure"); args.push_back("normal");
+        args.push_back("--shrink-alg"); args.push_back("map_qx");
+        args.push_back("--depth"); args.push_back("mzn");
       } else if(s == "fzn") { 
-        setParamSet(PSET_FZN, mo);
+        args.push_back("--structure"); args.push_back("normal");
+        args.push_back("--shrink-alg"); args.push_back("map_qx");
+        args.push_back("--depth"); args.push_back("fzn");
       } else {
         std::cout << "Unknown paramset. Available options are {hint, mzn, fzn}\n";
         help_short(EXIT_FAILURE);
       }
+
+    } else {
+      args.push_back(in_args[i]);
+    }
+  }
+
+  return args;
+}
+
+void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string>& in_args) {
+  vector<string> args = expandParamSet(in_args);
+
+  for(int i=0; i<args.size(); i++) {
+    if(args[i] == "--help") {
+      help_long();
+    } else if(args[i] == "--print-args") {
+      std::cout << "Args: " << utils::join(args, " ") << std::endl;
+    } else if(args[i] == "--paramset") {
+      std::cout << "Paramset argument should have been expanded. This should not happen.\n";
+      help_short(EXIT_FAILURE);
     } else if(args[i][0] == '-' && args[i][1] == 'D') {
       dro.input_files.push_back(args[i]);
-    } else if(args[i] ==  "--shrink-alg") {
+    } else if(args[i] == "--shrink-frontier") {
+      mo.map_shrink_frontier = true;
+    } else if(args[i] == "--native-shrink") {
+      mo.subproblem_native_shrink = true;
+    } else if(args[i] == "--shrink-alg") {
       std::string alg = args[++i];
       if(alg == "lin")          mo.map_shrink_alg = SH_LIN;
       else if(alg == "map_lin") mo.map_shrink_alg = SH_MAP_LIN;
@@ -283,21 +294,38 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
     } else if(args[i] ==  "--hard-domains") {
       mo.subproblem_hard_domain_constraints = true;
     } else if(args[i] ==  "--named-only") {
-      mo.subproblem_named_only = true;
+      mo.subproblem_name_filters.clear();
+      mo.subproblem_name_filters.emplace_back("*");
     } else if(args[i] ==  "--filter-sep") {
       dro.filter_sep = args[++i][0];
+    } else if(args[i] == "--filter-mode") {
+      std::string mode = args[++i];
+      if(mode == "fg")      mo.subproblem_filter_mode = FILTER_FOREGROUND;
+      else if(mode == "ex") mo.subproblem_filter_mode = FILTER_EXCLUSIVE;
+      else {
+        std::cout << "Invalid filter mode. Available options are {fg, ex}\n";
+        help_short(EXIT_FAILURE);
+      }
     } else if(!string(args[i]).compare(0, 8, "--filter")) {
       std::string arg = args[i];
       std::string csfilter = args[++i];
       vector<string> filters = utils::split(csfilter, dro.filter_sep);
       if(arg == "--filter-named-exclude") {
-        mo.subproblem_name_filters_excludes.insert(filters.begin(), filters.end());
+        mo.subproblem_name_filters_excludes.insert(
+            mo.subproblem_name_filters_excludes.end(),
+            filters.begin(), filters.end());
       } else if(arg == "--filter-named") {
-        mo.subproblem_name_filters.insert(filters.begin(), filters.end());
+        mo.subproblem_name_filters.insert(
+            mo.subproblem_name_filters.end(),
+            filters.begin(), filters.end());
       } else if(arg == "--filter-path-exclude") {
-        mo.subproblem_path_filters_excludes.insert(filters.begin(), filters.end());
+        mo.subproblem_path_filters_excludes.insert(
+            mo.subproblem_path_filters_excludes.end(),
+            filters.begin(), filters.end());
       } else if(arg == "--filter-path") {
-        mo.subproblem_path_filters.insert(filters.begin(), filters.end());
+        mo.subproblem_path_filters.insert(
+            mo.subproblem_path_filters.end(),
+            filters.begin(), filters.end());
       }
     } else if(args[i] ==  "--dump-dot") {
       dro.dump_dot_path = args[++i];
@@ -309,6 +337,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       dro.compile_verbose = true;
     } else if(args[i] ==  "--verbose-compile") {
       dro.compile_verbose = true;
+    } else if(args[i] == "-s") {
+      dro.compile_stats = true;
     } else if(args[i] == "--domains" || args[i] ==  "-g") {
       dro.compile_domains = true;
     } else if(args[i] ==  "--verbose-enum") {
@@ -390,9 +420,17 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
   if(!mo.subproblem_name_filters_excludes.empty()) {
     if(!mo.subproblem_name_filters.empty()) {
       for(const std::string& exclude : mo.subproblem_name_filters_excludes) {
-        if(mo.subproblem_name_filters.find(exclude) != mo.subproblem_name_filters.end()) {
-          mo.subproblem_name_filters.erase(exclude);
-          mo.subproblem_name_filters_excludes.erase(exclude);
+        if(find(mo.subproblem_name_filters.begin(),
+                mo.subproblem_name_filters.end(),
+                exclude) != mo.subproblem_name_filters.end()) {
+          mo.subproblem_name_filters.erase(
+              std::remove(mo.subproblem_name_filters.begin(),
+                mo.subproblem_name_filters.end(), exclude),
+              mo.subproblem_name_filters.end());
+          mo.subproblem_name_filters_excludes.erase(
+              std::remove(mo.subproblem_name_filters_excludes.begin(),
+                mo.subproblem_name_filters_excludes.end(), exclude),
+              mo.subproblem_name_filters_excludes.end());
         }
       }
     }
