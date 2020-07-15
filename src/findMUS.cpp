@@ -89,9 +89,11 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   }
 
   if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
-  std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_time;
-  std::cout << "Total Time: " << std::fixed << std::setprecision(5) << dur.count()
-            << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
+  if(dro.output_stats) {
+    std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_time;
+    std::cout << "Total Time: " << std::fixed << std::setprecision(5) << dur.count()
+      << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
+  }
 }
 }
 

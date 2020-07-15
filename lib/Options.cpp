@@ -229,6 +229,9 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       mo.mzn_stdlib_dir = args[++i];
     } else if(args[i] ==  "--no-progress") {
       dro.output_progress = false;
+    } else if(args[i] ==  "--no-stats") {
+      dro.output_stats = false;
+      mo.output_stats = false;
     } else if(args[i] ==  "--structure") {
       std::string type = args[++i];
       if(type == "flat")        mo.subproblem_structure = STR_FLAT;

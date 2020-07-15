@@ -20,7 +20,10 @@ namespace HierMUS {
       NamePathMap(const std::string& pathfilepath);
 
       inline const std::string& getPath(const std::string& name) const {
-        if(has_pathfile) return nameToPath.at(name);
+        auto it = nameToPath.find(name);
+        if (it != nameToPath.end()) {
+          return it->second;
+        }
         return name;
       }
 
@@ -29,16 +32,17 @@ namespace HierMUS {
       }
 
       inline const std::string& getName(size_t i) {
-        // TODO: NCons should typically be known earlier
-        if(!has_pathfile) {
-          if(leaf_names.size() < i+1)
-            leaf_names.resize(static_cast<int>(1.5*(i+1)));
-
-          if(leaf_names[i].empty()) {
-            leaf_names[i] = std::to_string(i);
-          }
+        if (leaf_names.size() < i) {
+          return leaf_names[i];
         }
 
+        // TODO: NCons should typically be known earlier
+        if(leaf_names.size() < i+1)
+          leaf_names.resize(static_cast<int>(1.5*(i+1)));
+
+        if(leaf_names[i].empty()) {
+          leaf_names[i] = std::to_string(i);
+        }
         return leaf_names[i];
       }
 

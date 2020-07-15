@@ -217,7 +217,7 @@ namespace HierMUS {
       MiniZinc::ConstraintI& ci = *cit;
       string name = nameToPath.getName(con_id);
       bool background = isBackgroundConstraint(ci, name);
-      if(isBackgroundConstraint(ci, name)) {
+      if(n_cons <= con_id || isBackgroundConstraint(ci, name)) {
         hard_cons++;
         background_cons.emplace_back(name);
       } else if(isFilteredIn(ci, name)) {
@@ -276,11 +276,11 @@ namespace HierMUS {
 
     init_oracle_model(oraclepath, hard_cons + soft_cons, background_cons);
 
-    //if(mopts.verbose_subsolve) {
-    std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_build;
-    std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tBuilt tree in "
-      << std::fixed << std::setprecision(5) << dur.count() << " seconds.\n";
-    //}
+    if(mopts.output_stats) {
+      std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_build;
+      std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tBuilt tree in "
+        << std::fixed << std::setprecision(5) << dur.count() << " seconds.\n";
+    }
   }
 
   bool FznSubProblem::provedSAT() { return last_sat; }

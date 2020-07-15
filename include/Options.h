@@ -19,6 +19,7 @@ public:
   int maxmuses = 1; // Start in focus_mode
   bool frequent_stats = false;
   bool output_progress = true;
+  bool output_stats = true;
   string dump_dot_path;
   char filter_sep = ',';
   bool use_new_enumer = true;
@@ -50,6 +51,7 @@ public:
   unsigned int verbose_map = 0;
   unsigned int verbose_enum = 0;
   unsigned int verbose_subsolve = 0;
+  bool output_stats = true;
 
   std::chrono::duration<double> timelimit;
   bool print_leftover = true;
