@@ -21,6 +21,7 @@
 #define dup2 _dup2
 #else // POSIX
 #define NULL_PATH "/dev/null"
+#include <unistd.h>
 #endif
 
 #include <minizinc/file_utils.hh>
