@@ -14,16 +14,6 @@
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
-#ifdef _MSC_VER
-#include <io.h>
-#define NULL_PATH "nul"
-#define dup _dup
-#define dup2 _dup2
-#else // POSIX
-#define NULL_PATH "/dev/null"
-#include <unistd.h>
-#endif
-
 #include <minizinc/file_utils.hh>
 #include <minizinc/solver.hh>
 
@@ -35,27 +25,6 @@
 #ifdef _MSC_VER
 #undef ERROR
 #endif
-
-
-static int saved_stdout;
-static int saved_stderr;
-static int null_file;
-
-inline void silence_init() {
-  saved_stdout = dup(STDOUT_FILENO);
-  saved_stderr = dup(STDERR_FILENO);
-  null_file = open(NULL_PATH, O_WRONLY, 0600);
-}
-
-inline void silence_output_start() {
-  dup2(null_file, STDOUT_FILENO);
-  dup2(null_file, STDERR_FILENO);
-}
-
-inline void silence_output_end() {
-  dup2(saved_stdout, STDOUT_FILENO);
-  dup2(saved_stderr, STDERR_FILENO);
-}
 
 namespace HierMUS {
   using std::string;
@@ -188,7 +157,6 @@ namespace HierMUS {
       MUSEnumOptions& mo, const string& oraclepath = "")
       : SubProblem(mo), last_sat{false}, shrunk{}, nameToPath{pathpath}, fzn_model{ nullptr }, oracle{ "root", false } {
 
-    silence_init();
     auto start_build = std::chrono::system_clock::now();
 
     init_fzn_model(fznpath);
@@ -343,7 +311,6 @@ namespace HierMUS {
     }
 
     if(!mopts.oracle_only && s != MiniZinc::SolverInstance::UNSAT) {
-      silence_output_start();
       // Build solver
       MiniZinc::MznSolver solver(nullstream, log);
 
@@ -418,32 +385,27 @@ namespace HierMUS {
 
       try {
         s = si->solve();
-        silence_output_end();
+#ifdef MZN_SUPPORTS_SHRINK
+        if(s == MiniZinc::SolverInstance::UNSAT) {
+          auto statusMUS = si->getMUSStatus();
+
+          if(statusMUS != MiniZinc::SolverInstance::MUS_NONE) {
+            setShrunk(si->getMUS(), statusMUS == MiniZinc::SolverInstance::MUS_MINIMAL);
+          }
+        }
+#endif
       } catch (const MiniZinc::InternalError& err) {
-        silence_output_end();
         std::cerr << "FznSubproblem:\tException during sub-solving: "
                   << err.msg() << ": " << err.what() << std::endl;
         exit(EXIT_FAILURE);
       } catch (const std::runtime_error& err) {
-        silence_output_end();
         std::cerr << "FznSubproblem:\tCaught runtime error:\n";
         std::cerr << "\t" << err.what() << "\n";
         exit(EXIT_FAILURE);
       } catch (...) {
-        silence_output_end();
         std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving\n";
         exit(EXIT_FAILURE);
       }
-
-#ifdef MZN_SUPPORTS_SHRINK
-      if(s == MiniZinc::SolverInstance::UNSAT) {
-        auto statusMUS = si->getMUSStatus();
-
-        if(statusMUS != MiniZinc::SolverInstance::MUS_NONE) {
-          setShrunk(si->getMUS(), statusMUS == MiniZinc::SolverInstance::MUS_MINIMAL);
-        }
-      }
-#endif
 
       std::string error_log = log.str();
       if(!error_log.empty()) {
