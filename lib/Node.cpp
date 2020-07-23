@@ -25,6 +25,10 @@ namespace HierMUS {
         return child.addPath(splitpath, p+1);
       }
     }
+    if(!con_id.empty()) {
+      children.push_back(MapNode(path, con_id));
+      con_id.clear();
+    }
     children.push_back(MapNode(splitpath[p]));
     return children.back().addPath(splitpath, p+1);
   }
