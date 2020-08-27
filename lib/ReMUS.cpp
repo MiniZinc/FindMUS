@@ -15,7 +15,7 @@ namespace HierMUS {
   ReMUS::~ReMUS() {}
 
   void ReMUS::setFrontier(const Selection& f) {
-    if(mopts.verbose_enum) { std::cout << "ReMUS: new frontier: " << f << "\n"; }
+    if(mopts.verbose_enum) { std::cout << "ReMUS: new frontier: " << f << std::endl; }
     remus_stack = { {f, {}} };
     frontier = f;
   }
@@ -31,14 +31,14 @@ namespace HierMUS {
       const string indent(depth, '\t');
       if(mopts.verbose_enum) { std::cout << indent << "ReMUS: stack.size(): " << remus_stack.size()
                                          << " top: " << state.S
-                                         << " crits: {" << state.criticals << " }\n"; }
+                                         << " crits: {" << state.criticals << " }" << std::endl; }
       stats.map_calls++;
 
       // s.selected and s.include are equal and s.exclude is accurate.
       Selection s_max = subsetMap->getSelection(state.S);
 
       if(s_max.selected.size() == 0) {
-        if(mopts.verbose_enum) { std::cout << indent << "ReMUS: popping\n"; }
+        if(mopts.verbose_enum) { std::cout << indent << "ReMUS: popping" << std::endl; }
         remus_stack.pop_back();
         continue;
       }
@@ -64,7 +64,7 @@ namespace HierMUS {
           }
           updateIncludeExclude(p);
 
-          if(mopts.verbose_enum) { std::cout << indent << "ReMUS: pushing: " << p << " crits: " << state.criticals << "\n"; }
+          if(mopts.verbose_enum) { std::cout << indent << "ReMUS: pushing: " << p << " crits: " << state.criticals << std::endl; }
           remus_stack.push_back({ p, state.criticals });
         }
         if(isLeaves(s_mus)) {
@@ -87,7 +87,7 @@ namespace HierMUS {
                             std::inserter(s_mcs, s_mcs.begin()));
         if(s_mcs.size() == 1) {
           state.criticals.insert((*s_mcs.begin()).child);
-          if(mopts.verbose_enum) { std::cout << indent << "ReMUS: updated crits: {" << state.criticals << " }\n"; }
+          if(mopts.verbose_enum) { std::cout << indent << "ReMUS: updated crits: {" << state.criticals << " }" << std::endl; }
         } else {
           // We are aboute to modify remus_stack so we need a copy of criticals
           set<MapNode*> criticals_copy = state.criticals;
@@ -100,7 +100,7 @@ namespace HierMUS {
             new_state.S.exclude.erase(n);
             new_state.criticals.insert(n);
             if(mopts.verbose_enum) { std::cout << indent << "ReMUS: pushing: " << new_state.S
-                                               << " crits: {" << new_state.criticals << " }\n"; }
+                                               << " crits: {" << new_state.criticals << " }" << std::endl; }
             remus_stack.push_back(new_state);
           }
         }

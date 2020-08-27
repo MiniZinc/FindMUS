@@ -34,10 +34,10 @@ namespace HierMUS {
   string ConstraintSet::getLongSummary(void) {
     std::stringstream ss;
     ss << getShortSummary();
-    ss << "\nTraces:\n";
+    ss << "\nTraces:" << std::endl;
 
     for(auto& ps : constraints) {
-      ss << ps.first << "\n";
+      ss << ps.first << std::endl;
     }
 
     return ss.str();
@@ -74,36 +74,36 @@ namespace HierMUS {
     std::stringstream shortSol;
 
     shortSol << "MUS: " << utils::join(leaves_vec, " ") << sep
-             << "Brief: " << utils::join(names_vec, sep) << "\n";
+             << "Brief: " << utils::join(names_vec, sep) << std::endl;
     return shortSol.str();
   }
 
   std::string ConstraintSet::getJSONSummary(void) {
     std::stringstream json;
-    json << "%%%mzn-json-start\n";
+    json << "%%%mzn-json-start" << std::endl;
     json << "{";
 
-    json << "\"constraints\": [\n";
+    json << "\"constraints\": [" << std::endl;
     unsigned int remain = static_cast<unsigned int>(constraints.size());
     for(auto& pcs : constraints) {
       unsigned int remain_inner = static_cast<unsigned int>(pcs.second.size());
       for(const ConstraintInfo& ci : pcs.second) {
-        json << "{\n";
-        json << "\t\"leaf_name\": " << "\"" << ci.leaf_name << "\",\n";
-        json << "\t\"name\": " << "\""            << utils::escape(ci.name, false) << "\",\n";
-        json << "\t\"path\": " << "\""            << utils::escape(ci.path, false) << "\",\n";
-        json << "\t\"assigns\": " << "\""         << utils::escape(ci.assigns, false) << "\",\n";
-        json << "\t\"constraint_name\": " << "\"" << utils::escape(ci.constraint_name, false) << "\",\n";
-        json << "\t\"expression_name\": " << "\"" << utils::escape(ci.expression_name, false) << "\"\n";
+        json << "{" << std::endl;
+        json << "\t\"leaf_name\": " << "\"" << ci.leaf_name << "\"," << std::endl;
+        json << "\t\"name\": " << "\""            << utils::escape(ci.name, false) << "\"," << std::endl;
+        json << "\t\"path\": " << "\""            << utils::escape(ci.path, false) << "\"," << std::endl;
+        json << "\t\"assigns\": " << "\""         << utils::escape(ci.assigns, false) << "\"," << std::endl;
+        json << "\t\"constraint_name\": " << "\"" << utils::escape(ci.constraint_name, false) << "\"," << std::endl;
+        json << "\t\"expression_name\": " << "\"" << utils::escape(ci.expression_name, false) << "\"" << std::endl;
         json << "}";
-        if(--remain_inner) json << ",\n";
+        if(--remain_inner) json << "," << std::endl;
       }
-      if(--remain) json << ",\n";
+      if(--remain) json << "," << std::endl;
     }
-    json << "]\n";
+    json << "]" << std::endl;
 
-    json << "}\n";
-    json << "%%%mzn-json-end\n";
+    json << "}" << std::endl;
+    json << "%%%mzn-json-end" << std::endl;
     return json.str();
   }
 
@@ -120,7 +120,7 @@ namespace HierMUS {
        << "<a href=\"highlight:?" << utils::join(path_vec, "&") << "\">"
        << getShortSummary("<br/>")
        << "</a></div>\n"
-       << "%%%mzn-html-end\n\n";
+       << "%%%mzn-html-end\n" << std::endl;
 
     return ss.str();
   }

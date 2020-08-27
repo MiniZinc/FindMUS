@@ -40,11 +40,11 @@ namespace HierMUS {
     ShrunkSet shrunk = subProblem.getShrunk();
 
     if(shrunk.con_ids.empty()) {
-      std::cerr << "MusEnumerator::native_shrink: Not supported.\n";
+      std::cerr << "MusEnumerator::native_shrink: Not supported." << std::endl;
       exit(EXIT_FAILURE);
     }
 
-    if(mopts.verbose_enum) std::cout << "MusEnumerator::native_shrink\n"; //:\tfrom: " << model;
+    if(mopts.verbose_enum) std::cout << "MusEnumerator::native_shrink" << std::endl; //:\tfrom: " << model;
 
     set<string>& con_ids = shrunk.con_ids;
     if(mopts.map_shrink_frontier) {
@@ -288,7 +288,7 @@ static int indent=0;
     }
     C2 = sel_complement(C, C1);
 
-    // std::cout << "Part: |C| = " << C.selected.size() << " |C1| = " << C1.selected.size() << " |C2| = " << C2.selected.size() << "\n";
+    // std::cout << "Part: |C| = " << C.selected.size() << " |C1| = " << C1.selected.size() << " |C2| = " << C2.selected.size() << std::endl;
 
     OptionalSelection D2, D1;
     if(C2.selected.size() == 1 && is_subset(C2, criticals)) {

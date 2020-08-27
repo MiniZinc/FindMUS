@@ -191,7 +191,7 @@ namespace HierMUS {
         background_cons.emplace_back(name);
       } else if(isFilteredIn(ci, name)) {
         if(n_cons <= con_id) {
-          std::cerr << "FznSubProblem:\tError: Path file does not match FlatZinc\n";
+          std::cerr << "FznSubProblem:\tError: Path file does not match FlatZinc" << std::endl;
           exit(EXIT_FAILURE);
         }
         constraints[name] = &ci;
@@ -248,7 +248,7 @@ namespace HierMUS {
     if(mopts.output_stats) {
       std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_build;
       std::cout << "FznSubProblem:\thard cons: " << hard_cons << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves << "\tbranches: " << cs.nbranches << "\tBuilt tree in "
-        << std::fixed << std::setprecision(5) << dur.count() << " seconds.\n";
+        << std::fixed << std::setprecision(5) << dur.count() << " seconds." << std::endl;
     }
   }
 
@@ -374,7 +374,7 @@ namespace HierMUS {
           break;
         default:
           std::cerr << "FznSubProblem:\tError creating solver with args:\t" << utils::join(args, " ") << std::endl;
-          std::cerr << "\t" << log.str() << "\n";
+          std::cerr << "\t" << log.str() << std::endl;
           exit(EXIT_FAILURE);
       }
 
@@ -399,17 +399,17 @@ namespace HierMUS {
                   << err.msg() << ": " << err.what() << std::endl;
         exit(EXIT_FAILURE);
       } catch (const std::runtime_error& err) {
-        std::cerr << "FznSubproblem:\tCaught runtime error:\n";
-        std::cerr << "\t" << err.what() << "\n";
+        std::cerr << "FznSubproblem:\tCaught runtime error:" << std::endl;
+        std::cerr << "\t" << err.what() << std::endl;
         exit(EXIT_FAILURE);
       } catch (...) {
-        std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving\n";
+        std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving" << std::endl;
         exit(EXIT_FAILURE);
       }
 
       std::string error_log = log.str();
       if(!error_log.empty()) {
-        std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << "\n";
+        std::cerr << "FznSubproblem:\tstderr from MznSolver:\n" << error_log << std::endl;
         log.clear();
         exit(EXIT_FAILURE);
       }
@@ -429,7 +429,7 @@ namespace HierMUS {
     } else if (s == MiniZinc::SolverInstance::ERROR) {
       res = "E";
       string errfilename = "FINDMUS_failed_subproblem.fzn";
-      std::cout << "FznSubproblem:\tSolver reported error without message\n";
+      std::cout << "FznSubproblem:\tSolver reported error without message" << std::endl;
       saveFzn(b, errfilename);
     } else {
       res = "?";
@@ -451,7 +451,7 @@ namespace HierMUS {
   }
 
   void FznSubProblem::saveFzn(const Selection& b, const string& filename) {
-    std::cout << "FznSubProblem:\tdumping fzn as: " << filename << "\n";
+    std::cout << "FznSubProblem:\tdumping fzn as: " << filename << std::endl;
     set<string> leaves = getLeaves(b);
     // Mark all constraints as removed;
     for(auto& kv : constraints) { kv.second->remove(); }
@@ -483,7 +483,7 @@ namespace HierMUS {
       p.print(fzn_model->solveItem());
       f.close();
     } else {
-      std::cout << "cannot open file" << filename << " for writing\n";
+      std::cout << "cannot open file" << filename << " for writing" << std::endl;
     }
   }
 

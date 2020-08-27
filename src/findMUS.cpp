@@ -63,7 +63,7 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
   regHandler();
   std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
   Statistics& stats = me.getStatistics();
-  if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0\n"; }
+  if(dro.output_progress) { std::cout << "%%%mzn-progress 0.0" << std::endl; }
   int start_sat_calls = 0;
   while(!sigint && !mo.timedOut() && me.search()) {
     me.printMUS();
@@ -79,7 +79,7 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
     if(dro.frequent_stats) {
       std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_time;
       std::cout << "Intermediate Result: Time: " << std::fixed << std::setprecision(5) << dur.count()
-                << "\tnmuses: " << stats.nmuses << "\t" << stats << "\tdsat: " << sat_calls_d <<"\n";
+                << "\tnmuses: " << stats.nmuses << "\t" << stats << "\tdsat: " << sat_calls_d << std::endl;
     }
     start_sat_calls = stats.sat_calls;
   }
@@ -88,11 +88,11 @@ static void run(DriverOptions& dro, MUSEnumOptions& mo, MusEnumerator& me) {
     me.printMUS();
   }
 
-  if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0\n"; }
+  if(dro.output_progress) { std::cout << "%%%mzn-progress 100.0" << std::endl; }
   if(dro.output_stats) {
     std::chrono::duration<double> dur = std::chrono::system_clock::now() - start_time;
     std::cout << "Total Time: " << std::fixed << std::setprecision(5) << dur.count()
-      << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << "\n";
+      << "\tnmuses: " << stats.nmuses << "\t" << me.getStatistics() << std::endl;
   }
 }
 }
@@ -119,7 +119,7 @@ SubProblem* createProblem(DriverOptions& dro,
 #endif
   if(!problem) {
     if(dro.input_files.empty()) {
-      std::cerr << "No input files provided\n";
+      std::cerr << "No input files provided" << std::endl;
       OptionsHelper::help_short(EXIT_FAILURE);
     }
     if(dro.fznpath.empty()) {
@@ -176,19 +176,19 @@ SubProblem* createProblem(DriverOptions& dro,
     }
 
     if(dro.fznpath.empty()) {
-      std::cerr << "No flatzinc file provided\n";
+      std::cerr << "No flatzinc file provided" << std::endl;
       OptionsHelper::help_short(EXIT_FAILURE);
     } else {
       std::ifstream checkpath(dro.fznpath);
       if(!checkpath.is_open()) {
-        std::cerr << "Flatzinc file "<< dro.fznpath << " cannot be opened.\n";
+        std::cerr << "Flatzinc file "<< dro.fznpath << " cannot be opened." << std::endl;
         OptionsHelper::help_short(EXIT_FAILURE);
       }
     }
     if(!dro.oraclepath.empty()) {
       std::ifstream checkpath(dro.oraclepath);
       if(!checkpath.is_open()) {
-        std::cerr << "Warning: Oracle file "<< dro.oraclepath << " not found.\n";
+        std::cerr << "Warning: Oracle file "<< dro.oraclepath << " not found." << std::endl;
         dro.pathpath = "";
       }
     }
@@ -199,7 +199,7 @@ SubProblem* createProblem(DriverOptions& dro,
     {
       std::ifstream checkpath(dro.pathpath);
       if(!checkpath.is_open()) {
-        std::cerr << "Warning: Path file "<< dro.pathpath << " not found. Compile with --output-paths to produce .paths file. Using flat hierarchy.\n";
+        std::cerr << "Warning: Path file "<< dro.pathpath << " not found. Compile with --output-paths to produce .paths file. Using flat hierarchy." << std::endl;
         dro.pathpath = "";
       }
     }
@@ -211,7 +211,7 @@ SubProblem* createProblem(DriverOptions& dro,
 void writeDotFile(const DriverOptions& dro, SubProblem* problem){
   std::ofstream f(dro.dump_dot_path);
   if(!f.is_open()) {
-    std::cout << "\nFailed to write to file\n";
+    std::cout << "\nFailed to write to file" << std::endl;
     return;
   }
   DotWriter dw(f, problem->getTree());
@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
   HierMUS::SubProblem* problem = createProblem(dro, mo, temp_files);
 
   if(!dro.dump_dot_path.empty()) {
-    std::cout << "Writing diagram to: " << dro.dump_dot_path << " and exiting\n";
+    std::cout << "Writing diagram to: " << dro.dump_dot_path << " and exiting" << std::endl;
     writeDotFile(dro, problem);
     exit(EXIT_SUCCESS);
   }
@@ -261,11 +261,11 @@ int main(int argc, char **argv) {
   // Is the model unsat to begin with?
   if(problem->check(me->getRootSelector())) { // If unsat isn't proven, check returns SAT
     if(problem->provedSAT()) {
-      std::cout << "Error: Model is Satisfiable\n";
+      std::cout << "Error: Model is Satisfiable" << std::endl;
       return EXIT_SUCCESS;
     } else {
       std::cout << "Error: Cannot prove UNSAT within solver timelimit. "
-                << "Set a larger timeout with the '--solver-timelimit' argument.\n";
+                << "Set a larger timeout with the '--solver-timelimit' argument." << std::endl;
     }
     return EXIT_FAILURE;
   }
@@ -284,13 +284,13 @@ int main(int argc, char **argv) {
     mo.subproblem_solver_time_limit = scaled_unsat_time.count() < mo.subproblem_solver_time_limit.count()
                                       ? scaled_unsat_time
                                       : mo.subproblem_solver_time_limit;
-    std::cout << "%% Adapting solver time limit to: " << std::chrono::duration_cast<std::chrono::seconds>(mo.subproblem_solver_time_limit).count() << "\n";
+    std::cout << "%% Adapting solver time limit to: " << std::chrono::duration_cast<std::chrono::seconds>(mo.subproblem_solver_time_limit).count() << std::endl;
   }
 
   // Print suggestion if using gen/hint
   if(mo.subproblem_structure == STR_GEN) {
     std::cout << "Note: Generalising model structure (stripping instance specific info). "
-      << "Use \"--paramset mzn\" for more precise output\n";
+      << "Use \"--paramset mzn\" for more precise output" << std::endl;
   }
 
   FindMUSState::run(dro, mo, *me);

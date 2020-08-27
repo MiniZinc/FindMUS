@@ -11,7 +11,7 @@ namespace HierMUS {
   HierMUSEnumer::HierMUSEnumer(SubProblem& prob, MUSEnumOptions& mo) : MusEnumerator(prob, mo), frontier_idx{ 0 } {
     if(mo.map_enumeration_alg == ALG_REMUS) {
       if(mo.subproblem_structure != STR_FLAT || mo.subproblem_binarize != BIN_NONE) {
-        std::cerr << "Warning: Hierarchical ReMUS has not been implemented. Results will be incorrect!\n";
+        std::cerr << "Warning: Hierarchical ReMUS has not been implemented. Results will be incorrect!" << std::endl;
       }
       inner_enum = new ReMUS(prob, mo, subsetMap);
     } else {
@@ -19,9 +19,9 @@ namespace HierMUS {
     }
 
     inner_enum->setUnsatCallback([&](const Selection& s) {
-      if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: SubEnumerator adding set: " << s << " to candidates\n"; }
+      if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: SubEnumerator adding set: " << s << " to candidates" << std::endl; }
       if(frontier_idx != -1) {
-        if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx] << "\n"; }
+        if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx] << std::endl; }
         candidates[frontier_idx].is_min = false;
       }
       unsatUnion = sel_union(unsatUnion, s);
@@ -45,7 +45,7 @@ namespace HierMUS {
   void HierMUSEnumer::loadNextCandidate() {
     Statistics& stats = inner_enum->getStatistics();
     if(stats.shouldRestart()) {
-      if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Restarting in flat mode\n"; }
+      if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Restarting in flat mode" << std::endl; }
       candidates.clear();
       Selection leaves = subsetMap->getLeavesSelector();
       leaves.is_min = false;
@@ -79,7 +79,7 @@ namespace HierMUS {
     while(!mopts.timedOut()) {
       if(inner_enum->search()) {
         if(frontier_idx != -1) {
-          if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx] << "\n"; }
+          if(mopts.verbose_enum) { std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx] << std::endl; }
           candidates[frontier_idx].is_min = false;
         }
         current_mus = inner_enum->getCurrentMUS();
@@ -95,12 +95,12 @@ namespace HierMUS {
     if(mopts.timedOut()) {
       std::cout << "FindMUS finishing early: ";
       if(candidates.empty()) {
-        std::cout << "No remaining candidates.\n";
+        std::cout << "No remaining candidates." << std::endl;
       } else if(mopts.print_leftover) {
-        std::cout << "Last (non-minimal) candidate:\n";
+        std::cout << "Last (non-minimal) candidate:" << std::endl;
         subProblem.printSol(candidates.back());
       } else {
-        std::cout << "Remaining candidate not printed (--no-leftover)\n";
+        std::cout << "Remaining candidate not printed (--no-leftover)" << std::endl;
       }
       return;
     }

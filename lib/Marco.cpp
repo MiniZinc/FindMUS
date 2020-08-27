@@ -16,7 +16,7 @@ namespace HierMUS {
   Marco::~Marco() {}
 
   void Marco::setFrontier(const Selection& f) { 
-    if(mopts.verbose_enum) { std::cout << "Marco: new frontier: " << f << "\n"; }
+    if(mopts.verbose_enum) { std::cout << "Marco: new frontier: " << f << std::endl; }
     frontier = f;
   }
 

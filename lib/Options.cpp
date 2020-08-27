@@ -19,7 +19,7 @@ void help_short(int exit_code) {
             << "                 [--verbose-{enum,map,subsolve} <v>]\n"
             << "                 [--verbose-compile]\n"
             << "                 [--verbose]\n"
-            << "\n";
+            << std::endl;
   if(exit_code == EXIT_FAILURE)
     exit(EXIT_FAILURE);
 }
@@ -155,7 +155,7 @@ void help_long(void) {
       << " Misc Options:\n"
       << "  --dump-dot <dot>\n"
       << "    Write tree in GraphViz format to file <dot>\n"
-      << "\n";
+      << std::endl;
   exit(EXIT_FAILURE);
 }
 

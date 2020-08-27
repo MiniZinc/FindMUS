@@ -43,7 +43,7 @@ namespace HierMUS {
     if(children.size() == 0) {
       cs.nleaves++;
     } else {
-      if(!con_id.empty()) {std::cout << "Found lost leaf: " << con_id << "\n";}
+      if(!con_id.empty()) {std::cout << "Found lost leaf: " << con_id << std::endl;}
       cs.nbranches++;
     }
     for(const MapNode& n : children)
