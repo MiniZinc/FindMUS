@@ -17,12 +17,12 @@ namespace HierMUS {
     MiniZinc::Expression* en = MiniZinc::getAnnotation(ci->e()->ann(), "mzn_expression_name");
     if(en) {
       MiniZinc::Call* c = en->cast<MiniZinc::Call>();
-      expression_name = c->arg(0)->cast<MiniZinc::StringLit>()->v().str();
+      expression_name = c->arg(0)->cast<MiniZinc::StringLit>()->v().c_str();
     }
     MiniZinc::Expression* cn = MiniZinc::getAnnotation(ci->e()->ann(), "mzn_constraint_name");
     if(cn) {
       MiniZinc::Call* c = cn->cast<MiniZinc::Call>();
-      constraint_name = c->arg(0)->cast<MiniZinc::StringLit>()->v().str();
+      constraint_name = c->arg(0)->cast<MiniZinc::StringLit>()->v().c_str();
     }
   }
 

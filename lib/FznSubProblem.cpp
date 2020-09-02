@@ -63,9 +63,9 @@ namespace HierMUS {
   inline ConNames getNames(const MiniZinc::ConstraintI& ci) {
     ConNames names;
     MiniZinc::Expression* cn = MiniZinc::getAnnotation(ci.e()->ann(), "mzn_constraint_name");
-    if(cn) names.cons_name = cn->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
+    if(cn) names.cons_name = cn->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().c_str();
     MiniZinc::Expression* en = MiniZinc::getAnnotation(ci.e()->ann(), "mzn_expression_name");
-    if(en) names.expr_name = en->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().str();
+    if(en) names.expr_name = en->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().c_str();
     return names;
   }
 

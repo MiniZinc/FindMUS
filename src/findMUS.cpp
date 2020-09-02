@@ -5,6 +5,7 @@
 #include <csignal>
 
 #ifdef WIN32
+#define NOMINMAX
 #include <windows.h>
 #undef ERROR
 #endif
