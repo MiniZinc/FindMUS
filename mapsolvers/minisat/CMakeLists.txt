@@ -26,8 +26,6 @@ set(MINISAT_SOVERSION ${MINISAT_SOMAJOR})
 #--------------------------------------------------------------------------------------------------
 # Dependencies:
 
-find_package(ZLIB)
-include_directories(${ZLIB_INCLUDE_DIR})
 include_directories(${minisat_SOURCE_DIR})
 
 #--------------------------------------------------------------------------------------------------
@@ -44,22 +42,21 @@ set(MINISAT_LIB_SOURCES
     minisat/core/Solver.cc
     minisat/simp/SimpSolver.cc)
 
-
-add_executable(minisat_core minisat/core/Main.cc)
-add_executable(minisat_simp minisat/simp/Main.cc)
+#add_executable(minisat_core minisat/core/Main.cc)
+#add_executable(minisat_simp minisat/simp/Main.cc)
 
 if(STATIC_BINARIES)
   add_library(minisat-lib-static STATIC ${MINISAT_LIB_SOURCES})
-  target_link_libraries(minisat-lib-static ${ZLIB_LIBRARY})
-  target_link_libraries(minisat_core minisat-lib-static)
-  target_link_libraries(minisat_simp minisat-lib-static)
+  target_link_libraries(minisat-lib-static)
+  #target_link_libraries(minisat_core minisat-lib-static)
+  #target_link_libraries(minisat_simp minisat-lib-static)
   set_target_properties(minisat-lib-static PROPERTIES OUTPUT_NAME "minisat")
   set(MINISAT_LIB_TARGET minisat-lib-static)
 else()
   add_library(minisat-lib-shared SHARED ${MINISAT_LIB_SOURCES})
-  target_link_libraries(minisat-lib-shared ${ZLIB_LIBRARY})
-  target_link_libraries(minisat_core minisat-lib-shared)
-  target_link_libraries(minisat_simp minisat-lib-shared)
+  target_link_libraries(minisat-lib-shared)
+  #target_link_libraries(minisat_core minisat-lib-shared)
+  #target_link_libraries(minisat_simp minisat-lib-shared)
   set_target_properties(minisat-lib-shared
     PROPERTIES
       OUTPUT_NAME "minisat" 
@@ -69,16 +66,16 @@ else()
 endif()
 
 
-set_target_properties(minisat_simp       PROPERTIES OUTPUT_NAME "minisat")
-
-#--------------------------------------------------------------------------------------------------
-# Installation targets:
-
-install(TARGETS ${MINISAT_LIB_TARGET} minisat_core minisat_simp 
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
-
-install(DIRECTORY minisat/mtl minisat/utils minisat/core minisat/simp
-        DESTINATION include/minisat
-        FILES_MATCHING PATTERN "*.h")
+#set_target_properties(minisat_simp       PROPERTIES OUTPUT_NAME "minisat")
+#
+##--------------------------------------------------------------------------------------------------
+## Installation targets:
+#
+#install(TARGETS ${MINISAT_LIB_TARGET} minisat_core minisat_simp 
+#        RUNTIME DESTINATION bin
+#        LIBRARY DESTINATION lib
+#        ARCHIVE DESTINATION lib)
+#
+#install(DIRECTORY minisat/mtl minisat/utils minisat/core minisat/simp
+#        DESTINATION include/minisat
+#        FILES_MATCHING PATTERN "*.h")

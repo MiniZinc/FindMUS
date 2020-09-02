@@ -24,7 +24,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <zlib.h>
+// #include <zlib.h>
 
 #include "minisat/mtl/XAlloc.h"
 
@@ -35,7 +35,7 @@ namespace Minisat {
 
 
 
-class StreamBuffer {
+/*class StreamBuffer {
     gzFile         in;
     unsigned char* buf;
     int            pos;
@@ -65,7 +65,7 @@ public:
 // End-of-file detection functions for StreamBuffer and char*:
 
 
-static inline bool isEof(StreamBuffer& in) { return *in == EOF;  }
+static inline bool isEof(StreamBuffer& in) { return *in == EOF;  }*/
 static inline bool isEof(const char*   in) { return *in == '\0'; }
 
 //-------------------------------------------------------------------------------------------------

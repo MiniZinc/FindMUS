@@ -17,8 +17,6 @@ message("-- Configuring: Minisat")
 include(cmake-helpers/configure_minisat.cmake)
 
 #### #### #### #### #### #### ####
-find_package(ZLIB)
-include_directories(${ZLIB_INCLUDE_DIR})
 include_directories(${minisat_SOURCE_DIR})
 
 include_directories("include" ${CMAKE_BINARY_DIR})
