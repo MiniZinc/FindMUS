@@ -7,10 +7,6 @@
 namespace HierMUS {
 
   class SetTrie {
-    private:
-      void add_set(const std::vector<std::string>& set, int i);
-      bool contains_subset(const std::vector<std::string>& set, int i);
-
     public:
       bool terminal;
       std::string value;
