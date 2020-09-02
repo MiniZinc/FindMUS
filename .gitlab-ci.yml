@@ -33,7 +33,7 @@ build:linux:
   variables:
     MZNARCH: "linux"
     CMAKE_ARCH: "Ninja"
-    CMAKEDIR: "lib64/cmake/libminizinc"
+    CMAKEDIR: "lib/cmake/libminizinc"
   tags: [linux, docker]
 
 build:osx:
