@@ -418,6 +418,11 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       help_short(EXIT_FAILURE);
     }
   }
+  if(!dro.oraclepath.empty()) {
+    dro.input_files.erase(std::remove(dro.input_files.begin(),
+                                      dro.input_files.end(),
+                                      dro.oraclepath), dro.input_files.end());
+  }
 
   // Sanity checks:
   if(!mo.subproblem_name_filters_excludes.empty()) {

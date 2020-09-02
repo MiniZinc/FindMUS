@@ -52,53 +52,57 @@ namespace HierMUS {
   struct ContainsEntry {
     SetTrie* curr;
     int s_ind;
-    ContainsEntry(SetTrie* c, int s) : curr{ c }, s_ind{ s } {}
+    int c_ind;
+
+    ContainsEntry(SetTrie* c, int si, int ci) :
+      curr{ c }, s_ind{ si }, c_ind{ ci } {}
   };
 
   bool SetTrie::contains_subset(const vector<string>& set) {
     vector<string> sorted_set (set.begin(), set.end());
     std::sort(sorted_set.begin(), sorted_set.end());
 
-    //std::cout << "\n\nChecking set: {" << utils::join(sorted_set, ", ") << "}\n";
-    //std::cout << "Are there subsets here:\n";
-    //printSetTrie(this);
-
     vector<ContainsEntry> stack;
-    stack.emplace_back(this, 0);
+    stack.emplace_back(this, 0, 0);
 
-    while (!stack.empty()) {
+    while(!stack.empty()) {
       ContainsEntry e = stack.back();
       stack.pop_back();
-      //std::cout << "Just popped: " << e.curr->value << ", " << e.s_ind << "\n";
 
-      // Invariant: sorted_set[e.s_ind] == e.curr.value
+      if(e.s_ind == sorted_set.size()) continue;
+      stack.emplace_back(e.curr, e.s_ind+1, 0);
 
-      if (e.s_ind == sorted_set.size()) {
-        //std::cout << "e.s_ind too far\n";
-        continue;
-      }
-
-      for (int s_rev = sorted_set.size()-1; s_rev >= e.s_ind; s_rev--) {
-        //std::cout << "s_rev:" << s_rev << " (" << sorted_set[s_rev] << ")\n";
-
-        for (int c_int = 0; c_int < e.curr->children.size(); c_int++) {
-          //std::cout << "    c_int:" << c_int << " (" << e.curr->children[c_int].value << ")\n";
-          if (sorted_set[s_rev] == e.curr->children[c_int].value) {
-            if (e.curr->children[c_int].terminal) {
-              //std::cout << "        Returning true\n";
-              return true;
-            }
-            //std::cout << "        emplace_back(" << e.curr->children[c_int].value << ", " << s_rev << ")\n";
-            stack.emplace_back(&e.curr->children[c_int], s_rev);
-
+      string& val = sorted_set[e.s_ind];
+      for(; e.c_ind < e.curr->children.size(); e.c_ind++) {
+        if(e.curr->children[e.c_ind].value == val) {
+          if(e.curr->children[e.c_ind].terminal) {
+            return true;
           }
+
+          stack.emplace_back(e.curr, e.s_ind, e.c_ind+1);
+          stack.emplace_back(&e.curr->children[e.c_ind], e.s_ind+1, 0);
+          break;
         }
       }
     }
 
-    //std::cout << "Returning false\n";
-
     return false;
   }
+
+  //bool SetTrie::contains_subset(const vector<string>& set) {
+  //  return contains_subset(set, 0);
+  //}
+  //bool SetTrie::contains_subset(const vector<string>& set, int i) {
+  //  if(i == set.size()) return false;
+  //  const string& val = set[i];
+  //  bool found = false;
+  //  for(SetTrie& child : children) {
+  //    if(child.value == val) {
+  //      found = child.terminal ? true : child.contains_subset(set, i+1);
+  //      break;
+  //    }
+  //  }
+  //  return found ? true : contains_subset(set, i+1);
+  //}
 
 }
