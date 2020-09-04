@@ -75,7 +75,7 @@ public:
   Binarize subproblem_binarize = BIN_ALL;
   bool subproblem_native_shrink = false;
 
-  string subproblem_solver = "org.gecode.gecode";
+  string subproblem_solver = "gecode_presolver";
   string subproblem_solver_flags = "";
   std::chrono::duration<double> subproblem_solver_time_limit = std::chrono::seconds(1);
   bool subproblem_adapt_time_limit = false;

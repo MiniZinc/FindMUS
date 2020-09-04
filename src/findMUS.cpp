@@ -229,7 +229,9 @@ int main(int argc, char **argv) {
   if(dro.list_solvers || dro.list_solvers_json) {
     std::fstream nullstream;
     MiniZinc::MznSolver solver(nullstream, std::cout);
-    vector<string> args (1);
+    vector<string> args (3);
+    args.push_back("--stdlib-dir");
+    args.push_back(mo.mzn_stdlib_dir);
     if(dro.list_solvers) args.push_back("--solvers");
     if(dro.list_solvers_json) args.push_back("--solvers-json");
     solver.run(args);

@@ -106,7 +106,7 @@ void help_long(void) {
       << "\n"
       << " Subproblem: Solving options\n"
       << "  --solver <s>, --subsolver <s>\n"
-      << "    Use solver <s> for SAT checking. Default: \"fzn-gecode\"\n"
+      << "    Use solver <s> for SAT checking. Default: \"gecode_presolver\"\n"
       << "  --oracle-only\n"
       << "    If provided with oracle log, treat it as a full enumeration\n"
       << "  --solver-flags <f>\n"
