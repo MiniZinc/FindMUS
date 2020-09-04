@@ -23,7 +23,7 @@ include_directories("include" ${CMAKE_BINARY_DIR})
 
 # The version number.
 set (findMUS_VERSION_MAJOR 0)
-set (findMUS_VERSION_MINOR 5)
+set (findMUS_VERSION_MINOR 6)
 set (findMUS_VERSION_PATCH 0)
 
 add_library(hiermus

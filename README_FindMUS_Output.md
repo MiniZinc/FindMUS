@@ -5,10 +5,10 @@
 FznSubProblem:	hard cons: 1483	soft cons: 755	leaves: 755	branches: 889	Built tree in 0.03854 seconds.
 ```
 
-The first line describes the "Checking solver" view of the problem. It sees
-1483 "hard" (background) constraints, 755 "soft" (foreground) constraints (this
-is the set that will be searched). Branches refers to the branching points in
-the full constraint hierarchy.
+The first line describes the "Checking solver" (or subsolver) view of the
+problem. It sees 1483 "hard" (background) constraints, 755 "soft"
+(foreground) constraints (this is the set that will be searched). Branches
+refers to the branching points in the full constraint hierarchy.
 
 ```
 SubsetMap:	nleaves:	222	nbranches:	244
@@ -44,11 +44,13 @@ FznSubProblem:	Solve: 5(?:S) ncons:      109	took: 1.00410 seconds
 
 Here we see three subset checks that report different statuses.  The status
 is listed in the `Solve` field between parenthesis.  The status shows two
-values separated by a colon: `(A:B)`.  `A` here represents the result we
-received from the underlying solver.  `U` means UNSAT, `S` means SAT, `?` means
+values separated by a colon: `(A:B)`. `A` here represents the result we
+received from the underlying solver. `U` means UNSAT, `S` means SAT, `?` means
 UNKNOWN. Typically `?` is the result of a check exceeding its timelimit (This
 can be seen in the third example case where the timelimit was set to 1 second
-and the subset could not be solved in this time).
+and the subset could not be solved in this time). FindMUS treats these
+timed-out cases as SAT (this means the reported MUSes may be reducible
+further).
 
 ## Interpreting an MUS
 
@@ -84,7 +86,7 @@ and expression annotations are useful for quickly interpreting the MUSes.
 
 ```
 Traces:
-/mnt/vault/research/cglol/coreguidedlol/exploration/models/seat-moving/seat-moving-core.mzn|112|2|117|2|ca|forall;/mnt/vault/research/cglol/coreguidedlol/exploration/models/seat-moving/seat-moving-core.mzn|112|2|117|2|ac;/mnt/vault/research/cglol/coreguidedlol/exploration/models/seat-moving/seat-moving-core.mzn|112|9|112|9|i=1;/mnt/vault/research/cglol/coreguidedlol/exploration/models/seat-moving/seat-moving-core.mzn|112|31|112|31|p=1;/mnt/vault/research/cglol/coreguidedlol/exploration/models/seat-moving/seat-moving-core.mzn|113|6|116|9|bin|'->';/mnt/vault/research/cglol/coreguidedlol/exploration/models/seat-moving/seat-moving-core.mzn|113|6|116|9|ca|clause
+models/seat-moving/seat-moving-core.mzn|112|2|117|2|ca|forall;models/seat-moving/seat-moving-core.mzn|112|2|117|2|ac;models/seat-moving/seat-moving-core.mzn|112|9|112|9|i=1;models/seat-moving/seat-moving-core.mzn|112|31|112|31|p=1;models/seat-moving/seat-moving-core.mzn|113|6|116|9|bin|'->';models/seat-moving/seat-moving-core.mzn|113|6|116|9|ca|clause
 ```
 
 The `Traces` section lists the constraint paths of the constraints in the MUS.

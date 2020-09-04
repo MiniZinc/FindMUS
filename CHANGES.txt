@@ -2,11 +2,36 @@
 # findMUS Changelog #
 ======================
 
-Recent changes
+
+version 0.6.0
 ==============
+  - Change: Set default subsolver to `gecode_presolver`
+  - Change: reduced details from `--verbose-map 1` output, use `--verbose-map 2` to output contents of selections
+  - Feature: support reading fzn files that have new constraints added without changing the order of existing constraints. (solve item should be the last item in the file).\
+  - Added --no-stats option to suppress some more output
+  * Replaced Chuffed map solver with minisat
+  - Removed: Removed knownSat feature
+  - Documentation: Added description of default findMUS output
+
+  - Feature: Added qx2 algorithm
+  * Feature: Oracle mode that reads findMUS output from `.log` file and can be used to accelerate enumeration or emulate a solver (--oracle-only) for testing. For parameter tuning, enumerate all MUSes with `--structure mix` at the depth you require then run subsequent parameters with --oracle-only mode.
+
+  - Feature: Native Shrink: Initial support for handling MUSes provided by subsolver. (Disabled for now, waiting for MiniZinc release that supports `--diagnose` flag)
+
+  - Feature: `--no-leftover` option to suppress outputting current (unsat) candidate on timeout
+  - Feature: `--adapt-timelimit` option sets timelimit to 1.5x the time to prove the entire model unsat
+  - Added `-s` option to output compilation statistics.
+  * Feature: FindMUS can run on a `.fzn` that does not have a corresponding `.paths` file. Structure is automatically added by binarizing.
+  - Changed options to allow filtering to omit constraints from background AND foreground (controlled with `--filter-mode fg`, or `ex`)
+
+  - FindMUS: Added basic test suite, also added benchmarks folder with experiment models/instances
+  - HierMUS: Union expand behaviour re-introduced, seems to make more sense in practice
+  - Re-added previously removed enumeration methods (old hiermus style + ReMUS) for experiments
+  - `--frequent-stats` now outputs the number of sat calls required for shrinking (listed as `dsat`)
+
   - Temporarily added Problem::provedSAT() so the FindMUS tool can distinguish between failing to prove UNSAT and actually proving SAT
   - Added SubsetMap::knownSat(S) which can report whether there is a subset of S that is not blocked with a superset (SAT) block.
-  - Added FileSP for reading demos from a file. See the examples/cpp folder for examples.
+  - Added FileSP for reading demos from a file. See the examples/spec folder for examples. (Accessed with `--demo file <filename>.mus`)
 
 version 0.5.1
 =============
