@@ -36,7 +36,7 @@ namespace HierMUS {
   using std::set;
   using std::unordered_map;
 
-  NullSolns2Out::NullSolns2Out() : Solns2Out(nullstream, nullstream, "") {}
+  NullSolns2Out::NullSolns2Out(string stdlib_dir) : Solns2Out(nullstream, nullstream, stdlib_dir) {}
   NullSolns2Out::~NullSolns2Out() {}
   std::ostream& NullSolns2Out::getOutput() { return nullstream; }
 
@@ -155,7 +155,7 @@ namespace HierMUS {
   FznSubProblem::FznSubProblem(
       const string& fznpath, const string& pathpath,
       MUSEnumOptions& mo, const string& oraclepath = "")
-      : SubProblem(mo), last_sat{false}, shrunk{}, nameToPath{pathpath}, fzn_model{ nullptr }, oracle{ "root", false } {
+      : SubProblem(mo), s2o(mo.mzn_stdlib_dir), fzn_model{ nullptr }, oracle{ "root", false }, last_sat{false}, shrunk{}, nameToPath{pathpath} {
 
     auto start_build = std::chrono::system_clock::now();
 
@@ -404,6 +404,8 @@ namespace HierMUS {
         exit(EXIT_FAILURE);
       } catch (...) {
         std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving" << std::endl;
+        string errfilename = "FINDMUS_failed_subproblem.fzn";
+        saveFzn(b, errfilename);
         exit(EXIT_FAILURE);
       }
 

@@ -22,7 +22,7 @@ namespace HierMUS {
   class NullSolns2Out : public MiniZinc::Solns2Out {
     public:
       std::ofstream nullstream;
-      NullSolns2Out();
+      NullSolns2Out(string stdlib_dir);
       virtual ~NullSolns2Out();
       virtual std::ostream& getOutput();
   };
