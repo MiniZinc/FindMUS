@@ -60,6 +60,8 @@ void help_long(void) {
   std::cout
       << "  --paths <path>\n"
       << "    Explicit path to paths file\n"
+      << "  --oracle <path>\n"
+      << "    Explicit path to oracle ('.log') file\n"
       << "  -t <ms>\n"
       << "    Stop after <ms> seconds. Default: -1 (no timelimit)\n"
       << "  --no-leftover \n"
@@ -210,6 +212,20 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       help_short(EXIT_FAILURE);
     } else if(args[i][0] == '-' && args[i][1] == 'D') {
       dro.input_files.push_back(args[i]);
+    } else if(args[i] == "--paths") {
+      string p = args[++i];
+      if(!dro.pathpath.empty()) {
+        std::cerr << "No support for multiple paths (.paths) input files: " << p << "\n";
+        help_short(EXIT_FAILURE);
+      }
+      dro.pathpath = p;
+    } else if(args[i] == "--oracle") {
+      string p = args[++i];
+      if(!dro.oraclepath.empty()) {
+        std::cerr << "No support for multiple oracles (.log) input files: " << p << "\n";
+        help_short(EXIT_FAILURE);
+      }
+      dro.oraclepath = p;
     } else if(args[i] == "--shrink-frontier") {
       mo.map_shrink_frontier = true;
     } else if(args[i] == "--native-shrink") {
