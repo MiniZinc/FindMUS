@@ -63,7 +63,8 @@ namespace HierMUS {
     OUT_DEBUG,
     OUT_NORMAL,
     OUT_HTML,
-    OUT_JSON
+    OUT_JSON,
+    OUT_HUMAN
   };
 
   enum MusAlg { ALG_MARCO, ALG_REMUS }; // Other options have been removed
@@ -127,8 +128,10 @@ namespace HierMUS {
     std::string getSummary(SubProblemOutputFormat format);
 
   private:
-    std::string getLongSummary(void);
     std::string getShortSummary(const std::string& sep = "\n");
+    std::string getHUMANSummary(const std::string& sep = "\n");
+
+    std::string getLongSummary(void);
     std::string getJSONSummary(void);
     std::string getHTMLSummary(void);
   };

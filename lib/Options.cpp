@@ -68,10 +68,13 @@ void help_long(void) {
       << "    Do not print leftover candidate on timeout\n"
       << "  --frequent-stats\n"
       << "    Output high-level stats after each MUS (for logging)\n"
+      << "  --progress\n"
+      << "    Output progress directive for IDE showing progress towards\n"
+      << "    finding target number of MUSes. (default)\n"
       << "  --no-progress\n"
       << "    Do not output progress directive for IDE showing progress towards\n"
       << "    finding target number of MUSes.\n"
-      << "  --output-{html, json, brief}\n"
+      << "  --output-{html, json, brief, names}\n"
       << "    Output modes, html for use with MiniZincIDE, brief for testing, json\n"
       << "    for easier to parse output.\n"
       << "  --use-old-enumer\n"
@@ -248,6 +251,9 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
     } else if(args[i] ==  "--no-stats") {
       dro.output_stats = false;
       mo.output_stats = false;
+    } else if(args[i] ==  "--stats") {
+      dro.output_stats = true;
+      mo.output_stats = true;
     } else if(args[i] ==  "--structure") {
       std::string type = args[++i];
       if(type == "flat")        mo.subproblem_structure = STR_FLAT;
@@ -358,6 +364,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       dro.compile_verbose = true;
     } else if(args[i] == "-s") {
       dro.compile_stats = true;
+      dro.output_stats = true;
+      mo.output_stats = true;
     } else if(args[i] == "--domains" || args[i] ==  "-g") {
       dro.compile_domains = true;
     } else if(args[i] ==  "--verbose-enum") {
@@ -374,6 +382,8 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       mo.subproblem_output_format = OUT_HTML;
     } else if(args[i] ==  "--output-brief") {
       mo.subproblem_output_format = OUT_DEBUG;
+    } else if(args[i] ==  "--output-human") {
+      mo.subproblem_output_format = OUT_HUMAN;
     } else if(args[i] ==  "--use-old-enumer") {
       dro.use_new_enumer = false;
 #ifdef BUILD_FINDMUS_EXAMPLES

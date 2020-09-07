@@ -1,4 +1,5 @@
 #include <iostream>
+#include <map>
 
 #include "Types.h"
 #include "path_utils.h"
@@ -107,6 +108,46 @@ namespace HierMUS {
     return json.str();
   }
 
+  std::string ConstraintSet::getHUMANSummary(const string& sep) {
+
+    std::map<string, std::set<string> > names;
+
+    unsigned int remain = static_cast<unsigned int>(constraints.size());
+    for(auto& pcs : constraints) {
+      unsigned int remain_inner = static_cast<unsigned int>(pcs.second.size());
+      for(const ConstraintInfo& ci : pcs.second) {
+        string con_name = (!ci.constraint_name.empty()) ? ci.constraint_name
+                                                        : "Uncategorised";
+        std::stringstream name_ss;
+        if(!ci.expression_name.empty()) {
+          name_ss << ci.expression_name;
+        } else if(!ci.constraint_name.empty()) {
+          name_ss << ci.constraint_name;
+          if(!ci.assigns.empty()) name_ss << " ( " << ci.assigns << " )";
+        } else if(!ci.path.empty()) {
+          name_ss << utils::getPathHead(ci.path, false, false)[0];
+          if(!ci.assigns.empty()) name_ss << " ( " << ci.assigns << " )";
+        } else {
+          name_ss << ci.name << " ( " << ci.leaf_name << " )";
+        }
+
+        auto& exp_names = names[con_name];
+        exp_names.insert(name_ss.str());
+      }
+    }
+
+    std::stringstream out;
+    out << "The following constraints are incompatible:" << sep;
+    for(auto& np : names) {
+      out << " " << np.first << ":" << sep;
+      for(auto& n : np.second) {
+        out << "  - " << n << sep;
+      }
+    }
+    out << sep << std::flush;
+    return out.str();
+  }
+
   std::string ConstraintSet::getHTMLSummary(void) {
     std::stringstream ss;
     std::unordered_set<string> paths;
@@ -118,7 +159,8 @@ namespace HierMUS {
     ss << "%%%mzn-html-start\n"
        << "<div class=\"explanation\" style=\"border:1px solid black\">"
        << "<a href=\"highlight:?" << utils::join(path_vec, "&") << "\">"
-       << getShortSummary("<br/>")
+       // << getShortSummary("<br/>")
+       << getHUMANSummary("<br/>")
        << "</a></div>\n"
        << "%%%mzn-html-end\n" << std::endl;
 
@@ -135,6 +177,8 @@ namespace HierMUS {
       ss << getHTMLSummary();
     } else if(format == OUT_JSON) {
       ss << getJSONSummary();
+    } else if(format == OUT_HUMAN) {
+      ss << getHUMANSummary();
     }
 
     return ss.str();
