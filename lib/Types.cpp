@@ -118,12 +118,13 @@ namespace HierMUS {
       for(const ConstraintInfo& ci : pcs.second) {
         string con_name = (!ci.constraint_name.empty()) ? ci.constraint_name
                                                         : "Uncategorised";
+
         std::stringstream name_ss;
         if(!ci.expression_name.empty()) {
           name_ss << ci.expression_name;
-        } else if(!ci.constraint_name.empty()) {
-          name_ss << ci.constraint_name;
-          if(!ci.assigns.empty()) name_ss << " ( " << ci.assigns << " )";
+        //} else if(!ci.constraint_name.empty()) {
+        //  name_ss << ci.constraint_name;
+        //  if(!ci.assigns.empty()) name_ss << " ( " << ci.assigns << " )";
         } else if(!ci.path.empty()) {
           name_ss << utils::getPathHead(ci.path, false, false)[0];
           if(!ci.assigns.empty()) name_ss << " ( " << ci.assigns << " )";
@@ -141,7 +142,7 @@ namespace HierMUS {
     for(auto& np : names) {
       out << " " << np.first << ":" << sep;
       for(auto& n : np.second) {
-        out << "  - " << n << sep;
+        out << "  • " << n << sep;
       }
     }
     out << sep << std::flush;
