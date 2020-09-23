@@ -74,7 +74,7 @@ void help_long(void) {
       << "  --no-progress\n"
       << "    Do not output progress directive for IDE showing progress towards\n"
       << "    finding target number of MUSes.\n"
-      << "  --output-{html, json, brief, names}\n"
+      << "  --output-{html, json, brief, human}\n"
       << "    Output modes, html for use with MiniZincIDE, brief for testing, json\n"
       << "    for easier to parse output.\n"
       << "  --use-old-enumer\n"

@@ -5,6 +5,7 @@
 
 version 0.6.0
 ==============
+  - Change: Added --output-human flag to present MUSes in a more readable form
   - Change: Set default subsolver to `gecode_presolver`
   - Change: reduced details from `--verbose-map 1` output, use `--verbose-map 2` to output contents of selections
   - Feature: support reading fzn files that have new constraints added without changing the order of existing constraints. (solve item should be the last item in the file).\
