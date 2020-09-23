@@ -38,7 +38,7 @@ void help_long(void) {
       << "      hint: --structure gen --shrink-alg map_lin --depth mzn\n"
       << "      mzn: --shrink-alg map_qx --depth mzn\n"
       << "      fzn: --shrink-alg map_qx --depth fzn\n"
-      << "  -n <n>   --nmuses <n>\n"
+      << "  -n <n>   --nmuses <n>  --num-solutions\n"
       << "    Number of MUSes to find\n"
       << "  -a\n"
       << "    Find all MUSes\n"
@@ -270,7 +270,7 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       mo.subproblem_binarize = BIN_NONE;
     } else if(args[i] ==  "--restarts") {
       mo.restarts_enabled = true;
-    } else if(args[i] == "--nmuses" || args[i] ==  "-n") {
+    } else if(args[i] == "--nmuses" || args[i] ==  "-n" || args[i] == "--num-solutions") {
       dro.maxmuses = std::stoi(args[++i]);
       if(dro.maxmuses != 1) { // Disable focus mode
         mo.map_enum_focus_mode = false;
