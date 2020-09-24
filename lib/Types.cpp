@@ -125,7 +125,7 @@ namespace HierMUS {
         if(map_depth == DEPTH_INSTANCE && !ci.expression_name.empty()) {
           name_ss << ci.expression_name;
         } else if(!ci.path.empty()) {
-          string full_path_head = utils::getPathHead(ci.path, false, false)[0];
+          string full_path_head = utils::getPathHead(ci.path, map_depth == DEPTH_PROGRAM, false)[0];
           vector<string> head_parts = utils::split(full_path_head, '|');
           head_parts[0] = MiniZinc::FileUtils::base_name(head_parts[0]);
           name_ss << utils::join(head_parts,"|");
