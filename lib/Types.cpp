@@ -3,6 +3,9 @@
 
 #include "Types.h"
 #include "path_utils.h"
+#include "string_utils.h"
+
+#include <minizinc/file_utils.hh>
 
 namespace HierMUS {
 
@@ -108,8 +111,7 @@ namespace HierMUS {
     return json.str();
   }
 
-  std::string ConstraintSet::getHUMANSummary(const string& sep) {
-
+  std::string ConstraintSet::getHUMANSummary(const string& sep, MapDepth map_depth) {
     std::map<string, std::set<string> > names;
 
     unsigned int remain = static_cast<unsigned int>(constraints.size());
@@ -120,13 +122,13 @@ namespace HierMUS {
                                                         : "Uncategorised";
 
         std::stringstream name_ss;
-        if(!ci.expression_name.empty()) {
+        if(map_depth == DEPTH_INSTANCE && !ci.expression_name.empty()) {
           name_ss << ci.expression_name;
-        //} else if(!ci.constraint_name.empty()) {
-        //  name_ss << ci.constraint_name;
-        //  if(!ci.assigns.empty()) name_ss << " ( " << ci.assigns << " )";
         } else if(!ci.path.empty()) {
-          name_ss << utils::getPathHead(ci.path, false, false)[0];
+          string full_path_head = utils::getPathHead(ci.path, false, false)[0];
+          vector<string> head_parts = utils::split(full_path_head, '|');
+          head_parts[0] = MiniZinc::FileUtils::base_name(head_parts[0]);
+          name_ss << utils::join(head_parts,"|");
           if(!ci.assigns.empty()) name_ss << " ( " << ci.assigns << " )";
         } else {
           name_ss << ci.name << " ( " << ci.leaf_name << " )";
@@ -149,7 +151,7 @@ namespace HierMUS {
     return out.str();
   }
 
-  std::string ConstraintSet::getHTMLSummary(void) {
+  std::string ConstraintSet::getHTMLSummary(MapDepth map_depth) {
     std::stringstream ss;
     std::unordered_set<string> paths;
     for(auto& ps : constraints) {
@@ -161,25 +163,26 @@ namespace HierMUS {
        << "<div class=\"explanation\" style=\"border:1px solid black\">"
        << "<a href=\"highlight:?" << utils::join(path_vec, "&") << "\">"
        // << getShortSummary("<br/>")
-       << getHUMANSummary("<br/>")
+       << getHUMANSummary("<br/>", map_depth)
        << "</a></div>\n"
        << "%%%mzn-html-end\n" << std::endl;
 
     return ss.str();
   }
 
-  std::string ConstraintSet::getSummary(SubProblemOutputFormat format) {
+  std::string ConstraintSet::getSummary(SubProblemOutputFormat format,
+                                        MapDepth map_depth) {
     std::stringstream ss;
     if(format == OUT_NORMAL) {
       ss << getLongSummary();
     } else if(format == OUT_DEBUG) {
       ss << getShortSummary();
     } else if(format == OUT_HTML) {
-      ss << getHTMLSummary();
+      ss << getHTMLSummary(map_depth);
     } else if(format == OUT_JSON) {
       ss << getJSONSummary();
     } else if(format == OUT_HUMAN) {
-      ss << getHUMANSummary();
+      ss << getHUMANSummary("\n", map_depth);
     }
 
     return ss.str();

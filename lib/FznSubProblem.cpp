@@ -491,6 +491,6 @@ namespace HierMUS {
 
   void FznSubProblem::printSol(const Selection& b) {
     ConstraintSet cs = getConstraintSet(b);
-    std::cout << cs.getSummary(mopts.subproblem_output_format);
+    std::cout << cs.getSummary(mopts.subproblem_output_format, mopts.map_depth);
   }
 }

@@ -125,15 +125,15 @@ namespace HierMUS {
     ConstraintSet();
     void addConstraintInfo(const std::string& path, const ConstraintInfo& ci);
 
-    std::string getSummary(SubProblemOutputFormat format);
+    std::string getSummary(SubProblemOutputFormat format, MapDepth map_depth = DEPTH_INSTANCE);
 
   private:
     std::string getShortSummary(const std::string& sep = "\n");
-    std::string getHUMANSummary(const std::string& sep = "\n");
+    std::string getHUMANSummary(const std::string& sep = "\n", MapDepth map_depth = DEPTH_INSTANCE);
 
     std::string getLongSummary(void);
     std::string getJSONSummary(void);
-    std::string getHTMLSummary(void);
+    std::string getHTMLSummary(MapDepth map_depth = DEPTH_INSTANCE);
   };
 
   struct ShrunkSet {
