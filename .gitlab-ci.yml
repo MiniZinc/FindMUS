@@ -66,9 +66,7 @@ build:win64:
 
 trigger:ide:
   stage: trigger
-  image: dekker1/minibuild:package
-  script:
-  - "curl --request POST --form token=$TRIGGER --form ref=develop https://gitlab.com/api/v4/projects/minizinc%2Fminizinc-ide/trigger/pipeline"
-  dependencies: []
-  tags: [linux, docker]
-  only: [master]
+  trigger:
+    project: minizinc/MiniZincIDE
+    branch: develop
+  only: [develop]
