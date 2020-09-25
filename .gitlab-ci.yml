@@ -67,6 +67,6 @@ build:win64:
 trigger:ide:
   stage: trigger
   trigger:
-    project: minizinc/MiniZincIDE
+    project: minizinc/minizinc-ide
     branch: develop
   only: [develop]
