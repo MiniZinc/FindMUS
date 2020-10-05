@@ -7,21 +7,13 @@ stages:
 
 .build:
   stage: build
-  variables:
-    # Vendor solver locations
-    Gecode_ROOT: "$CI_PROJECT_DIR/vendor/gecode"
-    Gurobi_ROOT: "$CI_PROJECT_DIR/vendor/gurobi"
-    CPlex_ROOT: "$CI_PROJECT_DIR/vendor/CPLEX_Studio/cplex"
-    OsiCBC_ROOT: "$CI_PROJECT_DIR/vendor/cbc"
-    SCIP_ROOT: "$CI_PROJECT_DIR/vendor/scip"
-    Xpress_ROOT: "$CI_PROJECT_DIR/vendor/xpressmp"
   before_script: *download_script
   script:
     - sh download.sh vendor master vendor:${MZNARCH} vendor.zip
     - unzip -q vendor.zip
     - sh download.sh minizinc develop build:${MZNARCH} minizinc.zip
     - unzip -q minizinc.zip
-    - cmake -S . -B build -G"$CMAKE_ARCH" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$CI_PROJECT_DIR/minizinc/$CMAKEDIR -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
+    - cmake -S . -B build -G"$CMAKE_ARCH" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$CI_PROJECT_DIR/minizinc/$CMAKEDIR -DGecode_ROOT="$CI_PROJECT_DIR/vendor/gecode" -DGurobi_ROOT="$CI_PROJECT_DIR/vendor/gurobi" -DCPlex_ROOT="$CI_PROJECT_DIR/vendor/CPLEX_Studio/cplex" -DOsiCBC_ROOT="$CI_PROJECT_DIR/vendor/cbc" -DSCIP_ROOT="$CI_PROJECT_DIR/vendor/scip" -DXpress_ROOT="$CI_PROJECT_DIR/vendor/xpressmp" -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS" 
     - cmake --build build --config Release --target install
   artifacts:
     paths:
@@ -61,7 +53,7 @@ build:win64:
     - unzip -q vendor.zip
     - sh download.sh minizinc develop build:%MZNARCH% minizinc.zip
     - unzip -q minizinc.zip
-    - cmake -S . -B build -G"%CMAKE_ARCH%" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%"  -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"
+    - cmake -S . -B build -G"%CMAKE_ARCH%" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%" -DGecode_ROOT="%CI_PROJECT_DIR%/vendor/gecode" -DGurobi_ROOT="%CI_PROJECT_DIR%/vendor/gurobi" -DCPlex_ROOT="%CI_PROJECT_DIR%/vendor/CPLEX_Studio/cplex" -DOsiCBC_ROOT="%CI_PROJECT_DIR%/vendor/cbc" -DSCIP_ROOT="%CI_PROJECT_DIR%/vendor/scip" -DXpress_ROOT="%CI_PROJECT_DIR%/vendor/xpressmp" -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"
     - cmake --build build --config Release --target install
   tags: [win64, cmake, cpp]
 
