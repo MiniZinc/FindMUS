@@ -2,34 +2,36 @@ stages:
   - build
   - trigger
 
-variables:
-  # Vendor solver locations
-  Gecode_ROOT: "$CI_PROJECT_DIR/vendor/gecode"
-  Gurobi_ROOT: "$CI_PROJECT_DIR/vendor/gurobi"
-  CPlex_ROOT: "$CI_PROJECT_DIR/vendor/CPLEX_Studio"
-  OsiCBC_ROOT: "$CI_PROJECT_DIR/vendor/cbc"
+.download_script: &download_script
+  - curl --location --header "PRIVATE-TOKEN:$ACCESS_TOKEN" --silent https://gitlab.com/api/v4/snippets/1796163/raw | tr -d '\r' > download.sh
 
-.build_template: &build_definition
+.build:
   stage: build
+  variables:
+    # Vendor solver locations
+    Gecode_ROOT: "$CI_PROJECT_DIR/vendor/gecode"
+    Gurobi_ROOT: "$CI_PROJECT_DIR/vendor/gurobi"
+    CPlex_ROOT: "$CI_PROJECT_DIR/vendor/CPLEX_Studio/cplex"
+    OsiCBC_ROOT: "$CI_PROJECT_DIR/vendor/cbc"
+    SCIP_ROOT: "$CI_PROJECT_DIR/vendor/scip"
+    Xpress_ROOT: "$CI_PROJECT_DIR/vendor/xpressmp"
+  before_script: *download_script
   script:
-    - curl --silent -o vendor.zip --location --header "PRIVATE-TOKEN:$ACCESS_TOKEN" "https://gitlab.com/api/v4/projects/minizinc%2Fvendor/jobs/artifacts/master/download?job=vendor:$MZNARCH"
+    - sh download.sh vendor master vendor:${MZNARCH} vendor.zip
     - unzip -q vendor.zip
-    - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:$ACCESS_TOKEN" "https://gitlab.com/api/v4/projects/minizinc%2Fminizinc/jobs/artifacts/develop/download?job=build:$MZNARCH"
+    - sh download.sh minizinc develop build:${MZNARCH} minizinc.zip
     - unzip -q minizinc.zip
-    - rm -rf build
-    - mkdir -p build
-    - cd build
-    - echo $Gecode_ROOT
-    - cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -G"$CMAKE_ARCH" -v .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$PWD/../minizinc/$CMAKEDIR -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
-    - cmake --build .  --config Release
-    - cmake --build .  --config Release --target install
+    - cmake -S . -B build -G"$CMAKE_ARCH" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$CI_PROJECT_DIR/minizinc/$CMAKEDIR -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
+    - cmake --build build --config Release --target install
   artifacts:
     paths:
       - findMUS/
-
+  cache:
+    key: "$CI_JOB_NAME"
+    paths: [minizinc.zip*, vendor.zip*]
 
 build:linux:
-  <<: *build_definition
+  extends: .build
   image: dekker1/minibuild:cpp
   variables:
     MZNARCH: "linux"
@@ -38,7 +40,7 @@ build:linux:
   tags: [linux, docker]
 
 build:osx:
-  <<: *build_definition
+  extends: .build
   variables:
     MZNARCH: "osx"
     CMAKE_ARCH: "Ninja"
@@ -46,21 +48,21 @@ build:osx:
   tags: [osx, cmake, cpp]
 
 build:win64:
-  <<: *build_definition
+  extends: .build
   variables:
     MZNARCH: "win64"
     CMAKEDIR: "CMake/libminizinc"
     CMAKE_ARCH: "Visual Studio 15 2017 Win64"
+  before_script:
+    - curl -o download.sh --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" --silent https://gitlab.com/api/v4/snippets/1796163/raw
+    - dos2unix download.sh
   script:
-    - curl --silent -o vendor.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fvendor/jobs/artifacts/master/download?job=vendor:%MZNARCH%"
+    - sh download.sh vendor master vendor:%MZNARCH% vendor.zip
     - unzip -q vendor.zip
-    - curl --silent -o minizinc.zip --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" "https://gitlab.com/api/v4/projects/minizinc%%2Fminizinc/jobs/artifacts/develop/download?job=build:%MZNARCH%"
+    - sh download.sh minizinc develop build:%MZNARCH% minizinc.zip
     - unzip -q minizinc.zip
-    - if not exist "build" mkdir build
-    - cd build
-    - cmake -G"%CMAKE_ARCH%" .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%"  -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"
-    - cmake --build .  --config Release
-    - cmake --build .  --config Release --target install
+    - cmake -S . -B build -G"%CMAKE_ARCH%" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR="%CI_PROJECT_DIR%/minizinc/%CMAKEDIR%"  -DCMAKE_INSTALL_PREFIX="%CI_PROJECT_DIR%/findMUS"
+    - cmake --build build --config Release --target install
   tags: [win64, cmake, cpp]
 
 # ----------- Trigger MiniZincIDE pipeline -----------
