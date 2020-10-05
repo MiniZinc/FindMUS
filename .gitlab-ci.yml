@@ -19,6 +19,7 @@ variables:
     - rm -rf build
     - mkdir -p build
     - cd build
+    - echo $Gecode_ROOT
     - cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -G"$CMAKE_ARCH" -v .. -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$PWD/../minizinc/$CMAKEDIR -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
     - cmake --build .  --config Release
     - cmake --build .  --config Release --target install

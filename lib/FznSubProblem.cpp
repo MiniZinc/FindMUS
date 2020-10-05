@@ -62,9 +62,9 @@ namespace HierMUS {
 
   inline ConNames getNames(const MiniZinc::ConstraintI& ci) {
     ConNames names;
-    MiniZinc::Expression* cn = MiniZinc::getAnnotation(ci.e()->ann(), "mzn_constraint_name");
+    MiniZinc::Expression* cn = MiniZinc::get_annotation(ci.e()->ann(), "mzn_constraint_name");
     if(cn) names.cons_name = cn->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().c_str();
-    MiniZinc::Expression* en = MiniZinc::getAnnotation(ci.e()->ann(), "mzn_expression_name");
+    MiniZinc::Expression* en = MiniZinc::get_annotation(ci.e()->ann(), "mzn_expression_name");
     if(en) names.expr_name = en->cast<MiniZinc::Call>()->arg(0)->cast<MiniZinc::StringLit>()->v().c_str();
     return names;
   }
@@ -145,9 +145,9 @@ namespace HierMUS {
       exit(EXIT_FAILURE);
     }
 
-    MiniZinc::registerBuiltins(fzn_env);
+    MiniZinc::register_builtins(fzn_env);
     fzn_env.swap();
-    MiniZinc::populateOutput(fzn_env);
+    MiniZinc::populate_output(fzn_env);
     fzn_env.model(fzn_model);
     s2o.initFromEnv(&fzn_env);
   }
@@ -182,8 +182,7 @@ namespace HierMUS {
 
     vector<string> background_cons;
 
-    for(auto cit = fzn_model->begin_constraints(); cit != fzn_model->end_constraints(); ++cit) {
-      MiniZinc::ConstraintI& ci = *cit;
+    for(auto& ci : fzn_model->constraints()) {
       string name = nameToPath.getName(con_id);
       bool background = isBackgroundConstraint(ci, name);
       if(n_cons <= con_id || isBackgroundConstraint(ci, name)) {
@@ -351,7 +350,7 @@ namespace HierMUS {
       solverModelMapping.clear();
 
       for(size_t i=0; i<fzn_model->size(); i++) {
-        if(MiniZinc::ConstraintI* ci = (*fzn_model)[i]->dyn_cast<MiniZinc::ConstraintI>()) {
+        if(MiniZinc::ConstraintI* ci = (*fzn_model)[i]->dynamicCast<MiniZinc::ConstraintI>()) {
           if(!ci->removed()) {
             // Constraint is part of background
             solver_con_id++;
@@ -379,7 +378,7 @@ namespace HierMUS {
       }
 
       MiniZinc::SolverFactory* sf = solver.getSF();
-      MiniZinc::SolverInstanceBase* si = sf->createSI(fzn_env, log, solver.getSI_OPT());
+      MiniZinc::SolverInstanceBase* si = sf->createSI(fzn_env, log, solver.getSIOptions());
       si->setSolns2Out(&s2o);
       si->processFlatZinc();
 
@@ -464,22 +463,19 @@ namespace HierMUS {
     f.open(filename);
     if(f.is_open()) {
       MiniZinc::Printer p(f, 0, true);
-      for (MiniZinc::FunctionIterator it = fzn_model->begin_functions(); it != fzn_model->end_functions(); ++it) {
-        if(!it->removed()) {
-          MiniZinc::Item& item = *it;
-          p.print(&item);
+      for (auto& it : fzn_model->functions()) {
+        if(!it.removed()) {
+          p.print(&it);
         }
       }
-      for (MiniZinc::VarDeclIterator it = fzn_model->begin_vardecls(); it != fzn_model->end_vardecls(); ++it) {
-        if(!it->removed()) {
-          MiniZinc::Item& item = *it;
-          p.print(&item);
+      for (auto& it : fzn_model->vardecls()) {
+        if(!it.removed()) {
+          p.print(&it);
         }
       }
-      for (MiniZinc::ConstraintIterator it = fzn_model->begin_constraints(); it != fzn_model->end_constraints(); ++it) {
-        if(!it->removed()) {
-          MiniZinc::Item& item = *it;
-          p.print(&item);
+      for (auto& it : fzn_model->constraints()) {
+        if(!it.removed()) {
+          p.print(&it);
         }
       }
       p.print(fzn_model->solveItem());
