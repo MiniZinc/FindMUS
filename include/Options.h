@@ -74,6 +74,8 @@ public:
   InitialStructure subproblem_structure = STR_NORMAL;
   Binarize subproblem_binarize = BIN_ALL;
   bool subproblem_native_shrink = false;
+  bool subproblem_native_shrink_ignore_min = false;
+  bool subproblem_dump_timeouts = false;
 
   string subproblem_solver = "gecode_presolver";
   string subproblem_solver_flags = "";

@@ -6,6 +6,7 @@ if(POLICY CMP0074)
 endif(POLICY CMP0074)
 
 option(BUILD_FINDMUS_EXAMPLES "Build set of cpp example SubProblems" OFF)
+option(MZN_SUPPORTS_SHRINK "Indicate that minizinc supports native shrink" OFF)
 
 message("-- Configuring: C++ options")
 include(cmake-helpers/configure_cpp_11.cmake)
@@ -69,6 +70,9 @@ target_link_libraries(hiermus minisat-lib-static)
 if(libminizinc_FOUND)
     add_executable(findMUS src/findMUS.cpp)
     target_link_libraries(findMUS hiermus mzn ${CMAKE_THREAD_LIBS_INIT})
+    if(MZN_SUPPORTS_SHRINK)
+      add_compile_definitions(MZN_SUPPORTS_SHRINK)
+    endif()
 
     if(BUILD_FINDMUS_EXAMPLES)
       target_include_directories(findMUS PRIVATE examples/cpp)

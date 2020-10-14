@@ -72,15 +72,14 @@ namespace HierMUS {
   bool FznSubProblem::isFilteredIn(const MiniZinc::ConstraintI& ci, const string& name) {
     ConNames names = getNames(ci);
 
-    if(!mopts.subproblem_name_filters.empty() && mopts.subproblem_name_filters[0] == "*") {
-      return !(names.cons_name.empty() && names.expr_name.empty());
-    }
-
     if(!mopts.subproblem_name_filters.empty() || !mopts.subproblem_name_filters_excludes.empty()) {
       for(const string& exclude_string: mopts.subproblem_name_filters_excludes) {
         if(names.cons_name.find(exclude_string) != string::npos ||
            names.expr_name.find(exclude_string) != string::npos)
           return false;
+      }
+      if(!mopts.subproblem_name_filters.empty() && mopts.subproblem_name_filters[0] == "*") {
+        return !(names.cons_name.empty() && names.expr_name.empty());
       }
       for(const string& include_string: mopts.subproblem_name_filters) {
         if(names.cons_name.find(include_string) != string::npos ||
@@ -151,6 +150,7 @@ namespace HierMUS {
     fzn_env.model(fzn_model);
     s2o.initFromEnv(&fzn_env);
   }
+
 
   FznSubProblem::FznSubProblem(
       const string& fznpath, const string& pathpath,
@@ -309,6 +309,9 @@ namespace HierMUS {
       s = oracle.contains_subset(leaves_vec) ? MiniZinc::SolverInstance::UNSAT : MiniZinc::SolverInstance::SAT;
     }
 
+    MiniZinc::SolverFactory* sf = nullptr;
+    MiniZinc::SolverInstanceBase* si = nullptr;
+
     if(!mopts.oracle_only && s != MiniZinc::SolverInstance::UNSAT) {
       // Build solver
       MiniZinc::MznSolver solver(nullstream, log);
@@ -349,7 +352,7 @@ namespace HierMUS {
 
       solverModelMapping.clear();
 
-      for(size_t i=0; i<fzn_model->size(); i++) {
+      for(unsigned int i=0; i<fzn_model->size(); i++) {
         if(MiniZinc::ConstraintI* ci = (*fzn_model)[i]->dynamicCast<MiniZinc::ConstraintI>()) {
           if(!ci->removed()) {
             // Constraint is part of background
@@ -377,8 +380,8 @@ namespace HierMUS {
           exit(EXIT_FAILURE);
       }
 
-      MiniZinc::SolverFactory* sf = solver.getSF();
-      MiniZinc::SolverInstanceBase* si = sf->createSI(fzn_env, log, solver.getSIOptions());
+      sf = solver.getSF();
+      si = sf->createSI(fzn_env, log, solver.getSIOptions());
       si->setSolns2Out(&s2o);
       si->processFlatZinc();
 
@@ -393,6 +396,7 @@ namespace HierMUS {
           }
         }
 #endif
+        sf->destroySI(si);
       } catch (const MiniZinc::InternalError& err) {
         std::cerr << "FznSubproblem:\tException during sub-solving: "
                   << err.msg() << ": " << err.what() << std::endl;
@@ -415,11 +419,12 @@ namespace HierMUS {
         exit(EXIT_FAILURE);
       }
 
-      sf->destroySI(si);
     }
 
     static int unsat_c = 0;
+    static int timeout_count = 0;
     string res;
+
     bool is_sat = s != MiniZinc::SolverInstance::UNSAT;
     last_sat = false;
     if (s == MiniZinc::SolverInstance::SAT || s == MiniZinc::SolverInstance::OPT) {
@@ -434,6 +439,12 @@ namespace HierMUS {
       saveFzn(b, errfilename);
     } else {
       res = "?";
+      if(mopts.subproblem_dump_timeouts) {
+        stringstream timeout_filename;
+        timeout_filename << "FINDMUS_timeout_" << timeout_count++ << ".fzn";
+        std::cout << "FznSubproblem:\tDumping timed out flatzinc\n";
+        saveFzn(b, timeout_filename.str());
+      }
     }
 
     if(mopts.verbose_subsolve) {

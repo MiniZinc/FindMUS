@@ -295,6 +295,9 @@ int main(int argc, char **argv) {
     std::cout << "Note: Generalising model structure (stripping instance specific info). "
       << "Use \"--paramset mzn\" for more precise output" << std::endl;
   }
+  if(mo.subproblem_native_shrink && mo.map_depth != DEPTH_PROGRAM) {
+    std::cout << "Note: Native shrink called without fzn depth. This may not work as expected" << std::endl;
+  }
 
   FindMUSState::run(dro, mo, *me);
 

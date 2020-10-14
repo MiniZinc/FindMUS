@@ -123,6 +123,10 @@ void help_long(void) {
       << "    Hard time limit for solver in milliseconds. Default: 1000\n"
       << "  --native-shrink\n"
       << "    Request unsat sets from the subsolver (--diagnose must be supported by solver)\n"
+      << "  --native-shrink-ignore-min\n"
+      << "    Treat MUS from solver as possible MUS regardless of solver's reporting\n"
+      << "  --dump-timeouts\n"
+      << "     Write timed out FlatZinc files (FINDMUS_timeout_<n>.fzn)\n"
       << "  Subproblem filtering options:\n"
       << "   --soft-defines\n"
       << "     Consider functional constraints as part of MUSes\n"
@@ -233,6 +237,10 @@ void parse(DriverOptions& dro, MUSEnumOptions& mo, const std::vector<std::string
       mo.map_shrink_frontier = true;
     } else if(args[i] == "--native-shrink") {
       mo.subproblem_native_shrink = true;
+    } else if(args[i] == "--dump-timeouts") {
+      mo.subproblem_dump_timeouts = true;
+    } else if(args[i] == "--native-shrink-ignore-min") {
+      mo.subproblem_native_shrink_ignore_min = true;
     } else if(args[i] == "--shrink-alg") {
       std::string alg = args[++i];
       if(alg == "lin")          mo.map_shrink_alg = SH_LIN;
