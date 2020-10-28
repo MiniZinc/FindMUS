@@ -6,25 +6,24 @@
 #include "MusEnumerator.h"
 
 namespace HierMUS {
-  class HierMUSEnumer : public MusEnumerator {
-    private:
-      Selection unsatUnion;
-      std::vector<Selection> candidates;
-      MusEnumerator* inner_enum;
+class HierMUSEnumer : public MusEnumerator {
+private:
+  Selection unsatUnion;
+  std::vector<Selection> candidates;
+  MusEnumerator *inner_enum;
 
-      void loadNextCandidate(void);
-      int frontier_idx;
+  void loadNextCandidate(void);
+  int frontier_idx;
 
-    public:
-      HierMUSEnumer(SubProblem& p, MUSEnumOptions& mo);
-      ~HierMUSEnumer();
+public:
+  HierMUSEnumer(SubProblem &p, MUSEnumOptions &mo);
+  ~HierMUSEnumer();
 
-      void setFrontier(const Selection& f);
-      bool search(void);
-      void printMUS(void);
-      Statistics& getStatistics(void);
-  };
-}
+  void setFrontier(const Selection &f);
+  bool search(void);
+  void printMUS(void);
+  Statistics &getStatistics(void);
+};
+} // namespace HierMUS
 
 #endif
-

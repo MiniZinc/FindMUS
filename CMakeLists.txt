@@ -100,3 +100,7 @@ if(libminizinc_FOUND)
 else()
     message("Error: Could not find MiniZinc library. findMUS cannot be compiled. Install libminizinc from source and set CMAKE_PREFIX_PATH or libminizinc_DIR.")
 endif()
+
+# -------------------------------------------------------------------------------------------------------------------
+#  -- Support Actions
+include(cmake-helpers/format.cmake)

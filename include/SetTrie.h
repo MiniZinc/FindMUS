@@ -6,18 +6,18 @@
 
 namespace HierMUS {
 
-  class SetTrie {
-    public:
-      std::string value;
-      std::vector<SetTrie> children;
-      bool terminal;
+class SetTrie {
+public:
+  std::string value;
+  std::vector<SetTrie> children;
+  bool terminal;
 
-      SetTrie(std::string v, bool t) : value{v}, terminal{t} {}
+  SetTrie(std::string v, bool t) : value{v}, terminal{t} {}
 
-      void add_set(const std::vector<std::string>& set);
-      bool contains_subset(const std::vector<std::string>& set);
-  };
+  void add_set(const std::vector<std::string> &set);
+  bool contains_subset(const std::vector<std::string> &set);
+};
 
-}
+} // namespace HierMUS
 
 #endif

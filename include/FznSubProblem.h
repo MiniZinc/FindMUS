@@ -1,73 +1,76 @@
 #ifndef __HIERMUS_FZNPROBLEM_H_
 #define __HIERMUS_FZNPROBLEM_H_
 
+#include "NamePathMap.h"
 #include "SetTrie.h"
 #include "SubProblem.h"
-#include "NamePathMap.h"
 #include "Types.h"
 #include "path_utils.h"
 
 #include <fstream>
-#include <string>
 #include <sstream>
-#include <vector>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <minizinc/model.hh>
-#include <minizinc/solver.hh>
 #include <minizinc/solns2out.hh>
+#include <minizinc/solver.hh>
 
 namespace HierMUS {
-  
-  class NullSolns2Out : public MiniZinc::Solns2Out {
-    public:
-      std::ofstream nullstream;
-      NullSolns2Out(string stdlib_dir);
-      virtual ~NullSolns2Out();
-      virtual std::ostream& getOutput();
-  };
 
-  class FznSubProblem : public SubProblem {
-    private:
-      std::ofstream nullstream;
-      std::stringstream log;
+class NullSolns2Out : public MiniZinc::Solns2Out {
+public:
+  std::ofstream nullstream;
+  NullSolns2Out(string stdlib_dir);
+  virtual ~NullSolns2Out();
+  virtual std::ostream &getOutput();
+};
 
-      NullSolns2Out s2o;
+class FznSubProblem : public SubProblem {
+private:
+  std::ofstream nullstream;
+  std::stringstream log;
 
-      MiniZinc::Env fzn_env;
-      MiniZinc::Model* fzn_model;
+  NullSolns2Out s2o;
 
-      SetTrie oracle;
+  MiniZinc::Env fzn_env;
+  MiniZinc::Model *fzn_model;
 
-      bool last_sat;
-      ShrunkSet shrunk;
+  SetTrie oracle;
 
-      std::unordered_map<std::string, MiniZinc::ConstraintI*> constraints;
-      NamePathMap nameToPath;
-      std::unordered_map<int, std::string> solverModelMapping;
+  bool last_sat;
+  ShrunkSet shrunk;
 
-      void init_fzn_model(const string& fznpath);
-      void init_oracle_model(const string& oraclepath, int ncons, vector<string>& background_cons);
-      ConstraintSet getConstraintSet(const Selection& b);
-      bool isBackgroundConstraint(const MiniZinc::ConstraintI& ci, const string& name);
-      bool isFilteredIn(const MiniZinc::ConstraintI& ci, const string& name);
-      void saveFzn(const Selection& b, const string& filename);
+  std::unordered_map<std::string, MiniZinc::ConstraintI *> constraints;
+  NamePathMap nameToPath;
+  std::unordered_map<int, std::string> solverModelMapping;
 
-    public:
-      FznSubProblem(const std::string& fznpath, const std::string& pathpath, MUSEnumOptions& mo, const std::string& oraclepath);
-      ~FznSubProblem() { delete fzn_model; }
+  void init_fzn_model(const string &fznpath);
+  void init_oracle_model(const string &oraclepath, int ncons,
+                         vector<string> &background_cons);
+  ConstraintSet getConstraintSet(const Selection &b);
+  bool isBackgroundConstraint(const MiniZinc::ConstraintI &ci,
+                              const string &name);
+  bool isFilteredIn(const MiniZinc::ConstraintI &ci, const string &name);
+  void saveFzn(const Selection &b, const string &filename);
 
-      void printSol(const Selection& b);
-      void printLongSol(const Selection& b);
-      void printHtml(const Selection& b);
+public:
+  FznSubProblem(const std::string &fznpath, const std::string &pathpath,
+                MUSEnumOptions &mo, const std::string &oraclepath);
+  ~FznSubProblem() { delete fzn_model; }
 
-      bool check(const Selection& b);
+  void printSol(const Selection &b);
+  void printLongSol(const Selection &b);
+  void printHtml(const Selection &b);
 
-      void setShrunk(const std::vector<int>&, bool min);
-      ShrunkSet getShrunk();
+  bool check(const Selection &b);
 
-      bool provedSAT();
-  };
-}
+  void setShrunk(const std::vector<int> &, bool min);
+  ShrunkSet getShrunk();
+
+  bool provedSAT();
+};
+} // namespace HierMUS
 
 #endif

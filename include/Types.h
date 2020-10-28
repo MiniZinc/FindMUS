@@ -1,10 +1,10 @@
 #ifndef __HIERMUS_TYPES_H_
 #define __HIERMUS_TYPES_H_
 
+#include <chrono>
 #include <set>
 #include <string>
 #include <unordered_map>
-#include <chrono>
 
 #include "Node.h"
 #include "Selection.h"
@@ -13,135 +13,137 @@
 
 namespace HierMUS {
 
-  struct Statistics {
+struct Statistics {
 
-    std::chrono::time_point<std::chrono::system_clock> start_time;
-    std::chrono::time_point<std::chrono::system_clock> last_time;
+  std::chrono::time_point<std::chrono::system_clock> start_time;
+  std::chrono::time_point<std::chrono::system_clock> last_time;
 
-    int sat_calls = 0;
-    int map_calls = 0;
+  int sat_calls = 0;
+  int map_calls = 0;
 
-    counts treecounts;
+  counts treecounts;
 
-    int local_sat_chain_limit = 0;
-    int local_sat_chain = 0;
-    bool should_restart = false;
-    bool restarts_enabled = false;
+  int local_sat_chain_limit = 0;
+  int local_sat_chain = 0;
+  bool should_restart = false;
+  bool restarts_enabled = false;
 
-    int nmuses = 0;
+  int nmuses = 0;
 
-    Statistics() : start_time{std::chrono::system_clock::now()}, last_time{start_time} {}
+  Statistics()
+      : start_time{std::chrono::system_clock::now()}, last_time{start_time} {}
 
-    inline void addCounts(counts& tc) {
-      treecounts = tc;
-      local_sat_chain_limit = treecounts.nleaves/2;
-    }
+  inline void addCounts(counts &tc) {
+    treecounts = tc;
+    local_sat_chain_limit = treecounts.nleaves / 2;
+  }
 
-    inline void madeSatCheck(void) { sat_calls++; }
-    inline void madeMapCall(void) { map_calls++; }
+  inline void madeSatCheck(void) { sat_calls++; }
+  inline void madeMapCall(void) { map_calls++; }
 
-    inline void foundSatSet(void) {
-      local_sat_chain++;
-      if(restarts_enabled && shouldRestart())
-        should_restart = true;
-    }
+  inline void foundSatSet(void) {
+    local_sat_chain++;
+    if (restarts_enabled && shouldRestart())
+      should_restart = true;
+  }
 
-    inline void foundUnSatSet(void) { local_sat_chain = 0; }
+  inline void foundUnSatSet(void) { local_sat_chain = 0; }
 
-    inline bool shouldRestart(void) const {
-      if(!restarts_enabled) return false;
-      if(should_restart) return true;
-      if(local_sat_chain_limit == 0) return local_sat_chain > local_sat_chain_limit;
+  inline bool shouldRestart(void) const {
+    if (!restarts_enabled)
       return false;
-    }
+    if (should_restart)
+      return true;
+    if (local_sat_chain_limit == 0)
+      return local_sat_chain > local_sat_chain_limit;
+    return false;
+  }
+};
 
+std::ostream &operator<<(std::ostream &os, Statistics const &a);
+
+enum SubProblemOutputFormat {
+  OUT_DEBUG,
+  OUT_NORMAL,
+  OUT_HTML,
+  OUT_JSON,
+  OUT_HUMAN
+};
+
+enum MusAlg { ALG_MARCO, ALG_REMUS }; // Other options have been removed
+
+enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_QX2, SH_MAP_QX };
+
+enum InitialStructure {
+  STR_FLAT,    // Remove all structure
+  STR_NORMAL,  // Leave the structure as is
+  STR_GEN,     // Remove instance specific structure (loop iterations etc...)
+  STR_GEN_MIX, // Place normal structure below generalized model structure
+  STR_IDX,     // Remove location information
+  STR_IDX_MIX  // Remove location information, include original path afterwards
+};
+
+enum Binarize {
+  BIN_NONE,
+  BIN_ALL // Force entire tree to be binary (use with --flat-structure to remove
+          // all original instance structure)
+};
+
+enum MapDepth {
+  DEPTH_INSTANCE, // Don't leave the user's .mzn file
+  DEPTH_PROGRAM,  // Search to the leaves of the subproblem
+  DEPTH_CUSTOM    // Search to a user-specified depth
+};
+
+enum FilterMode { FILTER_FOREGROUND, FILTER_EXCLUSIVE };
+
+struct UnsatSet {
+  struct Constraint {
+    std::vector<int> indices;
+    std::vector<std::string> paths;
+    std::vector<std::string> constraint_names;
+    std::vector<std::string> expression_names;
   };
+  std::vector<Constraint> constraints;
+};
 
-  std::ostream& operator<<(std::ostream& os, Statistics const& a);
+struct ConstraintInfo {
+  std::string leaf_name;
+  std::string name;
+  std::string assigns;
+  std::string path;
+  std::string expression_name;
+  std::string constraint_name;
 
-  enum SubProblemOutputFormat {
-    OUT_DEBUG,
-    OUT_NORMAL,
-    OUT_HTML,
-    OUT_JSON,
-    OUT_HUMAN
-  };
+  void setAnnotatedNamesFrom(const MiniZinc::ConstraintI *ci);
+};
 
-  enum MusAlg { ALG_MARCO, ALG_REMUS }; // Other options have been removed
+class ConstraintSet {
+public:
+  std::unordered_map<std::string, std::vector<ConstraintInfo>> constraints;
 
-  enum ShrinkAlg { SH_LIN, SH_MAP_LIN, SH_QX, SH_QX2, SH_MAP_QX };
+  ConstraintSet();
+  void addConstraintInfo(const std::string &path, const ConstraintInfo &ci);
 
-  enum InitialStructure {
-    STR_FLAT,    // Remove all structure
-    STR_NORMAL,  // Leave the structure as is
-    STR_GEN,     // Remove instance specific structure (loop iterations etc...)
-    STR_GEN_MIX, // Place normal structure below generalized model structure
-    STR_IDX,     // Remove location information
-    STR_IDX_MIX  // Remove location information, include original path afterwards
-  };
+  std::string getSummary(SubProblemOutputFormat format,
+                         MapDepth map_depth = DEPTH_INSTANCE);
 
-  enum Binarize {
-    BIN_NONE,
-    BIN_ALL   // Force entire tree to be binary (use with --flat-structure to remove all original instance structure)
-  };
+private:
+  std::string getShortSummary(const std::string &sep = "\n");
+  std::string getHUMANSummary(const std::string &sep = "\n",
+                              MapDepth map_depth = DEPTH_INSTANCE);
 
-  enum MapDepth { 
-    DEPTH_INSTANCE, // Don't leave the user's .mzn file
-    DEPTH_PROGRAM,  // Search to the leaves of the subproblem
-    DEPTH_CUSTOM    // Search to a user-specified depth
-  };
+  std::string getLongSummary(void);
+  std::string getJSONSummary(void);
+  std::string getHTMLSummary(MapDepth map_depth = DEPTH_INSTANCE);
+};
 
-  enum FilterMode {
-    FILTER_FOREGROUND,
-    FILTER_EXCLUSIVE
-  };
+struct ShrunkSet {
+  std::set<std::string> con_ids;
+  bool minimal;
 
-  struct UnsatSet {
-    struct Constraint {
-      std::vector<int> indices;
-      std::vector<std::string> paths;
-      std::vector<std::string> constraint_names;
-      std::vector<std::string> expression_names;
-    };
-    std::vector<Constraint> constraints;
+  ShrunkSet() : minimal{false} {};
+};
 
-  };
-
-  struct ConstraintInfo {
-    std::string leaf_name;
-    std::string name;
-    std::string assigns;
-    std::string path;
-    std::string expression_name;
-    std::string constraint_name;
-
-    void setAnnotatedNamesFrom(const MiniZinc::ConstraintI* ci);
-  };
-
-  class ConstraintSet {
-  public:
-    std::unordered_map<std::string, std::vector<ConstraintInfo> > constraints;
-
-    ConstraintSet();
-    void addConstraintInfo(const std::string& path, const ConstraintInfo& ci);
-
-    std::string getSummary(SubProblemOutputFormat format, MapDepth map_depth = DEPTH_INSTANCE);
-
-  private:
-    std::string getShortSummary(const std::string& sep = "\n");
-    std::string getHUMANSummary(const std::string& sep = "\n", MapDepth map_depth = DEPTH_INSTANCE);
-
-    std::string getLongSummary(void);
-    std::string getJSONSummary(void);
-    std::string getHTMLSummary(MapDepth map_depth = DEPTH_INSTANCE);
-  };
-
-  struct ShrunkSet {
-    std::set<std::string> con_ids;
-    bool minimal;
-
-    ShrunkSet() : minimal{false} {};
-  };
-
-}
+} // namespace HierMUS
 #endif

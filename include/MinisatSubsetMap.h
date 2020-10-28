@@ -3,66 +3,66 @@
 
 #include <minisat/core/Solver.h>
 
-#include <vector>
+#include <fstream>
 #include <memory>
 #include <unordered_map>
-#include <fstream>
+#include <vector>
 
-#include "Types.h"
+#include "Options.h"
 #include "SubProblem.h"
 #include "SubsetMap.h"
-#include "Options.h"
+#include "Types.h"
 
 namespace HierMUS {
 
-  class MinisatSubsetMap : public SubsetMap {
-    private:
-      Minisat::vec<Minisat::Var> leaves;
-      Minisat::vec<Minisat::Var> conjs;
-      Minisat::vec<Minisat::Var> disjs;
-      Minisat::vec<Minisat::Var> eqs;
+class MinisatSubsetMap : public SubsetMap {
+private:
+  Minisat::vec<Minisat::Var> leaves;
+  Minisat::vec<Minisat::Var> conjs;
+  Minisat::vec<Minisat::Var> disjs;
+  Minisat::vec<Minisat::Var> eqs;
 
-      std::vector<MapNode> leafNodes;
-      std::vector<MapNode> branchNodes;
+  std::vector<MapNode> leafNodes;
+  std::vector<MapNode> branchNodes;
 
-      std::vector<Minisat::Lit> tempStack;
+  std::vector<Minisat::Lit> tempStack;
 
-      MapNode root;
+  MapNode root;
 
-      Minisat::Solver solver;
+  Minisat::Solver solver;
 
-      int leaves_top;
-      int branches_top;
+  int leaves_top;
+  int branches_top;
 
-      Selection solution_set;
-      Selection solution_template;
+  Selection solution_set;
+  Selection solution_template;
 
-    private:
-      MapNode addConnections(const MapNode& node, unsigned int depth = 0);
+private:
+  MapNode addConnections(const MapNode &node, unsigned int depth = 0);
 
-    public:
-      MinisatSubsetMap(SubProblem* prob, MUSEnumOptions& mo);
-      ~MinisatSubsetMap() { }
+public:
+  MinisatSubsetMap(SubProblem *prob, MUSEnumOptions &mo);
+  ~MinisatSubsetMap() {}
 
-      void pushTempBlockSupersets(const Selection& selection);
-      void pushTempBlockSubsets(const Selection& selection);
-      void popTempBlock(void);
-      void reset(void);
+  void pushTempBlockSupersets(const Selection &selection);
+  void pushTempBlockSubsets(const Selection &selection);
+  void popTempBlock(void);
+  void reset(void);
 
-      void setMaximal(bool max_mode);
-      Selection expand(const Selection& selection, const Selection& range);
-      Selection getSelection(const Selection& selection);
-      Selection getSelection();
-      Selection getRootSelector();
-      Selection getLeavesSelector();
+  void setMaximal(bool max_mode);
+  Selection expand(const Selection &selection, const Selection &range);
+  Selection getSelection(const Selection &selection);
+  Selection getSelection();
+  Selection getRootSelector();
+  Selection getLeavesSelector();
 
-      Selection convertConIds(std::set<string>& con_ids);
+  Selection convertConIds(std::set<string> &con_ids);
 
-      void block(Minisat::vec<Minisat::Lit>& blockClause);
-      void blockSupersets(const Selection& selection);
-      void blockSubsets(const Selection& selection);
-  };
+  void block(Minisat::vec<Minisat::Lit> &blockClause);
+  void blockSupersets(const Selection &selection);
+  void blockSubsets(const Selection &selection);
+};
 
-}
+} // namespace HierMUS
 
 #endif

@@ -3,9 +3,9 @@
 
 #include "Types.h"
 
-#include <string>
-#include <random>
 #include <chrono>
+#include <random>
+#include <string>
 
 namespace HierMUS {
 
@@ -61,7 +61,8 @@ public:
   // FznSubProblem
   string mzn_stdlib_dir;
   bool subproblem_hard_functional_constraints = true;
-  bool subproblem_hard_domain_constraints = false; // This should be false until context-find is implemented!
+  bool subproblem_hard_domain_constraints =
+      false; // This should be false until context-find is implemented!
 
   bool subproblem_named_only = false;
   bool oracle_only = false;
@@ -79,12 +80,14 @@ public:
 
   string subproblem_solver = "gecode_presolver";
   string subproblem_solver_flags = "";
-  std::chrono::duration<double> subproblem_solver_time_limit = std::chrono::seconds(1);
+  std::chrono::duration<double> subproblem_solver_time_limit =
+      std::chrono::seconds(1);
   bool subproblem_adapt_time_limit = false;
   SubProblemOutputFormat subproblem_output_format = OUT_NORMAL;
 
   // SubsetMap
-  MapDepth map_depth = DEPTH_INSTANCE; // DEPTH_INSTANCE should probably be the default in future
+  MapDepth map_depth =
+      DEPTH_INSTANCE; // DEPTH_INSTANCE should probably be the default in future
   unsigned int map_depth_max = 1;
 
   MusAlg map_enumeration_alg = ALG_MARCO;
@@ -92,41 +95,46 @@ public:
   bool map_shrink_frontier = false;
   bool map_enum_focus_mode = true;
 
-  Statistics& stats;
+  Statistics &stats;
 
   int rand_seed;
   std::default_random_engine rand_generator;
   std::uniform_int_distribution<int> rand_bin;
 
   MUSEnumOptions() = delete;
-  MUSEnumOptions(Statistics& s) : timelimit{-1}, stats(s), rand_seed((int)time(NULL)), rand_generator(rand_seed), rand_bin(0,1) {}
-  MUSEnumOptions& operator=(const MUSEnumOptions& mo) =  delete;
+  MUSEnumOptions(Statistics &s)
+      : timelimit{-1}, stats(s), rand_seed((int)time(NULL)),
+        rand_generator(rand_seed), rand_bin(0, 1) {}
+  MUSEnumOptions &operator=(const MUSEnumOptions &mo) = delete;
 
   void setRandSeed(int s) {
     rand_seed = s;
     rand_generator.seed(rand_seed);
   }
 
-  bool getRandBool(void) {
-    return rand_bin(rand_generator) == 1;
-  }
+  bool getRandBool(void) { return rand_bin(rand_generator) == 1; }
 
   bool timedOut() {
-    if(timelimit.count() < 0) return false;
+    if (timelimit.count() < 0)
+      return false;
     stats.last_time = std::chrono::system_clock::now();
     std::chrono::duration<double> dur = stats.last_time - stats.start_time;
     return dur > timelimit;
   }
 
   void adjustSolverTimeout() {
-    if(timelimit.count() < 0) return;
-    std::chrono::duration<double> elapsedTime = std::chrono::system_clock::now() - stats.start_time;
+    if (timelimit.count() < 0)
+      return;
+    std::chrono::duration<double> elapsedTime =
+        std::chrono::system_clock::now() - stats.start_time;
     std::chrono::duration<double> remainingTime = timelimit - elapsedTime;
 
-    if(remainingTime.count() < 0) return;
+    if (remainingTime.count() < 0)
+      return;
 
-    if(remainingTime < subproblem_solver_time_limit) {
-      std::cerr << "Options: Tightening timeout to: " << remainingTime.count() << " seconds" << std::endl;
+    if (remainingTime < subproblem_solver_time_limit) {
+      std::cerr << "Options: Tightening timeout to: " << remainingTime.count()
+                << " seconds" << std::endl;
       subproblem_solver_time_limit = remainingTime;
     }
   }
@@ -135,11 +143,12 @@ public:
 namespace OptionsHelper {
 void help_short(int exit_code = EXIT_SUCCESS);
 void help_long(void);
-void parse(DriverOptions& d, MUSEnumOptions& m, int argc, char**argv);
-void parse(DriverOptions& d, MUSEnumOptions& m, const std::vector<std::string>& args);
-vector<string> expandParamSet(const vector<string>& in_args);
-}
+void parse(DriverOptions &d, MUSEnumOptions &m, int argc, char **argv);
+void parse(DriverOptions &d, MUSEnumOptions &m,
+           const std::vector<std::string> &args);
+vector<string> expandParamSet(const vector<string> &in_args);
+} // namespace OptionsHelper
 
-}
+} // namespace HierMUS
 
 #endif
