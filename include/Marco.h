@@ -8,7 +8,6 @@ namespace HierMUS {
     private:
       Selection selection;
       Selection frontier;
-      bool frontier_minimal;
 
     public:
       Marco(SubProblem& p, MUSEnumOptions& mo, SubsetMap* m = NULL);

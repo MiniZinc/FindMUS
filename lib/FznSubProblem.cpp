@@ -184,7 +184,6 @@ namespace HierMUS {
 
     for(auto& ci : fzn_model->constraints()) {
       string name = nameToPath.getName(con_id);
-      bool background = isBackgroundConstraint(ci, name);
       if(n_cons <= con_id || isBackgroundConstraint(ci, name)) {
         hard_cons++;
         background_cons.emplace_back(name);
@@ -421,7 +420,6 @@ namespace HierMUS {
 
     }
 
-    static int unsat_c = 0;
     static int timeout_count = 0;
     string res;
 

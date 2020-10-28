@@ -8,9 +8,9 @@ namespace HierMUS {
 
   class SetTrie {
     public:
-      bool terminal;
       std::string value;
       std::vector<SetTrie> children;
+      bool terminal;
 
       SetTrie(std::string v, bool t) : value{v}, terminal{t} {}
 

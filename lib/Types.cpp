@@ -114,9 +114,7 @@ namespace HierMUS {
   std::string ConstraintSet::getHUMANSummary(const string& sep, MapDepth map_depth) {
     std::map<string, std::set<string> > names;
 
-    unsigned int remain = static_cast<unsigned int>(constraints.size());
     for(auto& pcs : constraints) {
-      unsigned int remain_inner = static_cast<unsigned int>(pcs.second.size());
       for(const ConstraintInfo& ci : pcs.second) {
         string con_name = (!ci.constraint_name.empty()) ? ci.constraint_name
                                                         : "Uncategorised";

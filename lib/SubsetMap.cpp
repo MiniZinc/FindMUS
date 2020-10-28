@@ -28,7 +28,7 @@ namespace HierMUS {
     clearForceInclude();
     if(strictSubset) { popTempBlock(); }
     setMaximal(true);
-    return std::move(s);
+    return s;
   }
 
 }
