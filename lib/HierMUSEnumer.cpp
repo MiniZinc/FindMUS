@@ -32,7 +32,7 @@ HierMUSEnumer::HierMUSEnumer(SubProblem &prob, MUSEnumOptions &mo)
         std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx]
                   << std::endl;
       }
-      candidates[frontier_idx].is_min = false;
+      candidates[frontier_idx].setMinimal(false);
     }
     unsatUnion = sel_union(unsatUnion, s);
 
@@ -44,7 +44,7 @@ HierMUSEnumer::HierMUSEnumer(SubProblem &prob, MUSEnumOptions &mo)
   stats.treecounts = subProblem.getTree().getCounts();
 
   Selection root = subsetMap->getRootSelector();
-  root.is_min = true;
+  root.setMinimal(true);
   candidates.push_back(root);
   loadNextCandidate();
 }
@@ -60,14 +60,14 @@ void HierMUSEnumer::loadNextCandidate() {
     }
     candidates.clear();
     Selection leaves = subsetMap->getLeavesSelector();
-    leaves.is_min = false;
+    leaves.setMinimal(false);
     candidates.push_back(leaves);
     stats.restarts_enabled = false;
   }
 
   // Expand frontier
   if (frontier_idx != -1) {
-    if (unsatUnion.selected.empty()) {
+    if (unsatUnion.empty()) {
       candidates[frontier_idx] =
           subsetMap->expand(candidates[frontier_idx], candidates[frontier_idx]);
     } else {
@@ -79,7 +79,7 @@ void HierMUSEnumer::loadNextCandidate() {
 
   Selection top = candidates.back();
   candidates.pop_back();
-  if (!isLeaves(top)) {
+  if (!top.isLeaves()) {
     frontier_idx = static_cast<int>(candidates.size());
     candidates.push_back(top);
   } else {
@@ -97,7 +97,7 @@ bool HierMUSEnumer::search() {
           std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx]
                     << std::endl;
         }
-        candidates[frontier_idx].is_min = false;
+        candidates[frontier_idx].setMinimal(false);
       }
       current_mus = inner_enum->getCurrentMUS();
       return true;
@@ -123,7 +123,7 @@ void HierMUSEnumer::printMUS(void) {
     }
     return;
   }
-  if (!current_mus.selected.empty()) {
+  if (!current_mus.empty()) {
     subProblem.printSol(current_mus);
   }
 }

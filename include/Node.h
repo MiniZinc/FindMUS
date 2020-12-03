@@ -74,9 +74,10 @@ struct MapNode {
   void compact();
   void mergeLeaves();
   void makeBinary(std::function<bool(const MapNode &)> cond);
+
+  std::set<std::string> getLeaves() const;
 };
 
-void getLeaves(const MapNode &node, std::set<std::string> &leaves);
 std::ostream &operator<<(std::ostream &os, std::set<MapNode *> const &mns);
 std::string printMapNode(bool pol, const std::string &prefix,
                          const MapNode *mn);

@@ -289,7 +289,7 @@ FznSubProblem::FznSubProblem(const string &fznpath, const string &pathpath,
 bool FznSubProblem::provedSAT() { return last_sat; }
 
 ConstraintSet FznSubProblem::getConstraintSet(const Selection &b) {
-  set<string> leaf_names = getLeaves(b);
+  set<string> leaf_names = b.getLeaves();
   ConstraintSet entries;
   for (const string &leaf_name : leaf_names) {
     string path = nameToPath.getPath(leaf_name);
@@ -337,7 +337,7 @@ bool FznSubProblem::check(const Selection &b) {
 
   std::chrono::time_point<std::chrono::system_clock> beginCheck =
       std::chrono::system_clock::now();
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
 
   if (!oracle.children.empty()) {
     vector<string> leaves_vec(leaves.begin(), leaves.end());
@@ -393,7 +393,7 @@ bool FznSubProblem::check(const Selection &b) {
     int solver_con_id = 0;
     int con_id = 0;
     // Activate the selected constraints
-    set<string> leaves = getLeaves(b);
+    set<string> leaves = b.getLeaves();
 
     solverModelMapping.clear();
 
@@ -519,7 +519,7 @@ bool FznSubProblem::check(const Selection &b) {
 
 void FznSubProblem::saveFzn(const Selection &b, const string &filename) {
   std::cout << "FznSubProblem:\tdumping fzn as: " << filename << std::endl;
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
   // Mark all constraints as removed;
   for (auto &kv : constraints) {
     kv.second->remove();

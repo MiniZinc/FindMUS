@@ -12,6 +12,23 @@ namespace HierMUS {
 using std::string;
 using std::vector;
 
+void getLeaves(const MapNode &node, std::set<std::string> &leaves) {
+  if (!node.children.empty()) {
+    for (const MapNode &child : node.children)
+      getLeaves(child, leaves);
+  } else {
+    vector<string> split_leaves = utils::split(node.con_id, '#', false);
+    for (const string &l : split_leaves)
+      leaves.insert(l);
+  }
+}
+
+std::set<std::string> MapNode::getLeaves() const {
+  std::set<std::string> leaves;
+  HierMUS::getLeaves(*this, leaves);
+  return leaves;
+}
+
 MapNode &MapNode::addPath(std::vector<std::string> &splitpath, unsigned int p) {
   if (p == splitpath.size()) {
     if (!children.empty()) {
@@ -127,16 +144,6 @@ void MapNode::makeBinary(std::function<bool(const MapNode &)> cond) {
   }
 }
 
-void getLeaves(const MapNode &node, std::set<std::string> &leaves) {
-  if (!node.children.empty()) {
-    for (const MapNode &child : node.children)
-      getLeaves(child, leaves);
-  } else {
-    vector<string> split_leaves = utils::split(node.con_id, '#', false);
-    for (const string &l : split_leaves)
-      leaves.insert(l);
-  }
-}
 
 std::ostream &operator<<(std::ostream &os, std::set<MapNode *> const &mns) {
   return streamMapNodeSet(os, mns, true, "c_");

@@ -31,7 +31,7 @@ bool Marco::search() {
     stats.madeMapCall();
     Selection s = subsetMap->getSelection(frontier);
 
-    if (s.selected.size() == 0)
+    if (s.size() == 0)
       break;
 
     stats.madeSatCheck();
@@ -40,9 +40,9 @@ bool Marco::search() {
       std::set<MapNode *> empty_crits;
       if (!shrink(s, empty_crits))
         return false;
-      frontier.is_min = false;
+      frontier.setMinimal(false);
       subsetMap->blockSupersets(s);
-      if (isLeaves(s)) {
+      if (s.isLeaves()) {
         current_mus = s;
         return true;
       }
@@ -60,10 +60,10 @@ bool Marco::search() {
         return false;
     }
   }
-  if (frontier.is_min && isLeaves(frontier)) {
+  if (frontier.knownMinimal() && frontier.isLeaves()) {
     current_mus = frontier;
     frontier = {};
-    frontier.is_min = false;
+    frontier.setMinimal(false);
     return true;
   }
 

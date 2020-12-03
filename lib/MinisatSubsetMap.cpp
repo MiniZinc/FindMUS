@@ -220,42 +220,20 @@ MapNode MinisatSubsetMap::addConnections(const MapNode &node,
 }
 
 Selection MinisatSubsetMap::expand(const Selection &s, const Selection &m) {
-  Selection newSel;
-  newSel.selected = s.selected;
-  newSel.exclude = s.exclude;
-  newSel.is_min = s.is_min;
+  if (mopts.verbose_map == 1)
+    std::cout << "SubsetMap:\tExpanding: " << s.size() << " from "
+              << m.size();
+  if (mopts.verbose_map == 2)
+    std::cout << "SubsetMap:\tExpanding: " << s.const_included() << " from "
+              << m.const_included();
+
+  Selection newSel = s;
+  newSel.expand(m);
 
   if (mopts.verbose_map == 1)
-    std::cout << "SubsetMap:\tExpanding: " << s.include.size() << " from "
-              << m.include.size();
+    std::cout << " to " << newSel.size() << std::endl;
   if (mopts.verbose_map == 2)
-    std::cout << "SubsetMap:\tExpanding: " << s.include << " from "
-              << m.include;
-  for (const ExpandedNode &en : s.include) {
-    if (std::any_of(
-            m.include.begin(), m.include.end(),
-            [&](const ExpandedNode &m_en) { return m_en.child == en.child; })) {
-      if (s.selected.empty() ||
-          s.selected.find(en.parent) != s.selected.end()) {
-        MapNode *nm = en.child;
-        if (nm->var.isLeaf || nm->children.empty()) {
-          newSel.include.insert(en);
-        } else {
-          for (MapNode &child : nm->children)
-            newSel.include.insert(ExpandedNode(en.parent, &child));
-        }
-
-      } else {
-        newSel.exclude.insert(en.child);
-      }
-    } else {
-      newSel.include.insert(en);
-    }
-  }
-  if (mopts.verbose_map == 1)
-    std::cout << " to " << newSel.include.size() << std::endl;
-  if (mopts.verbose_map == 2)
-    std::cout << " to " << newSel.include << std::endl;
+    std::cout << " to " << newSel.const_included() << std::endl;
 
   return newSel;
 }
@@ -271,15 +249,15 @@ void MinisatSubsetMap::blockSupersets(const Selection &selection) {
     std::cout << "SubsetMap:\tSuperset block: "
               << (tempBlocking ? "<Temp> " : "");
 
-  for (const MapNode *node : selection.selected) {
+  for (const MapNode *node : selection.const_selected()) {
     blockClause.push(node->var.isLeaf ? ~mkLit(node->var.leaf)
                                       : ~mkLit(node->var.conj));
   }
   if (mopts.verbose_map == 1) {
-    std::cout << selection.selected.size() << std::endl;
+    std::cout << selection.size() << std::endl;
   }
   if (mopts.verbose_map == 2) {
-    streamMapNodeSet(std::cout, selection.selected, false, "c_");
+    streamMapNodeSet(std::cout, selection.const_selected(), false, "c_");
     std::cout << std::endl;
   }
 
@@ -298,15 +276,15 @@ void MinisatSubsetMap::blockSubsets(const Selection &selection) {
     std::cout << "SubsetMap:\tSubset block:   "
               << (tempBlocking ? "<Temp> " : "");
 
-  for (const MapNode *node : selection.exclude) {
+  for (const MapNode *node : selection.const_excluded()) {
     blockClause.push(node->var.isLeaf ? mkLit(node->var.leaf)
                                       : mkLit(node->var.disj));
   }
   if (mopts.verbose_map == 1) {
-    std::cout << selection.exclude.size() << std::endl;
+    std::cout << selection.const_excluded().size() << std::endl;
   }
   if (mopts.verbose_map == 2) {
-    streamMapNodeSet(std::cout, selection.exclude, true, "d_");
+    streamMapNodeSet(std::cout, selection.const_excluded(), true, "d_");
     std::cout << std::endl;
   }
 
@@ -326,8 +304,7 @@ Selection MinisatSubsetMap::getRootSelector() {
 Selection MinisatSubsetMap::getLeavesSelector() {
   Selection s_temp;
   for (size_t i = 0; i < leafNodes.size(); i++)
-    s_temp.include.insert(
-        ExpandedNode(&leafNodes[i])); // which nodes to get solutions for
+    s_temp.select(&leafNodes[i]); // which nodes to get solutions for
   return s_temp;
 }
 
@@ -359,13 +336,13 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
 
   Minisat::vec<Minisat::Lit> atLeastOne;
   if (mopts.verbose_map == 1)
-    std::cout << "SubsetMap:\tgetSelection(" << selection.selected.size()
+    std::cout << "SubsetMap:\tgetSelection(" << selection.const_selected().size()
               << ")\twith assumptions: { omitted";
   if (mopts.verbose_map == 2)
     std::cout << "SubsetMap:\tgetSelection(" << selection
               << ")\twith assumptions: {";
   Minisat::vec<Minisat::Lit> all_assumptions;
-  for (const ExpandedNode &enode : selection.include) {
+  for (const ExpandedNode &enode : selection.const_included()) {
     if (!enode.child->var.isLeaf) { // Don't force leaves to be active
       all_assumptions.push(mkLit(enode.child->var.eq));
       if (mopts.verbose_map == 2)
@@ -381,7 +358,7 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
   Minisat::Lit conLit = mkLit(control);
   atLeastOne.push(~conLit);
   for (MapNode *node : forceInclude) {
-    solution_template.exclude.erase(node);
+    solution_template.select(node);
     all_assumptions.push(node->var.isLeaf ? mkLit(node->var.leaf)
                                           : mkLit(node->var.conj));
     if (mopts.verbose_map == 2)
@@ -395,7 +372,7 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
     all_assumptions.push(l);
   }
 
-  for (MapNode *node : solution_template.exclude) {
+  for (MapNode *node : solution_template.const_excluded()) {
     all_assumptions.push(node->var.isLeaf ? ~mkLit(node->var.leaf)
                                           : ~mkLit(node->var.disj));
     if (mopts.verbose_map == 2)
@@ -419,19 +396,16 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
   // std::cout << std::endl;
 
   solution_set = {};
-  solution_set.exclude = solution_template.exclude;
+  solution_set.exclude(solution_set.const_excluded());
 
   if (r) {
-    for (const ExpandedNode &en : solution_template.include) {
+    for (const ExpandedNode &en : solution_template.const_included()) {
       if ((en.child->var.isLeaf &&
            solver.modelValue(en.child->var.leaf) == Minisat::l_True) ||
           solver.modelValue(en.child->var.conj) == Minisat::l_True) {
-        solution_set.selected.insert(en.child);
-        solution_set.exclude.erase(en.child);
-        solution_set.include.insert(
-            ExpandedNode(en.child)); // New Selection so parent can be discarded
+        solution_set.select(en.child);
       } else {
-        solution_set.exclude.insert(en.child);
+        solution_set.exclude(en.child);
       }
     }
   }
@@ -444,7 +418,7 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
         std::chrono::system_clock::now() - start_time;
     std::cout << "SubsetMap:\tSolve took " << std::fixed << std::setprecision(5)
               << dur.count()
-              << " seconds. Returning: " << solution_set.selected.size() << ". "
+              << " seconds. Returning: " << solution_set.const_selected().size() << ". "
               << std::endl;
   }
   if (mopts.verbose_map == 2) {
@@ -463,10 +437,9 @@ Selection MinisatSubsetMap::convertConIds(std::set<string> &con_ids) {
 
   for (MapNode &node : leafNodes) {
     if (con_ids.find(node.con_id) != con_ids.end()) {
-      shrunk.selected.insert(&node);
-      shrunk.include.insert(ExpandedNode{&node});
+      shrunk.select(&node);
     } else {
-      shrunk.exclude.insert(&node);
+      shrunk.exclude(&node);
     }
   }
 
