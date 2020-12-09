@@ -288,8 +288,8 @@ int main(int argc, char **argv) {
 
   // Sanity checks
   auto native_shrink = mo.subproblem_native_shrink;
-  mo.subproblem_native_shrink =
-      false; // Disable use of --diagnose flag for sanity check
+  // Disable use of --diagnose flag for sanity check
+  mo.subproblem_native_shrink = false;
 
   std::chrono::time_point<std::chrono::system_clock> check_unsat_starttime =
       std::chrono::system_clock::now();

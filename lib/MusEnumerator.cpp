@@ -8,7 +8,7 @@ namespace HierMUS {
 using std::set;
 using std::string;
 
-bool MusEnumerator::shrink(Selection &m, const set<MapNode *> &c) {
+bool MusEnumerator::shrink(Selection &m, const NodeSet &c) {
   switch (mopts.map_shrink_alg) {
   case SH_MAP_QX:
     return qx_with_map(m, c);
@@ -52,7 +52,7 @@ bool MusEnumerator::process_native(Selection &model) {
 }
 
 bool MusEnumerator::linear_shrink(Selection &model,
-                                  const set<MapNode *> &criticals) {
+                                  const NodeSet &criticals) {
   if (process_native(model))
     return true;
 
@@ -82,7 +82,7 @@ bool MusEnumerator::linear_shrink(Selection &model,
 }
 
 bool MusEnumerator::linear_shrink_with_map(Selection &model,
-                                           const set<MapNode *> &) {
+                                           const NodeSet &) {
   if (process_native(model))
     return true;
 
@@ -120,7 +120,7 @@ bool MusEnumerator::linear_shrink_with_map(Selection &model,
 #define QXEarlyNonMin(S) OptionalSelection(S, true, false);
 
 OptionalSelection MusEnumerator::qx_back(Selection B, size_t D, Selection C,
-                                         const set<MapNode *> &criticals) {
+                                         const NodeSet &criticals) {
   if (mopts.timedOut())
     return QXTimeOut;
 
@@ -167,7 +167,7 @@ OptionalSelection MusEnumerator::qx_back(Selection B, size_t D, Selection C,
   return sel_union(D1.get(), D2.get());
 }
 
-bool MusEnumerator::qx(Selection &model, const set<MapNode *> &criticals) {
+bool MusEnumerator::qx(Selection &model, const NodeSet &criticals) {
   if (process_native(model))
     return true;
 
@@ -184,7 +184,7 @@ bool MusEnumerator::qx(Selection &model, const set<MapNode *> &criticals) {
 }
 
 OptionalSelection MusEnumerator::qx2_back(Selection B, size_t D, Selection C,
-                                          const set<MapNode *> &criticals) {
+                                          const NodeSet &criticals) {
   if (mopts.timedOut())
     return QXTimeOut;
 
@@ -236,7 +236,7 @@ OptionalSelection MusEnumerator::qx2_back(Selection B, size_t D, Selection C,
   return sel_union(D1.get(), D2.get());
 }
 
-bool MusEnumerator::qx2(Selection &model, const set<MapNode *> &criticals) {
+bool MusEnumerator::qx2(Selection &model, const NodeSet &criticals) {
   if (process_native(model))
     return true;
 
@@ -259,7 +259,7 @@ static int indent = 0;
 
 OptionalSelection
 MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
-                                const set<MapNode *> &criticals) {
+                                const NodeSet &criticals) {
   QXLOG("START");
   indent++;
   if (mopts.timedOut())
@@ -332,7 +332,7 @@ MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
 }
 
 bool MusEnumerator::qx_with_map(Selection &model,
-                                const set<MapNode *> &criticals) {
+                                const NodeSet &criticals) {
   if (process_native(model))
     return true;
 

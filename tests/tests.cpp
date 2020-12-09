@@ -49,7 +49,7 @@ bool run_test(size_t id, const vector<string> &args, string path) {
             << utils::join(
                    {
                        path,
-                       (result == "PASS" ? "PASS" : ("FAIL(" + result + ")")),
+                       (result == "PASS" ? "PASS        " : ("FAIL(" + result + ")")),
                        std::to_string(mstats.map_calls),
                        std::to_string(mstats.sat_calls),
                        std::to_string(stats.nmuses),
@@ -63,6 +63,8 @@ bool run_test(size_t id, const vector<string> &args, string path) {
 
 int run_tests(vector<size_t> ids) {
   vector<vector<string>> test_args = {
+      {"-t", "1000", "--paramset", "fzn", "--no-binarize", "--structure", "flat", "--shrink-alg", "map_lin"},
+      {"-t", "1000", "--paramset", "fzn", "--structure", "flat", "--shrink-alg", "map_lin"},
       {"-t", "1000", "--paramset", "fzn", "--no-binarize"},
       {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "lin"},
       {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "qx"},

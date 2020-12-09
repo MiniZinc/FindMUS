@@ -145,17 +145,30 @@ void MapNode::makeBinary(std::function<bool(const MapNode &)> cond) {
 }
 
 
-std::ostream &operator<<(std::ostream &os, std::set<MapNode *> const &mns) {
+std::ostream &operator<<(std::ostream &os, NodeSet const &mns) {
   return streamMapNodeSet(os, mns, true, "c_");
 }
 
-std::ostream &operator<<(std::ostream &os, std::set<ExpandedNode> const &inc) {
+#define SHOW_PARENT 1
+std::ostream& operator<<(std::ostream& os, ExpandedNode const& en) {
+#ifdef SHOW_PARENT
+  os << "(" << printMapNode(true, "c_", en.parent) << ", ";
+#endif
+  os << printMapNode(true, "e_", en.child);
+#ifdef SHOW_PARENT
+  os << ")";
+#endif
+  return os;
+}
+
+std::ostream &operator<<(std::ostream &os, ExpandedNodeSet const &inc) {
   bool first = true;
   os << "{";
   for (const ExpandedNode &en : inc) {
-    if (!first)
+    if (!first) {
       os << ", ";
-    os << printMapNode(true, "e_", en.child);
+    }
+    os << en;
     first = false;
   }
   os << "}";
@@ -174,7 +187,7 @@ inline std::string printMapNode(bool pol, const std::string &prefix,
 }
 
 std::ostream &streamExpandedNodeSet(std::ostream &os,
-                                    std::set<ExpandedNode> const &mns, bool pol,
+                                    ExpandedNodeSet const &mns, bool pol,
                                     std::string prefix) {
   bool first = true;
   os << "{";
@@ -189,7 +202,7 @@ std::ostream &streamExpandedNodeSet(std::ostream &os,
   return os;
 }
 
-std::ostream &streamMapNodeSet(std::ostream &os, std::set<MapNode *> const &mns,
+std::ostream &streamMapNodeSet(std::ostream &os, NodeSet const &mns,
                                bool pol, std::string prefix) {
   bool first = true;
   os << "{";

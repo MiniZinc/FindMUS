@@ -37,7 +37,7 @@ bool Marco::search() {
     stats.madeSatCheck();
     if (!subProblem.check(s)) {
       stats.foundUnSatSet();
-      std::set<MapNode *> empty_crits;
+      NodeSet empty_crits;
       if (!shrink(s, empty_crits))
         return false;
       frontier.setMinimal(false);

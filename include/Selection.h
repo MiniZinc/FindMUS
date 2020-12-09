@@ -12,9 +12,6 @@
 
 namespace HierMUS {
 
-typedef std::set<MapNode *> NodeSet;
-typedef std::set<ExpandedNode> ExpandedNodeSet;
-
 class Selection {
 protected:
   NodeSet roots;   // previously selected
@@ -26,8 +23,12 @@ protected:
   ExpandedNodeSet& included();
   NodeSet& excluded();
 
+  void roots_erase(MapNode* mn);
+  void frontier_erase(MapNode* mn);
+  void complement_erase(MapNode* mn);
+
 public:
-  Selection(const NodeSet &s, const std::set<ExpandedNode> &i, const NodeSet &e, bool m = true);
+  Selection(const NodeSet &s, const ExpandedNodeSet &i, const NodeSet &e, bool m = true);
   Selection();
 
   void setMinimal(bool im);

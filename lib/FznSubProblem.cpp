@@ -217,7 +217,7 @@ FznSubProblem::FznSubProblem(const string &fznpath, const string &pathpath,
       background_cons.emplace_back(name);
     } else if (isFilteredIn(ci, name)) {
       if (n_cons <= con_id) {
-        std::cerr << "FznSubProblem:\tError: Path file does not match FlatZinc"
+        std::cerr << "FznSubProblem: Error: Path file does not match FlatZinc"
                   << std::endl;
         exit(EXIT_FAILURE);
       }
@@ -278,9 +278,9 @@ FznSubProblem::FznSubProblem(const string &fznpath, const string &pathpath,
   if (mopts.output_stats) {
     std::chrono::duration<double> dur =
         std::chrono::system_clock::now() - start_build;
-    std::cout << "FznSubProblem:\thard cons: " << hard_cons
-              << "\tsoft cons: " << soft_cons << "\tleaves: " << cs.nleaves
-              << "\tbranches: " << cs.nbranches << "\tBuilt tree in "
+    std::cout << "FznSubProblem: hard cons: " << hard_cons
+              << " soft cons: " << soft_cons << " leaves: " << cs.nleaves
+              << " branches: " << cs.nbranches << " Built tree in "
               << std::fixed << std::setprecision(5) << dur.count()
               << " seconds." << std::endl;
   }
@@ -421,9 +421,9 @@ bool FznSubProblem::check(const Selection &b) {
     case 0:
       break;
     default:
-      std::cerr << "FznSubProblem:\tError creating solver with args:\t"
+      std::cerr << "FznSubProblem: Error creating solver with args: "
                 << utils::join(args, " ") << std::endl;
-      std::cerr << "\t" << log.str() << std::endl;
+      std::cerr << " " << log.str() << std::endl;
       exit(EXIT_FAILURE);
     }
 
@@ -446,15 +446,15 @@ bool FznSubProblem::check(const Selection &b) {
 #endif
       sf->destroySI(si);
     } catch (const MiniZinc::InternalError &err) {
-      std::cerr << "FznSubproblem:\tException during sub-solving: " << err.msg()
+      std::cerr << "FznSubproblem: Exception during sub-solving: " << err.msg()
                 << ": " << err.what() << std::endl;
       exit(EXIT_FAILURE);
     } catch (const std::runtime_error &err) {
-      std::cerr << "FznSubproblem:\tCaught runtime error:" << std::endl;
-      std::cerr << "\t" << err.what() << std::endl;
+      std::cerr << "FznSubproblem: Caught runtime error:" << std::endl;
+      std::cerr << " " << err.what() << std::endl;
       exit(EXIT_FAILURE);
     } catch (...) {
-      std::cerr << "FznSubproblem:\tCaught unknown exception during sub-solving"
+      std::cerr << "FznSubproblem: Caught unknown exception during sub-solving"
                 << std::endl;
       string errfilename = "FINDMUS_failed_subproblem.fzn";
       saveFzn(b, errfilename);
@@ -463,7 +463,7 @@ bool FznSubProblem::check(const Selection &b) {
 
     std::string error_log = log.str();
     if (!error_log.empty()) {
-      std::cerr << "FznSubproblem:\tstderr from MznSolver:\n"
+      std::cerr << "FznSubproblem: stderr from MznSolver:\n"
                 << error_log << std::endl;
       log.clear();
       exit(EXIT_FAILURE);
@@ -484,7 +484,7 @@ bool FznSubProblem::check(const Selection &b) {
   } else if (s == MiniZinc::SolverInstance::ERROR) {
     res = "E";
     string errfilename = "FINDMUS_failed_subproblem.fzn";
-    std::cout << "FznSubproblem:\tSolver reported error without message"
+    std::cout << "FznSubproblem: Solver reported error without message"
               << std::endl;
     saveFzn(b, errfilename);
   } else {
@@ -492,13 +492,13 @@ bool FznSubProblem::check(const Selection &b) {
     if (mopts.subproblem_dump_timeouts) {
       stringstream timeout_filename;
       timeout_filename << "FINDMUS_timeout_" << timeout_count++ << ".fzn";
-      std::cout << "FznSubproblem:\tDumping timed out flatzinc\n";
+      std::cout << "FznSubproblem: Dumping timed out flatzinc\n";
       saveFzn(b, timeout_filename.str());
     }
   }
 
   if (mopts.verbose_subsolve) {
-    std::cout << "FznSubProblem:\tSolve: " << s << "(" << res << ":"
+    std::cout << "FznSubProblem: Solve: " << s << "(" << res << ":"
               << (is_sat ? "S" : "U") << ") ";
     if (mopts.verbose_subsolve > 1) {
       std::cout << "cons: " << b;
@@ -507,9 +507,9 @@ bool FznSubProblem::check(const Selection &b) {
     }
     std::chrono::duration<double> dur =
         std::chrono::system_clock::now() - beginCheck;
-    std::cout << "\ttook: " << std::fixed << std::setprecision(5) << dur.count()
+    std::cout << " took: " << std::fixed << std::setprecision(5) << dur.count()
               << " seconds";
-    std::cout << "\tmus: "
+    std::cout << " mus: "
               << "(" << !shrunk.con_ids.empty() << "," << shrunk.minimal << ")"
               << std::endl;
   }
@@ -518,7 +518,7 @@ bool FznSubProblem::check(const Selection &b) {
 }
 
 void FznSubProblem::saveFzn(const Selection &b, const string &filename) {
-  std::cout << "FznSubProblem:\tdumping fzn as: " << filename << std::endl;
+  std::cout << "FznSubProblem: dumping fzn as: " << filename << std::endl;
   set<string> leaves = b.getLeaves();
   // Mark all constraints as removed;
   for (auto &kv : constraints) {

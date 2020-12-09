@@ -18,7 +18,7 @@ class SubsetMap {
 protected:
   MUSEnumOptions &mopts;
   SubProblem *problem;
-  std::set<MapNode *> forceInclude;
+  NodeSet forceInclude;
 
   bool consistent;
   bool tempBlocking;

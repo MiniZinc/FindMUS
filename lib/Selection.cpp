@@ -11,8 +11,7 @@
 namespace HierMUS {
 
 
-Selection::Selection(const std::set<MapNode *> &s, const std::set<ExpandedNode> &i,
-          const std::set<MapNode *> &e, bool m)
+Selection::Selection(const NodeSet &s, const ExpandedNodeSet &i, const NodeSet &e, bool m)
     : roots(s), frontier(i), complement(e), is_min(m) {}
 
 Selection::Selection() : is_min(true) {}
@@ -36,7 +35,7 @@ const ExpandedNodeSet& Selection::const_included() const { return frontier; }
 size_t Selection::size() const { return roots.size(); }
 bool Selection::empty() const { return size() == 0; }
 
-void Selection::exclude(const std::set<MapNode *>& nodes) {
+void Selection::exclude(const NodeSet& nodes) {
   for(MapNode *mn : nodes) {
     exclude(mn);
   }
@@ -58,21 +57,51 @@ void Selection::select(const NodeSet& nodes) {
   }
 }
 
+void Selection::roots_erase(MapNode* mn) {
+  auto rit = roots.find(mn);
+  if (rit != roots.end())
+    roots.erase(rit);
+}
+
+void Selection::frontier_erase(MapNode* mn) {
+  auto fit = frontier.find(ExpandedNode{ mn });
+  if (fit != frontier.end())
+    frontier.erase(fit);
+}
+
+void Selection::complement_erase(MapNode* mn) {
+  auto cit = complement.find(mn);
+  if (cit != complement.end())
+    complement.erase(cit);
+}
+
+/*
+ * remove mn from complement
+ * remove (*,parent) from frontier
+ * remove (*,mn) from frontier
+ * add (p, mn) to frontier
+ * add p to roots
+ */
 void Selection::select(MapNode *mn, MapNode* parent) {
+  complement_erase(mn);
+
   if(parent) {
+    complement_erase(parent);
+    frontier_erase(parent);
+    frontier_erase(mn);
+
     roots.insert(parent);
     frontier.insert(ExpandedNode {parent, mn});
+
   } else {
     roots.insert(mn);
     frontier.insert(ExpandedNode {mn});
   }
 
-  auto cit = complement.find(mn);
-  if (cit != complement.end()) complement.erase(cit);
 }
 
 void Selection::updateIncludeExclude() {
-  std::set<ExpandedNode> old_frontier = frontier;
+  ExpandedNodeSet old_frontier = frontier;
   frontier.clear();
   for (const ExpandedNode &en : old_frontier) {
     if (roots.find(en.child) == roots.end()) {
@@ -85,7 +114,7 @@ void Selection::updateIncludeExclude() {
 }
 
 void Selection::shrinkTo(std::set<std::string> &con_ids) {
-  std::set<MapNode *> roots_copy = roots;
+  NodeSet roots_copy = roots;
   for (MapNode *mn : roots_copy) {
     std::set<string> leaves = mn->getLeaves();
 
@@ -154,24 +183,45 @@ bool contains_child(const ExpandedNodeSet& ens, const MapNode* child) {
 
 
 void Selection::expand(const Selection &m) {
-  for (const ExpandedNode &en : frontier) {
+  //std::cerr << "Expanding " << *this << "   with: " << m << std::endl;
+  const ExpandedNodeSet frontier_copy = frontier;
+  for (const ExpandedNode &en : frontier_copy) {
+    //std::cerr << "  Checking " << en << std::endl;
     if (contains_child(m.const_included(), en.child)) {
+      //std::cerr << "    m has: " << en << std::endl;
       if (roots.empty() || roots.find(en.parent) != roots.end()) {
+        //std::cerr << "     root is empty or does contain parent" << std::endl;
+        roots_erase(en.parent);
         MapNode *nm = en.child;
+        frontier_erase(en.child);
         if (nm->var.isLeaf || nm->children.empty()) {
-          frontier.insert(en);
+          //std::cerr << "      Is leaf, selecting: " << en << std::endl;
+          select(en.child, en.parent);
+          //std::cerr << "      Is leaf, result: " << *this << std::endl;
+          //frontier.insert(en);
         } else {
-          for (MapNode &child : nm->children)
+          for (MapNode& child : nm->children) {
+            //std::cerr << "      Not leaf, selecting: " << printMapNode(true, "d_", &child) << std::endl;
             select(&child, en.parent);
+            //std::cerr << "      Not leaf, result: " << *this << std::endl;
+          }
         }
 
       } else {
+        //std::cerr << "     root is not empty or contains parent" << std::endl;
+        //std::cerr << "     removing child of: " << en << std::endl;
         exclude(en.child);
+        //std::cerr << "     removed child result: " << *this << std::endl;
       }
     } else {
+      //std::cerr << "    m not has: " << en << std::endl;
+      //std::cerr << "    selecting child: " << en << std::endl;
       select(en.child, en.parent);
+      //std::cerr << "    selected result: " << *this << std::endl;
     }
   }
+
+  //std::cerr << "after expand: " << *this << std::endl;
 }
 
 
@@ -197,7 +247,7 @@ void sel_split(const Selection &C, Selection &c1, Selection &c2) {
   c1 = C;
   c2 = C;
 
-  std::set<MapNode *>::iterator it = C.const_selected().begin();
+  NodeSet::iterator it = C.const_selected().begin();
   for (size_t c = 0; c < C.const_selected().size(); c++, ++it) {
 #if RANDOM_SEL_SPLIT
     if (rand_bin(rd) == 1) { // c1
@@ -225,7 +275,7 @@ Selection empty_sel(const Selection &C) {
   return e;
 }
 
-bool is_subset(const Selection &C, const std::set<MapNode *> &crits) {
+bool is_subset(const Selection &C, const NodeSet &crits) {
   if (crits.empty() || C.size() > crits.size())
     return false;
   for (MapNode *mn : C.const_selected()) {

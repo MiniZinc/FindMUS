@@ -17,6 +17,7 @@ namespace HierMUS {
 using std::string;
 using std::vector;
 
+
 static const char MINOR_SEP = '|';
 static const char MAJOR_SEP = ';';
 
@@ -78,11 +79,18 @@ struct MapNode {
   std::set<std::string> getLeaves() const;
 };
 
-std::ostream &operator<<(std::ostream &os, std::set<MapNode *> const &mns);
+
+typedef std::set<MapNode *> NodeSet;
+
+std::ostream &operator<<(std::ostream &os, NodeSet const &mns);
 std::string printMapNode(bool pol, const std::string &prefix,
                          const MapNode *mn);
-std::ostream &streamMapNodeSet(std::ostream &os, std::set<MapNode *> const &mns,
+std::ostream &streamMapNodeSet(std::ostream &os, NodeSet const &mns,
                                bool pol, std::string prefix);
+
+struct ExpandedNode;
+struct ExpandedNodeCompare;
+typedef std::set<ExpandedNode,ExpandedNodeCompare> ExpandedNodeSet;
 
 struct ExpandedNode {
   MapNode *parent;
@@ -101,10 +109,17 @@ struct ExpandedNode {
   }
 };
 
-std::ostream &operator<<(std::ostream &os, std::set<ExpandedNode> const &inc);
+std::ostream& operator<<(std::ostream& os, ExpandedNode const& en);
+std::ostream &operator<<(std::ostream &os, ExpandedNodeSet const &inc);
 std::ostream &streamExpandedNodeSet(std::ostream &os,
-                                    std::set<ExpandedNode> const &mns, bool pol,
+                                    ExpandedNodeSet const &mns, bool pol,
                                     std::string prefix);
+
+struct ExpandedNodeCompare {
+  bool operator() (const ExpandedNode& lhs, const ExpandedNode& rhs) const {
+    return lhs.child < rhs.child;
+  }
+};
 
 class DotWriter {
   std::ostream &os;
