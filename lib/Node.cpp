@@ -149,7 +149,8 @@ std::ostream &operator<<(std::ostream &os, NodeSet const &mns) {
   return streamMapNodeSet(os, mns, true, "c_");
 }
 
-#define SHOW_PARENT 1
+//#define SHOW_PARENT 1
+#undef SHOW_PARENT
 std::ostream& operator<<(std::ostream& os, ExpandedNode const& en) {
 #ifdef SHOW_PARENT
   os << "(" << printMapNode(true, "c_", en.parent) << ", ";

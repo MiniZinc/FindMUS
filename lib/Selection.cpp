@@ -140,10 +140,21 @@ Selection Selection::get_diff(const Selection& c2) const {
 }
 
 Selection Selection::get_union(const Selection &c2) const {
-  Selection un = *this;
+  //std::cout << "UNION of: C1 = " << *this << "\nAND: C2 = " << c2 << "\n";
+  Selection un;
+  for(MapNode* mn: const_excluded()) {
+    un.exclude(mn);
+  }
+  for(MapNode* mn: c2.const_excluded()) {
+    un.exclude(mn);
+  }
+  for(MapNode* mn: const_selected()) {
+    un.select(mn);
+  }
   for(MapNode* mn: c2.const_selected()) {
     un.select(mn);
   }
+  //std::cout << "UNION of C1+C2 = " << un << "\n";
   return un;
 }
 

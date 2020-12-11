@@ -60,13 +60,17 @@ bool ReMUS::search() {
         return false;
       subsetMap->blockSupersets(s_mus);
       subsetMap->blockSubsets(s_mus);
+      // if s_mus is 10% smaller than s_max
       if (s_mus.size() < floor(0.9 * s_max.size())) {
+        // copy s_mus into p (it is smaller and should be consistent)
         Selection p = s_mus; // s_mus subset of p subset of s_max
+        Selection missing = s_max.get_diff(p);
 
-        size_t n_remove = floor(s_max.size() * 0.1);
-        auto it = s_max.const_selected().rbegin();
-        while(--n_remove) {
-          p.exclude(*(++it));
+        // compute how many elements should be added
+        size_t n_remove = floor(0.9 * s_max.size() - s_mus.size());
+        auto it = missing.const_selected().rbegin();
+        while(n_remove--) {
+          p.select(*(it++));
         }
 
         if (mopts.verbose_enum) {

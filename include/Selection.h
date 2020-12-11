@@ -25,9 +25,9 @@ protected:
 
   void roots_erase(MapNode* mn);
   void frontier_erase(MapNode* mn);
-  void complement_erase(MapNode* mn);
 
 public:
+  void complement_erase(MapNode* mn);
   Selection(const NodeSet &s, const ExpandedNodeSet &i, const NodeSet &e, bool m = true);
   Selection();
 

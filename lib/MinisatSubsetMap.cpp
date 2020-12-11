@@ -358,7 +358,7 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
   Minisat::Lit conLit = mkLit(control);
   atLeastOne.push(~conLit);
   for (MapNode *node : forceInclude) {
-    solution_template.select(node);
+    solution_template.complement_erase(node);
     all_assumptions.push(node->var.isLeaf ? mkLit(node->var.leaf)
                                           : mkLit(node->var.conj));
     if (mopts.verbose_map == 2)
