@@ -80,7 +80,33 @@ struct MapNode {
 };
 
 
-typedef std::set<MapNode *> NodeSet;
+// typedef std::set<MapNode *> NodeSet;
+class NodeSet {
+  protected:
+    std::set<MapNode *> nodes;
+
+  public:
+    using iterator         = std::set<MapNode *>::iterator;
+    using const_iterator   = std::set<MapNode *>::const_iterator;
+    using reverse_iterator = std::set<MapNode *>::reverse_iterator;
+
+    NodeSet() {};
+    NodeSet(std::initializer_list<MapNode *> other) : nodes{other} {}
+    void insert(MapNode *node) { nodes.insert(node); }
+    void erase(MapNode *node) { nodes.erase(node); }
+    void erase(iterator &it) { nodes.erase(it); }
+    iterator begin() { return nodes.begin(); }
+    iterator end() { return nodes.end(); }
+    const_iterator begin() const { return nodes.cbegin(); }
+    const_iterator end() const { return nodes.cend(); }
+    reverse_iterator rbegin() const { return nodes.rbegin(); }
+    reverse_iterator rend() const { return nodes.rend(); }
+    iterator find(MapNode *node) const { return nodes.find(node); }
+    size_t size() const { return nodes.size(); }
+    bool empty() const { return nodes.empty(); }
+    void clear() { nodes.clear(); }
+};
+
 
 std::ostream &operator<<(std::ostream &os, NodeSet const &mns);
 std::string printMapNode(bool pol, const std::string &prefix,
