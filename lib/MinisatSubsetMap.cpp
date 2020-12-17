@@ -298,7 +298,7 @@ void MinisatSubsetMap::blockSubsets(const Selection &selection) {
 }
 
 Selection MinisatSubsetMap::getRootSelector() {
-  return {{&root}, {ExpandedNode(&root)}, {}};
+  return {{&root}, { ExpandedNode(&root) }, {}};
 }
 
 Selection MinisatSubsetMap::getLeavesSelector() {

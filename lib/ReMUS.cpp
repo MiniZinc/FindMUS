@@ -105,9 +105,9 @@ bool ReMUS::search() {
         // We are aboute to modify remus_stack so we need a copy of criticals
         NodeSet criticals_copy = state.criticals;
         const ExpandedNodeSet& s_mcs_included = s_mcs.const_included();
-        ExpandedNodeSet::reverse_iterator rit;
-        for (rit = s_mcs_included.rbegin(); rit != s_mcs_included.rend(); ++rit) {
-          MapNode *n = (*rit).child;
+        vector<MapNode *>::const_reverse_iterator rit;
+        for (rit = s_mcs_included.get_nodes().rbegin(); rit != s_mcs_included.get_nodes().rend(); ++rit) {
+          MapNode *n = *rit;
           ReMUSState new_state{s_max, criticals_copy};
           new_state.S.select(n);
           new_state.criticals.insert(n);

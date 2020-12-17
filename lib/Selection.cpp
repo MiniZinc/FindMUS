@@ -43,12 +43,8 @@ void Selection::exclude(const NodeSet& nodes) {
 
 void Selection::exclude(MapNode *mn) {
   complement.insert(mn);
-
-  auto sit = roots.find(mn);
-  if (sit != roots.end()) roots.erase(sit);
-
-  auto fit = frontier.find(ExpandedNode {mn});
-  if (fit != frontier.end()) frontier.erase(fit);
+  roots.erase(mn);
+  frontier.erase(mn);
 }
 
 void Selection::select(const NodeSet& nodes) {
@@ -58,21 +54,15 @@ void Selection::select(const NodeSet& nodes) {
 }
 
 void Selection::roots_erase(MapNode* mn) {
-  auto rit = roots.find(mn);
-  if (rit != roots.end())
-    roots.erase(rit);
+  roots.erase(mn);
 }
 
 void Selection::frontier_erase(MapNode* mn) {
-  auto fit = frontier.find(ExpandedNode{ mn });
-  if (fit != frontier.end())
-    frontier.erase(fit);
+  frontier.erase(mn);
 }
 
 void Selection::complement_erase(MapNode* mn) {
-  auto cit = complement.find(mn);
-  if (cit != complement.end())
-    complement.erase(cit);
+  complement.erase(mn);
 }
 
 /*
@@ -91,11 +81,11 @@ void Selection::select(MapNode *mn, MapNode* parent) {
     frontier_erase(mn);
 
     roots.insert(parent);
-    frontier.insert(ExpandedNode {parent, mn});
+    frontier.insert(mn, parent);
 
   } else {
     roots.insert(mn);
-    frontier.insert(ExpandedNode {mn});
+    frontier.insert(mn);
   }
 
 }
@@ -161,7 +151,7 @@ Selection Selection::get_union(const Selection &c2) const {
 void Selection::allow_excludes() {
   for (MapNode *node : complement) {
     roots.insert(node);
-    frontier.insert(ExpandedNode(node));
+    frontier.insert(node);
   }
   complement.clear();
 }
@@ -176,20 +166,15 @@ std::set<std::string> Selection::getLeaves() const {
 }
 
 bool Selection::isLeaves() const {
-  for (const ExpandedNode &en : frontier)
-    if (!en.child->var.isLeaf)
+  for (const MapNode *child: frontier.get_nodes())
+    if (!child->var.isLeaf)
       return false;
   return true;
 }
 
 inline
 bool contains_child(const ExpandedNodeSet& ens, const MapNode* child) {
-  return std::any_of(
-      ens.begin(), ens.end(),
-      [&](const ExpandedNode &en) {
-        return en.child == child;
-      }
-  );
+  return ens.contains_node(child);
 }
 
 
@@ -258,7 +243,7 @@ void sel_split(const Selection &C, Selection &c1, Selection &c2) {
   c1 = C;
   c2 = C;
 
-  NodeSet::iterator it = C.const_selected().begin();
+  NodeSet::const_iterator it = C.const_selected().begin();
   for (size_t c = 0; c < C.const_selected().size(); c++, ++it) {
 #if RANDOM_SEL_SPLIT
     if (rand_bin(rd) == 1) { // c1

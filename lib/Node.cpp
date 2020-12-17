@@ -144,6 +144,10 @@ void MapNode::makeBinary(std::function<bool(const MapNode &)> cond) {
   }
 }
 
+std::ostream &operator<<(std::ostream &os, MapNode const &mn) {
+  os << printMapNode(true, "c_", &mn);
+  return os;
+}
 
 std::ostream &operator<<(std::ostream &os, NodeSet const &mns) {
   return streamMapNodeSet(os, mns, true, "c_");
@@ -165,7 +169,7 @@ std::ostream& operator<<(std::ostream& os, ExpandedNode const& en) {
 std::ostream &operator<<(std::ostream &os, ExpandedNodeSet const &inc) {
   bool first = true;
   os << "{";
-  for (const ExpandedNode &en : inc) {
+  for (const ExpandedNode en : inc) {
     if (!first) {
       os << ", ";
     }

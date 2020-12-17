@@ -43,7 +43,7 @@ bool run_test(size_t id, const vector<string> &args, string path) {
   }
   if (mo.timedOut())
     result = "TIMEOUT";
-  if (stats.nmuses != filesp.muses.size())
+  if (result != " BADMUS" && stats.nmuses != filesp.muses.size())
     result = " MISSED";
 
   const Statistics &mstats = me.getStatistics();
