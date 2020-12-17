@@ -85,18 +85,18 @@ std::ostream &operator<<(std::ostream &os, NodeSet const &mns);
 
 class NodeSet {
   protected:
-    std::vector<MapNode *> nodes;
+    std::vector<const MapNode *> nodes;
 
   public:
-    using iterator = typename std::vector<MapNode *>::iterator;
-    using const_iterator = typename std::vector<MapNode *>::const_iterator;
-    using reverse_iterator = typename std::vector<MapNode *>::reverse_iterator;
-    using const_reverse_iterator = typename std::vector<MapNode *>::const_reverse_iterator;
+    using iterator = typename std::vector<const MapNode *>::iterator;
+    using const_iterator = typename std::vector<const MapNode *>::const_iterator;
+    using reverse_iterator = typename std::vector<const MapNode *>::reverse_iterator;
+    using const_reverse_iterator = typename std::vector<const MapNode *>::const_reverse_iterator;
 
     NodeSet() {};
-    NodeSet(std::initializer_list<MapNode *> other) : nodes{other} {}
+    NodeSet(std::initializer_list<const MapNode *> other) : nodes{other} {}
 
-    size_t insert(MapNode *node) {
+    size_t insert(const MapNode *node) {
       size_t idx = nodes.end() - nodes.begin();
       if(nodes.empty() || nodes.back() < node) {
         nodes.push_back(node);
@@ -112,7 +112,7 @@ class NodeSet {
       return idx;
     }
 
-    size_t erase(MapNode *node) {
+    size_t erase(const MapNode *node) {
       size_t idx = nodes.end() - nodes.begin();
       iterator it = std::lower_bound(nodes.begin(), nodes.end(), node);
       if(it != nodes.end() && *it == node) {
@@ -166,23 +166,23 @@ std::ostream &streamMapNodeSet(std::ostream &os, NodeSet const &mns,
                                bool pol, std::string prefix);
 
 struct ExpandedNode {
-  MapNode *parent;
-  MapNode *child;
+  const MapNode *parent;
+  const MapNode *child;
 
-  explicit ExpandedNode(MapNode *p, MapNode *c) : parent(p), child(c) {}
-  explicit ExpandedNode(MapNode *c) : parent(c), child(c) {}
+  explicit ExpandedNode(const MapNode *p, const MapNode *c) : parent(p), child(c) {}
+  explicit ExpandedNode(const MapNode *c) : parent(c), child(c) {}
   ~ExpandedNode() {}
 };
 
 class ExpandedNodeSetIterator {
   NodeSet::const_iterator nodes_it;
-  vector<MapNode *>::const_iterator roots_it;
+  vector<const MapNode *>::const_iterator roots_it;
 
 public:
   ExpandedNodeSetIterator(const ExpandedNodeSetIterator &ei)
     : nodes_it {ei.nodes_it}, roots_it {ei.roots_it} {}
   ExpandedNodeSetIterator(const NodeSet::const_iterator &nit,
-                          const vector<MapNode *>::const_iterator &rit)
+                          const vector<const MapNode *>::const_iterator &rit)
     : nodes_it{nit}, roots_it{rit} {}
   ~ExpandedNodeSetIterator() {}
 
@@ -209,19 +209,10 @@ public:
   ExpandedNode operator*() const { return ExpandedNode {*roots_it, *nodes_it}; }
 };
 
-class MapNodeRange {
-  const vector<MapNode *> &_vec;
-public:
-  MapNodeRange(const vector<MapNode *> &v) : _vec{v} {}
-
-  vector<MapNode *>::const_iterator begin() { return _vec.cbegin(); }
-  vector<MapNode *>::const_iterator end() { return _vec.cend(); }
-};
-
 class ExpandedNodeSet {
   protected:
     NodeSet nodes;
-    std::vector<MapNode *> roots;
+    std::vector<const MapNode *> roots;
 
   public:
 
@@ -236,16 +227,16 @@ class ExpandedNodeSet {
       insert(en.child, en.parent);
     }
 
-    void insert(MapNode *node, MapNode *parent) {
+    void insert(const MapNode *node, const MapNode *parent) {
       size_t idx = nodes.insert(node);
       roots.insert(roots.begin() + idx, parent);
     }
 
-    void insert(MapNode *node) {
+    void insert(const MapNode *node) {
       insert(node, node);
     }
 
-    void erase(MapNode *node) {
+    void erase(const MapNode *node) {
       size_t idx = nodes.erase(node);
       if (idx < roots.size()) {
         roots.erase(roots.begin() + idx);
@@ -265,7 +256,7 @@ class ExpandedNodeSet {
     }
 
     const NodeSet& get_nodes() const { return nodes; }
-    const vector<MapNode *>& get_roots() const { return roots; }
+    const vector<const MapNode *>& get_roots() const { return roots; }
 
     size_t size() const { return nodes.size(); }
     bool empty() const { return nodes.empty(); }

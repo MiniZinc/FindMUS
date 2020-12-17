@@ -57,7 +57,7 @@ bool MusEnumerator::linear_shrink(Selection &model,
     return true;
 
   NodeSet selected_copy = model.const_selected();
-  for (MapNode *mn : selected_copy) {
+  for (const MapNode *mn : selected_copy) {
     if (model.size() == 1)
       break;
     if (mopts.timedOut())

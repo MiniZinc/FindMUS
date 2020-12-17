@@ -23,11 +23,11 @@ protected:
   ExpandedNodeSet& included();
   NodeSet& excluded();
 
-  void roots_erase(MapNode* mn);
-  void frontier_erase(MapNode* mn);
+  void roots_erase(const MapNode *mn);
+  void frontier_erase(const MapNode *mn);
 
 public:
-  void complement_erase(MapNode* mn);
+  void complement_erase(const MapNode *mn);
   Selection(const NodeSet &s, const ExpandedNodeSet &i, const NodeSet &e, bool m = true);
   Selection();
 
@@ -41,11 +41,11 @@ public:
   const ExpandedNodeSet& const_included() const;
   const NodeSet& const_excluded() const;
 
-  void select(MapNode *mn, MapNode* parent = nullptr);
+  void select(const MapNode *mn, const MapNode *parent = nullptr);
   void select(const NodeSet& nodes);
 
   void exclude(const NodeSet& nodes);
-  void exclude(MapNode *mn);
+  void exclude(const MapNode *mn);
 
   void expand(const Selection &m);
 
@@ -53,7 +53,7 @@ public:
 
   void shrinkTo(std::set<std::string> &con_ids);
 
-  bool isSelected(MapNode* mn);
+  bool isSelected(const MapNode *mn);
 
   void allow_excludes();
 

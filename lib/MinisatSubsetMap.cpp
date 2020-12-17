@@ -342,14 +342,14 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
     std::cout << "SubsetMap: getSelection(" << selection
               << ") with assumptions: {";
   Minisat::vec<Minisat::Lit> all_assumptions;
-  for (const ExpandedNode &enode : selection.const_included()) {
-    if (!enode.child->var.isLeaf) { // Don't force leaves to be active
-      all_assumptions.push(mkLit(enode.child->var.eq));
+  for (const MapNode *child : selection.const_included().get_nodes()) {
+    if (!child->var.isLeaf) { // Don't force leaves to be active
+      all_assumptions.push(mkLit(child->var.eq));
       if (mopts.verbose_map == 2)
-        std::cout << " e" << enode.child->path;
+        std::cout << " e" << child->path;
     }
     Minisat::Var v =
-        enode.child->var.isLeaf ? enode.child->var.leaf : enode.child->var.conj;
+        child->var.isLeaf ? child->var.leaf : child->var.conj;
     atLeastOne.push(mkLit(v));
     solver.setDecisionVar(v, true);
   }
@@ -357,7 +357,7 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
   Minisat::Var control = solver.newVar(Minisat::l_Undef, false);
   Minisat::Lit conLit = mkLit(control);
   atLeastOne.push(~conLit);
-  for (MapNode *node : forceInclude) {
+  for (const MapNode *node : forceInclude) {
     solution_template.complement_erase(node);
     all_assumptions.push(node->var.isLeaf ? mkLit(node->var.leaf)
                                           : mkLit(node->var.conj));
@@ -372,7 +372,7 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
     all_assumptions.push(l);
   }
 
-  for (MapNode *node : solution_template.const_excluded()) {
+  for (const MapNode *node : solution_template.const_excluded()) {
     all_assumptions.push(node->var.isLeaf ? ~mkLit(node->var.leaf)
                                           : ~mkLit(node->var.disj));
     if (mopts.verbose_map == 2)
@@ -399,13 +399,13 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
   solution_set.exclude(solution_template.const_excluded());
 
   if (r) {
-    for (const ExpandedNode &en : solution_template.const_included()) {
-      if ((en.child->var.isLeaf &&
-           solver.modelValue(en.child->var.leaf) == Minisat::l_True) ||
-          solver.modelValue(en.child->var.conj) == Minisat::l_True) {
-        solution_set.select(en.child);
+    for (const MapNode *child : solution_template.const_included().get_nodes()) {
+      if ((child->var.isLeaf &&
+           solver.modelValue(child->var.leaf) == Minisat::l_True) ||
+          solver.modelValue(child->var.conj) == Minisat::l_True) {
+        solution_set.select(child);
       } else {
-        solution_set.exclude(en.child);
+        solution_set.exclude(child);
       }
     }
   }

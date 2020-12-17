@@ -196,8 +196,7 @@ std::ostream &streamExpandedNodeSet(std::ostream &os,
                                     std::string prefix) {
   bool first = true;
   os << "{";
-  for (const ExpandedNode &emn : mns) {
-    const MapNode *mn = emn.child;
+  for (const MapNode *mn : mns.get_nodes()) {
     if (!first)
       os << ", ";
     os << printMapNode(pol, prefix, mn);

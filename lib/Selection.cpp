@@ -36,32 +36,32 @@ size_t Selection::size() const { return roots.size(); }
 bool Selection::empty() const { return size() == 0; }
 
 void Selection::exclude(const NodeSet& nodes) {
-  for(MapNode *mn : nodes) {
+  for(const MapNode *mn : nodes) {
     exclude(mn);
   }
 }
 
-void Selection::exclude(MapNode *mn) {
+void Selection::exclude(const MapNode *mn) {
   complement.insert(mn);
   roots.erase(mn);
   frontier.erase(mn);
 }
 
 void Selection::select(const NodeSet& nodes) {
-  for(MapNode *mn : nodes) {
+  for(const MapNode *mn : nodes) {
     select(mn);
   }
 }
 
-void Selection::roots_erase(MapNode* mn) {
+void Selection::roots_erase(const MapNode* mn) {
   roots.erase(mn);
 }
 
-void Selection::frontier_erase(MapNode* mn) {
+void Selection::frontier_erase(const MapNode* mn) {
   frontier.erase(mn);
 }
 
-void Selection::complement_erase(MapNode* mn) {
+void Selection::complement_erase(const MapNode* mn) {
   complement.erase(mn);
 }
 
@@ -72,7 +72,7 @@ void Selection::complement_erase(MapNode* mn) {
  * add (p, mn) to frontier
  * add p to roots
  */
-void Selection::select(MapNode *mn, MapNode* parent) {
+void Selection::select(const MapNode *mn, const MapNode* parent) {
   complement_erase(mn);
 
   if(parent) {
@@ -105,7 +105,7 @@ void Selection::updateIncludeExclude() {
 
 void Selection::shrinkTo(std::set<std::string> &con_ids) {
   NodeSet roots_copy = roots;
-  for (MapNode *mn : roots_copy) {
+  for (const MapNode *mn : roots_copy) {
     std::set<string> leaves = mn->getLeaves();
 
     if (!any_of(con_ids.begin(), con_ids.end(), [&](const string &s) {
@@ -117,13 +117,13 @@ void Selection::shrinkTo(std::set<std::string> &con_ids) {
   updateIncludeExclude();
 }
 
-bool Selection::isSelected(MapNode* mn) {
+bool Selection::isSelected(const MapNode* mn) {
   return roots.find(mn) != roots.end();
 }
 
 Selection Selection::get_diff(const Selection& c2) const {
   Selection diff = *this;
-  for(MapNode* mn: c2.const_selected()) {
+  for(const MapNode* mn: c2.const_selected()) {
     diff.exclude(mn);
   }
   return diff;
@@ -132,16 +132,16 @@ Selection Selection::get_diff(const Selection& c2) const {
 Selection Selection::get_union(const Selection &c2) const {
   //std::cout << "UNION of: C1 = " << *this << "\nAND: C2 = " << c2 << "\n";
   Selection un;
-  for(MapNode* mn: const_excluded()) {
+  for(const MapNode* mn: const_excluded()) {
     un.exclude(mn);
   }
-  for(MapNode* mn: c2.const_excluded()) {
+  for(const MapNode* mn: c2.const_excluded()) {
     un.exclude(mn);
   }
-  for(MapNode* mn: const_selected()) {
+  for(const MapNode* mn: const_selected()) {
     un.select(mn);
   }
-  for(MapNode* mn: c2.const_selected()) {
+  for(const MapNode* mn: c2.const_selected()) {
     un.select(mn);
   }
   //std::cout << "UNION of C1+C2 = " << un << "\n";
@@ -149,7 +149,7 @@ Selection Selection::get_union(const Selection &c2) const {
 }
 
 void Selection::allow_excludes() {
-  for (MapNode *node : complement) {
+  for (const MapNode *node : complement) {
     roots.insert(node);
     frontier.insert(node);
   }
@@ -188,7 +188,7 @@ void Selection::expand(const Selection &m) {
       if (roots.empty() || roots.find(en.parent) != roots.end()) {
         //std::cerr << "     root is empty or does contain parent" << std::endl;
         roots_erase(en.parent);
-        MapNode *nm = en.child;
+        const MapNode *nm = en.child;
         frontier_erase(en.child);
         if (nm->var.isLeaf || nm->children.empty()) {
           //std::cerr << "      Is leaf, selecting: " << en << std::endl;
@@ -196,7 +196,7 @@ void Selection::expand(const Selection &m) {
           //std::cerr << "      Is leaf, result: " << *this << std::endl;
           //frontier.insert(en);
         } else {
-          for (MapNode& child : nm->children) {
+          for (const MapNode& child : nm->children) {
             //std::cerr << "      Not leaf, selecting: " << printMapNode(true, "d_", &child) << std::endl;
             select(&child, en.parent);
             //std::cerr << "      Not leaf, result: " << *this << std::endl;
@@ -262,10 +262,10 @@ void sel_split(const Selection &C, Selection &c1, Selection &c2) {
 // Construct empty Selection that still contains union of nodes
 Selection empty_sel(const Selection &C) {
   Selection e;
-  for(MapNode* mn : C.const_selected()) {
+  for(const MapNode *mn : C.const_selected()) {
     e.exclude(mn);
   }
-  for(MapNode* mn : C.const_excluded()) {
+  for(const MapNode *mn : C.const_excluded()) {
     e.exclude(mn);
   }
   return e;
@@ -274,7 +274,7 @@ Selection empty_sel(const Selection &C) {
 bool is_subset(const Selection &C, const NodeSet &crits) {
   if (crits.empty() || C.size() > crits.size())
     return false;
-  for (MapNode *mn : C.const_selected()) {
+  for (const MapNode *mn : C.const_selected()) {
     if (crits.find(mn) == crits.end())
       return false;
   }
