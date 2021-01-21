@@ -13,7 +13,7 @@ stages:
     - unzip -q vendor.zip
     - sh download.sh minizinc develop build:${MZNARCH} minizinc.zip
     - unzip -q minizinc.zip
-    - cmake -S . -B build -G"$CMAKE_ARCH" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$CI_PROJECT_DIR/minizinc/$CMAKEDIR -DGecode_ROOT="$CI_PROJECT_DIR/vendor/gecode" -DGurobi_ROOT="$CI_PROJECT_DIR/vendor/gurobi" -DCPlex_ROOT="$CI_PROJECT_DIR/vendor/CPLEX_Studio/cplex" -DOsiCBC_ROOT="$CI_PROJECT_DIR/vendor/cbc" -DSCIP_ROOT="$CI_PROJECT_DIR/vendor/scip" -DXpress_ROOT="$CI_PROJECT_DIR/vendor/xpressmp" -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS" 
+    - cmake -S . -B build -G"$CMAKE_ARCH" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$CI_PROJECT_DIR/minizinc/$CMAKEDIR -DGecode_ROOT="$CI_PROJECT_DIR/vendor/gecode" -DGurobi_ROOT="$CI_PROJECT_DIR/vendor/gurobi" -DCPlex_ROOT="$CI_PROJECT_DIR/vendor/CPLEX_Studio/cplex" -DOsiCBC_ROOT="$CI_PROJECT_DIR/vendor/cbc" -DSCIP_ROOT="$CI_PROJECT_DIR/vendor/scip" -DXpress_ROOT="$CI_PROJECT_DIR/vendor/xpressmp" -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
     - cmake --build build --config Release --target install
   artifacts:
     paths:
@@ -24,7 +24,7 @@ stages:
 
 build:linux:
   extends: .build
-  image: dekker1/minibuild:cpp
+  image: minizinc/build-environment:cpp
   variables:
     MZNARCH: "linux"
     CMAKE_ARCH: "Ninja"
