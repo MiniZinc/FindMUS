@@ -13,7 +13,7 @@ void SubsetMap::clearForceInclude(void) { forceInclude.clear(); }
 
 void SubsetMap::setForceInclude(const Selection &selection) {
   clearForceInclude();
-  for (MapNode *node : selection.selected) {
+  for (const MapNode *node : selection.const_selected()) {
     forceInclude.insert(node);
   }
 }

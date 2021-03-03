@@ -91,7 +91,7 @@ void help_long(void) {
       << "    Include the given data assignment in the model.\n"
       << "\n"
       << " Enumeration Options:\n"
-      << "  --shrink-alg lin,map_lin,qx,qx2,map_qx\tdefault: lin\n"
+      << "  --shrink-alg lin,map_lin,qx,qx2,map_qx\tdefault: map_qx\n"
       << "    Shrink algorithm to use:\n"
       << "      lin:     linear shrink\n"
       << "      map_lin: linear shrink recording intermediate results in map\n"

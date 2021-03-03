@@ -12,6 +12,23 @@ namespace HierMUS {
 using std::string;
 using std::vector;
 
+void getLeaves(const MapNode &node, std::set<std::string> &leaves) {
+  if (!node.children.empty()) {
+    for (const MapNode &child : node.children)
+      getLeaves(child, leaves);
+  } else {
+    vector<string> split_leaves = utils::split(node.con_id, '#', false);
+    for (const string &l : split_leaves)
+      leaves.insert(l);
+  }
+}
+
+std::set<std::string> MapNode::getLeaves() const {
+  std::set<std::string> leaves;
+  HierMUS::getLeaves(*this, leaves);
+  return leaves;
+}
+
 MapNode &MapNode::addPath(std::vector<std::string> &splitpath, unsigned int p) {
   if (p == splitpath.size()) {
     if (!children.empty()) {
@@ -127,28 +144,36 @@ void MapNode::makeBinary(std::function<bool(const MapNode &)> cond) {
   }
 }
 
-void getLeaves(const MapNode &node, std::set<std::string> &leaves) {
-  if (!node.children.empty()) {
-    for (const MapNode &child : node.children)
-      getLeaves(child, leaves);
-  } else {
-    vector<string> split_leaves = utils::split(node.con_id, '#', false);
-    for (const string &l : split_leaves)
-      leaves.insert(l);
-  }
+std::ostream &operator<<(std::ostream &os, MapNode const &mn) {
+  os << printMapNode(true, "c_", &mn);
+  return os;
 }
 
-std::ostream &operator<<(std::ostream &os, std::set<MapNode *> const &mns) {
+std::ostream &operator<<(std::ostream &os, NodeSet const &mns) {
   return streamMapNodeSet(os, mns, true, "c_");
 }
 
-std::ostream &operator<<(std::ostream &os, std::set<ExpandedNode> const &inc) {
+//#define SHOW_PARENT 1
+#undef SHOW_PARENT
+std::ostream& operator<<(std::ostream& os, ExpandedNode const& en) {
+#ifdef SHOW_PARENT
+  os << "(" << printMapNode(true, "c_", en.parent) << ", ";
+#endif
+  os << printMapNode(true, "e_", en.child);
+#ifdef SHOW_PARENT
+  os << ")";
+#endif
+  return os;
+}
+
+std::ostream &operator<<(std::ostream &os, ExpandedNodeSet const &inc) {
   bool first = true;
   os << "{";
-  for (const ExpandedNode &en : inc) {
-    if (!first)
+  for (const ExpandedNode en : inc) {
+    if (!first) {
       os << ", ";
-    os << printMapNode(true, "e_", en.child);
+    }
+    os << en;
     first = false;
   }
   os << "}";
@@ -167,12 +192,11 @@ inline std::string printMapNode(bool pol, const std::string &prefix,
 }
 
 std::ostream &streamExpandedNodeSet(std::ostream &os,
-                                    std::set<ExpandedNode> const &mns, bool pol,
+                                    ExpandedNodeSet const &mns, bool pol,
                                     std::string prefix) {
   bool first = true;
   os << "{";
-  for (const ExpandedNode &emn : mns) {
-    const MapNode *mn = emn.child;
+  for (const MapNode *mn : mns.get_nodes()) {
     if (!first)
       os << ", ";
     os << printMapNode(pol, prefix, mn);
@@ -182,7 +206,7 @@ std::ostream &streamExpandedNodeSet(std::ostream &os,
   return os;
 }
 
-std::ostream &streamMapNodeSet(std::ostream &os, std::set<MapNode *> const &mns,
+std::ostream &streamMapNodeSet(std::ostream &os, NodeSet const &mns,
                                bool pol, std::string prefix) {
   bool first = true;
   os << "{";

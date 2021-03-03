@@ -108,7 +108,7 @@ FileSP::FileSP(MUSEnumOptions &mo, string file_path)
 }
 
 void FileSP::printSol(const Selection &b) {
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
     std::cout << leaf << ", ";
   }
@@ -117,8 +117,8 @@ void FileSP::printSol(const Selection &b) {
 
 bool FileSP::check(const Selection &s) {
   bool sol = true;
-  if (!s.selected.empty()) {
-    set<string> leaves = getLeaves(s);
+  if (!s.empty()) {
+    set<string> leaves = s.getLeaves();
     vector<string> leaves_vec(leaves.begin(), leaves.end());
     sol = !oracle.contains_subset(leaves_vec);
   }
@@ -129,8 +129,8 @@ bool FileSP::check(const Selection &s) {
 }
 
 bool FileSP::isMUS(const Selection &s) {
-  if (!s.selected.empty()) {
-    set<string> leaves = getLeaves(s);
+  if (!s.empty()) {
+    set<string> leaves = s.getLeaves();
     if (find(muses.begin(), muses.end(), leaves) != muses.end())
       return true;
   }

@@ -10,6 +10,7 @@
 #include "Options.h"
 
 #include "../include/string_utils.h"
+#include <minizinc/file_utils.hh>
 
 namespace HierMUS {
 using std::string;
@@ -24,6 +25,7 @@ bool run_test(size_t id, const vector<string> &args, string path) {
   OptionsHelper::parse(dro, mo, n_args);
 
   FileSP filesp(mo, path);
+  string basepath = MiniZinc::FileUtils::base_name(path);
 
   HierMUS::SubProblem *problem = static_cast<HierMUS::SubProblem *>(&filesp);
   HierMUSEnumer me(*problem, mo);
@@ -35,21 +37,22 @@ bool run_test(size_t id, const vector<string> &args, string path) {
     if (filesp.isMUS(s)) {
       stats.nmuses++;
     } else {
-      result = "BADMUS";
+      result = " BADMUS";
       break;
     }
   }
   if (mo.timedOut())
     result = "TIMEOUT";
-  if (stats.nmuses != filesp.muses.size())
-    result = "MISSED";
+  if (result != " BADMUS" && stats.nmuses != filesp.muses.size())
+    result = " MISSED";
 
   const Statistics &mstats = me.getStatistics();
-  std::cout << id << ": "
+  std::cout << std::setw(2) << id << ": "
             << utils::join(
                    {
-                       path,
-                       (result == "PASS" ? "PASS" : ("FAIL(" + result + ")")),
+                       basepath,
+                       result == "PASS" ? "PASS" : "FAIL",
+                       result == "PASS" ? "       " : result,
                        std::to_string(mstats.map_calls),
                        std::to_string(mstats.sat_calls),
                        std::to_string(stats.nmuses),
@@ -63,13 +66,15 @@ bool run_test(size_t id, const vector<string> &args, string path) {
 
 int run_tests(vector<size_t> ids) {
   vector<vector<string>> test_args = {
-      {"-t", "1000", "--paramset", "fzn", "--no-binarize"},
-      {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "lin"},
-      {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "qx"},
-      {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "qx2"},
-      {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "map_lin"},
-      {"-t", "1000", "--paramset", "fzn", "--no-binarize", "--structure",
-       "flat", "--remus", "--shrink-alg", "map_lin"},
+    {"-t", "1000", "--paramset", "fzn", "--no-binarize", "--structure", "flat", "--shrink-alg", "map_lin"},
+    {"-t", "1000", "--paramset", "fzn", "--structure", "flat", "--shrink-alg", "map_lin"},
+    {"-t", "1000", "--paramset", "fzn", "--no-binarize"},
+    {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "lin"},
+    {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "qx"},
+    {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "qx2"},
+    {"-t", "1000", "--paramset", "fzn", "--shrink-alg", "map_lin"},
+    {"-t", "1000", "--paramset", "fzn", "--no-binarize", "--structure", "flat", "--remus", "--shrink-alg", "map_lin"},
+    {"-t", "1000", "--paramset", "fzn", "--no-binarize", "--structure", "flat", "--remus"},
   };
   vector<string> spec_files = {
       "../examples/specs/dep.mus", "../examples/specs/indep.mus",
@@ -112,8 +117,7 @@ int run_tests(vector<size_t> ids) {
     all_pass = all_pass && result;
   }
 
-  std::cout << "Passed: (" << ids.size() - fails.size() << "/" << ids.size()
-            << ")\t";
+  std::cout << "Passed: (" << ids.size() - fails.size() << "/" << ids.size() << ")\t";
   std::cout << "Failed: (" << fails.size() << "/" << ids.size() << "):\t";
   if (!fails.empty()) {
     std::cout << utils::join(fails, " ");

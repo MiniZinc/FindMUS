@@ -1,7 +1,6 @@
 #ifndef __HIERMUS_PROBLEM_H_
 #define __HIERMUS_PROBLEM_H_
 
-#include <set>
 #include <string>
 #include <vector>
 

@@ -9,11 +9,7 @@ namespace HierMUS {
 using std::vector;
 
 void allow_excludes(Selection &s) {
-  for (MapNode *node : s.exclude) {
-    s.selected.insert(node);
-    s.include.insert(ExpandedNode(node));
-  }
-  s.exclude.clear();
+  s.allow_excludes();
 }
 
 OldMUSEnumer::OldMUSEnumer(SubProblem &prob, MUSEnumOptions &mo)
@@ -40,7 +36,7 @@ OldMUSEnumer::OldMUSEnumer(SubProblem &prob, MUSEnumOptions &mo)
   Selection root = subsetMap->getRootSelector();
   frontier = subsetMap->expand(root, root);
   inner_enum->setFrontier(frontier);
-  needs_expansion = !isLeaves(frontier);
+  needs_expansion = !frontier.isLeaves();
   frontier = empty_selection;
   subsetMap->enableTempBlocking();
 }
@@ -62,7 +58,7 @@ bool OldMUSEnumer::search() {
     if (!mopts.map_enum_focus_mode)
       allow_excludes(frontier);
 
-    needs_expansion = !isLeaves(frontier);
+    needs_expansion = !frontier.isLeaves();
     inner_enum->setFrontier(frontier);
     frontier = empty_selection;
     subsetMap->reset();
@@ -79,7 +75,7 @@ void OldMUSEnumer::printMUS(void) {
     subProblem.printSol(frontier);
     return;
   }
-  if (!current_mus.selected.empty()) {
+  if (!current_mus.empty()) {
     subProblem.printSol(current_mus);
   }
 }

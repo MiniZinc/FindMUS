@@ -17,6 +17,7 @@ namespace HierMUS {
 using std::string;
 using std::vector;
 
+
 static const char MINOR_SEP = '|';
 static const char MAJOR_SEP = ';';
 
@@ -74,35 +75,202 @@ struct MapNode {
   void compact();
   void mergeLeaves();
   void makeBinary(std::function<bool(const MapNode &)> cond);
+
+  std::set<std::string> getLeaves() const;
 };
 
-void getLeaves(const MapNode &node, std::set<std::string> &leaves);
-std::ostream &operator<<(std::ostream &os, std::set<MapNode *> const &mns);
+class NodeSet;
+std::ostream &operator<<(std::ostream &os, MapNode const &mn);
+std::ostream &operator<<(std::ostream &os, NodeSet const &mns);
+
+class NodeSet {
+  protected:
+    std::vector<const MapNode *> nodes;
+
+  public:
+    using iterator = typename std::vector<const MapNode *>::iterator;
+    using const_iterator = typename std::vector<const MapNode *>::const_iterator;
+    using reverse_iterator = typename std::vector<const MapNode *>::reverse_iterator;
+    using const_reverse_iterator = typename std::vector<const MapNode *>::const_reverse_iterator;
+
+    NodeSet() {};
+    NodeSet(std::initializer_list<const MapNode *> other) : nodes{other} {}
+
+    size_t insert(const MapNode *node) {
+      size_t idx = nodes.end() - nodes.begin();
+      if(nodes.empty() || nodes.back() < node) {
+        nodes.push_back(node);
+      } else {
+        iterator it = std::lower_bound(nodes.begin(), nodes.end(), node);
+        if(it == nodes.end()) {
+          nodes.push_back(node);
+        } else if(*it != node) {
+          idx = it - nodes.begin();
+          nodes.insert(it, node);
+        }
+      }
+      return idx;
+    }
+
+    size_t erase(const MapNode *node) {
+      size_t idx = nodes.end() - nodes.begin();
+      iterator it = std::lower_bound(nodes.begin(), nodes.end(), node);
+      if(it != nodes.end() && *it == node) {
+        idx = erase(it);
+      }
+      return idx;
+    }
+
+    size_t erase(iterator &it) {
+      size_t idx = it - nodes.begin();
+      nodes.erase(it);
+      return idx;
+    }
+
+    iterator begin() { return nodes.begin(); }
+    iterator end() { return nodes.end(); }
+
+    const_iterator begin() const { return nodes.cbegin(); }
+    const_iterator end() const { return nodes.cend(); }
+
+    reverse_iterator rbegin() { return nodes.rbegin(); }
+    reverse_iterator rend() { return nodes.rend(); }
+
+    const_reverse_iterator rbegin() const { return nodes.rbegin(); }
+    const_reverse_iterator rend() const { return nodes.rend(); }
+
+    iterator find(const MapNode *node) {
+      iterator it = std::lower_bound(nodes.begin(), nodes.end(), node);
+      if(it != nodes.end() && *it == node)
+        return it;
+      return nodes.end();
+    }
+
+    const_iterator find(const MapNode *node) const {
+      const_iterator it = std::lower_bound(nodes.cbegin(), nodes.cend(), node);
+      if(it != nodes.end() && *it == node)
+        return it;
+      return nodes.end();
+    }
+
+    size_t size() const { return nodes.size(); }
+    bool empty() const { return nodes.empty(); }
+    void clear() { nodes.clear(); }
+};
+
+
+
 std::string printMapNode(bool pol, const std::string &prefix,
                          const MapNode *mn);
-std::ostream &streamMapNodeSet(std::ostream &os, std::set<MapNode *> const &mns,
+std::ostream &streamMapNodeSet(std::ostream &os, NodeSet const &mns,
                                bool pol, std::string prefix);
 
 struct ExpandedNode {
-  MapNode *parent;
-  MapNode *child;
+  const MapNode *parent;
+  const MapNode *child;
 
-  explicit ExpandedNode(MapNode *p, MapNode *c) : parent(p), child(c) {}
-  explicit ExpandedNode(MapNode *c) : parent(c), child(c) {}
+  explicit ExpandedNode(const MapNode *p, const MapNode *c) : parent(p), child(c) {}
+  explicit ExpandedNode(const MapNode *c) : parent(c), child(c) {}
   ~ExpandedNode() {}
-
-  bool operator<(const ExpandedNode &other) const {
-    return parent < other.parent ||
-           (parent == other.parent && child < other.child);
-  }
-  bool operator==(const ExpandedNode &other) const {
-    return parent == other.parent && child == other.child;
-  }
 };
 
-std::ostream &operator<<(std::ostream &os, std::set<ExpandedNode> const &inc);
+class ExpandedNodeSetIterator {
+  NodeSet::const_iterator nodes_it;
+  vector<const MapNode *>::const_iterator roots_it;
+
+public:
+  ExpandedNodeSetIterator(const ExpandedNodeSetIterator &ei)
+    : nodes_it {ei.nodes_it}, roots_it {ei.roots_it} {}
+  ExpandedNodeSetIterator(const NodeSet::const_iterator &nit,
+                          const vector<const MapNode *>::const_iterator &rit)
+    : nodes_it{nit}, roots_it{rit} {}
+  ~ExpandedNodeSetIterator() {}
+
+  ExpandedNodeSetIterator& operator=(const ExpandedNodeSetIterator &ei) {
+    if (this != &ei) {
+      nodes_it = ei.nodes_it;
+      roots_it = ei.roots_it;
+    }
+    return *this;
+  }
+  bool operator==(const ExpandedNodeSetIterator &ei) const { return nodes_it == ei.nodes_it && roots_it == ei.roots_it; }
+  bool operator!=(const ExpandedNodeSetIterator &ei) const { return nodes_it != ei.nodes_it || roots_it != ei.roots_it; }
+  ExpandedNodeSetIterator &operator++() {
+    nodes_it++;
+    roots_it++;
+    return *this;
+  }
+  ExpandedNodeSetIterator &operator--() {
+    nodes_it--;
+    roots_it--;
+    return *this;
+  }
+
+  ExpandedNode operator*() const { return ExpandedNode {*roots_it, *nodes_it}; }
+};
+
+class ExpandedNodeSet {
+  protected:
+    NodeSet nodes;
+    std::vector<const MapNode *> roots;
+
+  public:
+
+    ExpandedNodeSet() {};
+    ExpandedNodeSet(const std::initializer_list<const ExpandedNode> &&other) {
+      for(const ExpandedNode& en: other) {
+        insert(en);
+      }
+    }
+
+    void insert(const ExpandedNode& en) {
+      insert(en.child, en.parent);
+    }
+
+    void insert(const MapNode *node, const MapNode *parent) {
+      size_t idx = nodes.insert(node);
+      roots.insert(roots.begin() + idx, parent);
+    }
+
+    void insert(const MapNode *node) {
+      insert(node, node);
+    }
+
+    void erase(const MapNode *node) {
+      size_t idx = nodes.erase(node);
+      if (idx < roots.size()) {
+        roots.erase(roots.begin() + idx);
+      }
+    }
+
+    ExpandedNodeSetIterator begin() const {
+      return ExpandedNodeSetIterator(nodes.begin(), roots.begin());
+    }
+
+    ExpandedNodeSetIterator end() const {
+      return ExpandedNodeSetIterator(nodes.end(), roots.end());
+    }
+
+    bool contains_node(const MapNode *node) const {
+      return nodes.find(node) != nodes.end();
+    }
+
+    const NodeSet& get_nodes() const { return nodes; }
+    const vector<const MapNode *>& get_roots() const { return roots; }
+
+    size_t size() const { return nodes.size(); }
+    bool empty() const { return nodes.empty(); }
+
+    void clear() {
+      nodes.clear();
+      roots.clear();
+    }
+};
+
+std::ostream &operator<<(std::ostream &os, ExpandedNode const& en);
+std::ostream &operator<<(std::ostream &os, ExpandedNodeSet const &inc);
 std::ostream &streamExpandedNodeSet(std::ostream &os,
-                                    std::set<ExpandedNode> const &mns, bool pol,
+                                    ExpandedNodeSet const &mns, bool pol,
                                     std::string prefix);
 
 class DotWriter {

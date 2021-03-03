@@ -10,55 +10,226 @@
 
 namespace HierMUS {
 
-std::set<std::string> getLeaves(const Selection &b) {
+
+Selection::Selection(const NodeSet &s, const ExpandedNodeSet &i, const NodeSet &e, bool m)
+    : roots(s), frontier(i), complement(e), is_min(m) {}
+
+Selection::Selection() : is_min(true) {}
+
+void Selection::setMinimal(bool im) {
+  is_min = im;
+}
+
+bool Selection::knownMinimal() {
+  return is_min;
+}
+
+NodeSet& Selection::selected() { return roots; }
+NodeSet& Selection::excluded() { return complement; }
+ExpandedNodeSet& Selection::included() { return frontier; }
+
+const NodeSet& Selection::const_selected() const { return roots; }
+const NodeSet& Selection::const_excluded() const { return complement; }
+const ExpandedNodeSet& Selection::const_included() const { return frontier; }
+
+size_t Selection::size() const { return roots.size(); }
+bool Selection::empty() const { return size() == 0; }
+
+void Selection::exclude(const NodeSet& nodes) {
+  for(const MapNode *mn : nodes) {
+    exclude(mn);
+  }
+}
+
+void Selection::exclude(const MapNode *mn) {
+  complement.insert(mn);
+  roots.erase(mn);
+  frontier.erase(mn);
+}
+
+void Selection::select(const NodeSet& nodes) {
+  for(const MapNode *mn : nodes) {
+    select(mn);
+  }
+}
+
+void Selection::roots_erase(const MapNode* mn) {
+  roots.erase(mn);
+}
+
+void Selection::frontier_erase(const MapNode* mn) {
+  frontier.erase(mn);
+}
+
+void Selection::complement_erase(const MapNode* mn) {
+  complement.erase(mn);
+}
+
+/*
+ * remove mn from complement
+ * remove (*,parent) from frontier
+ * remove (*,mn) from frontier
+ * add (p, mn) to frontier
+ * add p to roots
+ */
+void Selection::select(const MapNode *mn, const MapNode* parent) {
+  complement_erase(mn);
+
+  if(parent) {
+    complement_erase(parent);
+    frontier_erase(parent);
+    frontier_erase(mn);
+
+    roots.insert(parent);
+    frontier.insert(mn, parent);
+
+  } else {
+    roots.insert(mn);
+    frontier.insert(mn);
+  }
+
+}
+
+void Selection::updateIncludeExclude() {
+  ExpandedNodeSet old_frontier = frontier;
+  frontier.clear();
+  for (const ExpandedNode &en : old_frontier) {
+    if (roots.find(en.child) == roots.end()) {
+      complement.insert(en.child);
+    } else {
+      frontier.insert(en);
+      complement.erase(en.child);
+    }
+  }
+}
+
+void Selection::shrinkTo(std::set<std::string> &con_ids) {
+  NodeSet roots_copy = roots;
+  for (const MapNode *mn : roots_copy) {
+    std::set<string> leaves = mn->getLeaves();
+
+    if (!any_of(con_ids.begin(), con_ids.end(), [&](const string &s) {
+          return leaves.find(s) != leaves.end();
+        })) {
+      roots.erase(mn);
+    }
+  }
+  updateIncludeExclude();
+}
+
+bool Selection::isSelected(const MapNode* mn) {
+  return roots.find(mn) != roots.end();
+}
+
+Selection Selection::get_diff(const Selection& c2) const {
+  Selection diff = *this;
+  for(const MapNode* mn: c2.const_selected()) {
+    diff.exclude(mn);
+  }
+  return diff;
+}
+
+Selection Selection::get_union(const Selection &c2) const {
+  //std::cout << "UNION of: C1 = " << *this << "\nAND: C2 = " << c2 << "\n";
+  Selection un;
+  for(const MapNode* mn: const_excluded()) {
+    un.exclude(mn);
+  }
+  for(const MapNode* mn: c2.const_excluded()) {
+    un.exclude(mn);
+  }
+  for(const MapNode* mn: const_selected()) {
+    un.select(mn);
+  }
+  for(const MapNode* mn: c2.const_selected()) {
+    un.select(mn);
+  }
+  //std::cout << "UNION of C1+C2 = " << un << "\n";
+  return un;
+}
+
+void Selection::allow_excludes() {
+  for (const MapNode *node : complement) {
+    roots.insert(node);
+    frontier.insert(node);
+  }
+  complement.clear();
+}
+
+std::set<std::string> Selection::getLeaves() const {
   std::set<std::string> leaves;
-  for (const MapNode *node : b.selected) {
-    getLeaves(*node, leaves);
+  for (const MapNode *node : roots) {
+    std::set<std::string> node_leaves = node->getLeaves();
+    leaves.insert(node_leaves.begin(), node_leaves.end());
   }
   return leaves;
 }
 
-Selection sel_union(const Selection &c1, const Selection &c2) {
-  Selection un = c1;
-  un.exclude.insert(c2.exclude.begin(), c2.exclude.end());
-  for (MapNode *mn : c2.selected) {
-    un.selected.insert(mn);
-    un.include.insert(ExpandedNode(mn));
-    un.exclude.erase(mn);
-  }
-  for (MapNode *mn : c1.selected) {
-    un.exclude.erase(mn);
-  }
-  return un;
+bool Selection::isLeaves() const {
+  for (const MapNode *child: frontier.get_nodes())
+    if (!child->var.isLeaf)
+      return false;
+  return true;
 }
 
-Selection sel_difference(const Selection &c1, const Selection &c2) {
-  Selection di = c1;
-  for (MapNode *mn : c2.selected) {
-    di.selected.erase(mn);
-    di.include.erase(ExpandedNode(mn));
-    di.exclude.insert(mn);
-  }
-  return di;
+inline
+bool contains_child(const ExpandedNodeSet& ens, const MapNode* child) {
+  return ens.contains_node(child);
 }
 
-Selection sel_complement(const Selection &U, const Selection &S) {
-  Selection co = U;
 
-  co.include.clear();
-  co.selected.clear();
+void Selection::expand(const Selection &m) {
+  //std::cerr << "Expanding " << *this << "   with: " << m << std::endl;
+  const ExpandedNodeSet frontier_copy = frontier;
+  for (const ExpandedNode &en : frontier_copy) {
+    //std::cerr << "  Checking " << en << std::endl;
+    if (contains_child(m.const_included(), en.child)) {
+      //std::cerr << "    m has: " << en << std::endl;
+      if (roots.empty() || roots.find(en.parent) != roots.end()) {
+        //std::cerr << "     root is empty or does contain parent" << std::endl;
+        roots_erase(en.parent);
+        const MapNode *nm = en.child;
+        frontier_erase(en.child);
+        if (nm->var.isLeaf || nm->children.empty()) {
+          //std::cerr << "      Is leaf, selecting: " << en << std::endl;
+          select(en.child, en.parent);
+          //std::cerr << "      Is leaf, result: " << *this << std::endl;
+          //frontier.insert(en);
+        } else {
+          for (const MapNode& child : nm->children) {
+            //std::cerr << "      Not leaf, selecting: " << printMapNode(true, "d_", &child) << std::endl;
+            select(&child, en.parent);
+            //std::cerr << "      Not leaf, result: " << *this << std::endl;
+          }
+        }
 
-  for (MapNode *mn : U.selected) {
-    if (S.selected.find(mn) == S.selected.end()) {
-      co.selected.insert(mn);
-      co.include.insert(ExpandedNode(mn));
-      co.exclude.erase(mn);
+      } else {
+        //std::cerr << "     root is not empty or contains parent" << std::endl;
+        //std::cerr << "     removing child of: " << en << std::endl;
+        exclude(en.child);
+        //std::cerr << "     removed child result: " << *this << std::endl;
+      }
     } else {
-      co.exclude.insert(mn);
+      //std::cerr << "    m not has: " << en << std::endl;
+      //std::cerr << "    selecting child: " << en << std::endl;
+      select(en.child, en.parent);
+      //std::cerr << "    selected result: " << *this << std::endl;
     }
   }
-  return co;
+
+  //std::cerr << "after expand: " << *this << std::endl;
 }
+
+
+Selection sel_union(const Selection& c1, const Selection& c2) {
+  return c1.get_union(c2);
+}
+
+
+Selection sel_difference(const Selection &c1, const Selection &c2) {
+  return c1.get_diff(c2);
+}
+
 
 void sel_split(const Selection &C, Selection &c1, Selection &c2) {
 #if RANDOM_SEL_SPLIT
@@ -68,39 +239,42 @@ void sel_split(const Selection &C, Selection &c1, Selection &c2) {
   static std::uniform_int_distribution<int> rand_bin(0, 1);
 #endif
 
-  size_t mid = C.selected.size() / 2;
-  c1.exclude.insert(C.exclude.begin(), C.exclude.end());
-  c2.exclude.insert(C.exclude.begin(), C.exclude.end());
+  size_t mid = C.size() / 2;
+  c1 = C;
+  c2 = C;
 
-  std::set<MapNode *>::iterator it = C.selected.begin();
-  for (size_t c = 0; c < C.selected.size(); c++, ++it) {
+  NodeSet::const_iterator it = C.const_selected().begin();
+  for (size_t c = 0; c < C.const_selected().size(); c++, ++it) {
 #if RANDOM_SEL_SPLIT
     if (rand_bin(rd) == 1) { // c1
 #else
     if (c < mid) { // c1
 #endif
-      c1.selected.insert(*it);
-      c1.include.insert(ExpandedNode(*it));
-      c2.exclude.insert(*it);
+      c1.select(*it);
+      c2.exclude(*it);
     } else { // c2
-      c2.selected.insert(*it);
-      c2.include.insert(ExpandedNode(*it));
-      c1.exclude.insert(*it);
+      c2.select(*it);
+      c1.exclude(*it);
     }
   }
 }
 
+// Construct empty Selection that still contains union of nodes
 Selection empty_sel(const Selection &C) {
   Selection e;
-  e.exclude.insert(C.selected.begin(), C.selected.end());
-  e.exclude.insert(C.exclude.begin(), C.exclude.end());
+  for(const MapNode *mn : C.const_selected()) {
+    e.exclude(mn);
+  }
+  for(const MapNode *mn : C.const_excluded()) {
+    e.exclude(mn);
+  }
   return e;
 }
 
-bool is_subset(const Selection &C, const std::set<MapNode *> &crits) {
-  if (crits.empty() || C.selected.size() > crits.size())
+bool is_subset(const Selection &C, const NodeSet &crits) {
+  if (crits.empty() || C.size() > crits.size())
     return false;
-  for (MapNode *mn : C.selected) {
+  for (const MapNode *mn : C.const_selected()) {
     if (crits.find(mn) == crits.end())
       return false;
   }
@@ -112,32 +286,25 @@ static bool output_details_for_selections = true;
 
 std::ostream &operator<<(std::ostream &os, Selection const &a) {
   bool first = true;
-  if (a.selected.empty()) {
+  if (a.const_selected().empty()) {
     os << "empty";
     return os;
   }
   if (output_leaves_for_selections) {
-    std::set<std::string> leaves = getLeaves(a);
+    std::set<std::string> leaves = a.getLeaves();
     for (const string &leaf : leaves) {
       os << (first ? " " : ", ") << leaf;
       first = false;
     }
     return os;
   }
-  os << a.selected;
+  os << a.const_selected();
   if (output_details_for_selections) {
-    os << " inc: " << a.include;
+    os << " inc: " << a.const_included();
     os << " exc: ";
-    streamMapNodeSet(os, a.exclude, false, "d_");
+    streamMapNodeSet(os, a.const_excluded(), false, "d_");
   }
   return os;
-}
-
-bool isLeaves(const Selection &s) {
-  for (const ExpandedNode &en : s.include)
-    if (!en.child->var.isLeaf)
-      return false;
-  return true;
 }
 
 } // namespace HierMUS

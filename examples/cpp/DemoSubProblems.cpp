@@ -36,7 +36,7 @@ HM5::HM5(MUSEnumOptions &mo) : SubProblem(mo) {
 }
 
 void HM5::printSol(const Selection &b) {
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
     std::cout << leaf << ", ";
   }
@@ -46,7 +46,7 @@ void HM5::printSol(const Selection &b) {
 bool HM5::check(const Selection &s) {
   vector<bool> b(6, false);
 
-  set<string> leaves = getLeaves(s);
+  set<string> leaves = s.getLeaves();
   for (const string &leaf : leaves) {
     if (leaf == "b1")
       b[0] = true;
@@ -94,7 +94,7 @@ FFLAT::FFLAT(MUSEnumOptions &mo) : SubProblem(mo) {
 }
 
 void FFLAT::printSol(const Selection &b) {
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
     std::cout << leaf << ", ";
   }
@@ -102,7 +102,7 @@ void FFLAT::printSol(const Selection &b) {
 }
 
 bool FFLAT::check(const Selection &s) {
-  set<string> leaves = getLeaves(s);
+  set<string> leaves = s.getLeaves();
   vector<set<string>> unsat_sets;
   unsat_sets.push_back({"15", "16"});
   unsat_sets.push_back({"16", "17"});
@@ -147,7 +147,7 @@ GLM::GLM(MUSEnumOptions &mo) : SubProblem(mo) {
 }
 
 void GLM::printSol(const Selection &b) {
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
     std::cout << leaf << ", ";
   }
@@ -157,7 +157,7 @@ void GLM::printSol(const Selection &b) {
 bool GLM::check(const Selection &s) {
 
   bool sol = true;
-  set<string> leaves = getLeaves(s);
+  set<string> leaves = s.getLeaves();
   for (const string &leaf : leaves) {
     if (leaf == "cumu")
       sol = false;
@@ -190,7 +190,7 @@ HM5_2::HM5_2(MUSEnumOptions &mo) : SubProblem(mo) {
 }
 
 void HM5_2::printSol(const Selection &b) {
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
     std::cout << leaf << ", ";
   }
@@ -200,7 +200,7 @@ void HM5_2::printSol(const Selection &b) {
 bool HM5_2::check(const Selection &s) {
   vector<bool> b(6, false);
 
-  set<string> leaves = getLeaves(s);
+  set<string> leaves = s.getLeaves();
   for (const string &leaf : leaves) {
     if (leaf == "b1")
       b[0] = true;
@@ -254,7 +254,7 @@ Path::Path(MUSEnumOptions &mo) : SubProblem(mo) {
 }
 
 void Path::printSol(const Selection &b) {
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
     std::cout << leaf << ", ";
   }
@@ -273,7 +273,7 @@ bool Path::check(const Selection &s) {
   bool c3 = false;
 
   bool sol = true;
-  set<string> leaves = getLeaves(s);
+  set<string> leaves = s.getLeaves();
   for (const string &leaf : leaves) {
     if (leaf == "a1")
       a1 = true;
@@ -339,7 +339,7 @@ P1f::P1f(MUSEnumOptions &mo) : SubProblem(mo) {
 }
 
 void P1f::printSol(const Selection &b) {
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
     std::cout << leaf << ", ";
   }
@@ -348,7 +348,7 @@ void P1f::printSol(const Selection &b) {
 
 bool P1f::check(const Selection &s) {
   bool sol = true;
-  set<string> leaves = getLeaves(s);
+  set<string> leaves = s.getLeaves();
   for (const string &leaf : leaves) {
     if (leaf == "23")
       sol = false;
@@ -420,7 +420,7 @@ RandomProblem::RandomProblem(MUSEnumOptions &mo, int seed, unsigned int ncons,
 }
 
 void RandomProblem::printSol(const Selection &b) {
-  set<string> leaves = getLeaves(b);
+  set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
     std::cout << leaf << ", ";
   }
@@ -437,8 +437,8 @@ inline bool is_subset(const set<string> &mus, const set<string> &sel) {
 
 bool RandomProblem::check(const Selection &s) {
   bool sol = true;
-  if (!s.selected.empty()) {
-    set<string> leaves = getLeaves(s);
+  if (!s.empty()) {
+    set<string> leaves = s.getLeaves();
     for (const set<string> &mus : muses) {
       if (is_subset(mus, leaves)) {
         sol = false;

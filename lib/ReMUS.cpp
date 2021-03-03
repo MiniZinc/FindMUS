@@ -44,7 +44,7 @@ bool ReMUS::search() {
     // s.selected and s.include are equal and s.exclude is accurate.
     Selection s_max = subsetMap->getSelection(state.S);
 
-    if (s_max.selected.size() == 0) {
+    if (s_max.size() == 0) {
       if (mopts.verbose_enum) {
         std::cout << indent << "ReMUS: popping" << std::endl;
       }
@@ -54,25 +54,24 @@ bool ReMUS::search() {
 
     stats.sat_calls++;
     if (!subProblem.check(s_max)) {
-      frontier.is_min = false;
+      frontier.setMinimal(false);
       Selection s_mus = s_max; // Copy of s with maximal s
       if (!shrink(s_mus, state.criticals))
         return false;
       subsetMap->blockSupersets(s_mus);
       subsetMap->blockSubsets(s_mus);
-      if (s_mus.selected.size() < floor(0.9 * s_max.selected.size())) {
+      // if s_mus is 10% smaller than s_max
+      if (s_mus.size() < floor(0.9 * s_max.size())) {
+        // copy s_mus into p (it is smaller and should be consistent)
         Selection p = s_mus; // s_mus subset of p subset of s_max
-        p.exclude.insert(s_max.selected.begin(), s_max.selected.end());
+        Selection missing = s_max.get_diff(p);
 
-        set<MapNode *>::iterator it = s_max.selected.begin();
-        while (it != s_max.selected.end() &&
-               p.selected.size() < floor(0.9 * s_max.selected.size())) {
-          p.selected.insert(*it);
-          p.include.insert(ExpandedNode(*it));
-          p.exclude.erase(*it);
-          ++it;
+        // compute how many elements should be added
+        size_t n_remove = floor(0.9 * s_max.size() - s_mus.size());
+        auto it = missing.const_selected().rbegin();
+        while(n_remove--) {
+          p.select(*(it++));
         }
-        updateIncludeExclude(p);
 
         if (mopts.verbose_enum) {
           std::cout << indent << "ReMUS: pushing: " << p
@@ -80,12 +79,12 @@ bool ReMUS::search() {
         }
         remus_stack.push_back({p, state.criticals});
       }
-      if (isLeaves(s_mus)) {
+      if (s_mus.isLeaves()) {
         current_mus = s_mus;
         return true;
       }
       if (unsat_callback) {
-        s_mus.is_min = true;
+        s_mus.setMinimal(true);
         unsat_callback(s_mus);
         if (mopts.map_enum_focus_mode) {
           // Pretend we have exhausted this frontier
@@ -94,26 +93,23 @@ bool ReMUS::search() {
       }
     } else {
       subsetMap->blockSubsets(s_max);
-      set<ExpandedNode> s_mcs;
-      std::set_difference(state.S.include.begin(), state.S.include.end(),
-                          s_max.include.begin(), s_max.include.end(),
-                          std::inserter(s_mcs, s_mcs.begin()));
+      Selection s_mcs = state.S.get_diff(s_max);
+
       if (s_mcs.size() == 1) {
-        state.criticals.insert((*s_mcs.begin()).child);
+        state.criticals.insert((*s_mcs.const_included().begin()).child);
         if (mopts.verbose_enum) {
           std::cout << indent << "ReMUS: updated crits: {" << state.criticals
                     << " }" << std::endl;
         }
       } else {
         // We are aboute to modify remus_stack so we need a copy of criticals
-        set<MapNode *> criticals_copy = state.criticals;
-        set<ExpandedNode>::reverse_iterator rit;
-        for (rit = s_mcs.rbegin(); rit != s_mcs.rend(); ++rit) {
-          MapNode *n = (*rit).child;
+        NodeSet criticals_copy = state.criticals;
+        const NodeSet& s_mcs_included = s_mcs.const_included().get_nodes();
+        vector<const MapNode *>::const_reverse_iterator rit;
+        for (rit = s_mcs_included.rbegin(); rit != s_mcs_included.rend(); ++rit) {
+          const MapNode *n = *rit;
           ReMUSState new_state{s_max, criticals_copy};
-          new_state.S.selected.insert(n);
-          new_state.S.include.insert(ExpandedNode(n));
-          new_state.S.exclude.erase(n);
+          new_state.S.select(n);
           new_state.criticals.insert(n);
           if (mopts.verbose_enum) {
             std::cout << indent << "ReMUS: pushing: " << new_state.S
@@ -125,10 +121,10 @@ bool ReMUS::search() {
       }
     }
   }
-  if (frontier.is_min && isLeaves(frontier)) {
+  if (frontier.knownMinimal() && frontier.isLeaves()) {
     current_mus = frontier;
     frontier = {};
-    frontier.is_min = false;
+    frontier.setMinimal(false);
     return true;
   }
 

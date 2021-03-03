@@ -11,7 +11,7 @@ class ReMUS : public MusEnumerator {
 private:
   struct ReMUSState {
     Selection S;
-    std::set<MapNode *> criticals;
+    NodeSet criticals;
   };
 
   std::vector<ReMUSState> remus_stack;
