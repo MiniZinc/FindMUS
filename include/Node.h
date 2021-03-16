@@ -1,6 +1,7 @@
 #ifndef __HIERMUS_NODE_H_
 #define __HIERMUS_NODE_H_
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <set>
