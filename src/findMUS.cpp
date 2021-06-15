@@ -23,6 +23,7 @@
 #endif
 
 #include <minizinc/file_utils.hh>
+#include <minizinc/utils.hh>
 #include <minizinc/solver.hh>
 
 using namespace HierMUS;
@@ -248,7 +249,8 @@ void writeDotFile(const DriverOptions &dro, SubProblem *problem) {
   dw.print();
 }
 
-int main(int argc, char **argv) {
+int main(int argc, const char **argv) {
+  MiniZinc::OverflowHandler::install(argv);
   Statistics s;
   DriverOptions dro;
   MUSEnumOptions mo(s);

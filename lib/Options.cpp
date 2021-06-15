@@ -177,7 +177,7 @@ void help_long(void) {
   exit(EXIT_FAILURE);
 }
 
-void parse(DriverOptions &dro, MUSEnumOptions &mo, int argc, char **argv) {
+void parse(DriverOptions &dro, MUSEnumOptions &mo, int argc, const char **argv) {
   std::vector<std::string> args;
   for (int i = 1; i < argc; i++)
     args.push_back(argv[i]);
