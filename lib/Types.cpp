@@ -157,7 +157,7 @@ std::string ConstraintSet::getHUMANSummary(const string &sep,
   for (auto &np : names) {
     out << " " << np.first << ":" << sep;
     for (auto &n : np.second) {
-      out << "  • " << n << sep;
+      out << "  - " << n << sep;
     }
   }
   out << sep << std::flush;
