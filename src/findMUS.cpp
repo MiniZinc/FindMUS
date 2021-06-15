@@ -250,7 +250,11 @@ void writeDotFile(const DriverOptions &dro, SubProblem *problem) {
 }
 
 int main(int argc, const char **argv) {
+#ifdef WIN32
+  MiniZinc::OverflowHandler::install();
+#else
   MiniZinc::OverflowHandler::install(argv);
+#endif
   Statistics s;
   DriverOptions dro;
   MUSEnumOptions mo(s);
