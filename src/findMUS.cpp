@@ -144,7 +144,8 @@ SubProblem *createProblem(DriverOptions &dro, MUSEnumOptions &mo,
       OptionsHelper::help_short(EXIT_FAILURE);
     }
     if (dro.fznpath.empty()) {
-      MiniZinc::MznSolver solver(std::cerr, std::cerr);
+      MiniZinc::Timer timer;
+      MiniZinc::MznSolver solver(std::cerr, std::cerr, timer);
       vector<string> args{"--stdlib-dir", mo.mzn_stdlib_dir, "-c", "--solver",
                           mo.subproblem_solver};
 
@@ -255,7 +256,8 @@ int main(int argc, char **argv) {
 
   if (dro.list_solvers || dro.list_solvers_json) {
     std::fstream nullstream;
-    MiniZinc::MznSolver solver(nullstream, std::cout);
+    MiniZinc::Timer timer;
+    MiniZinc::MznSolver solver(nullstream, std::cout, timer);
     vector<string> args(3);
     args.push_back("--stdlib-dir");
     args.push_back(mo.mzn_stdlib_dir);

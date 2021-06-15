@@ -350,7 +350,8 @@ bool FznSubProblem::check(const Selection &b) {
 
   if (!mopts.oracle_only && s != MiniZinc::SolverInstance::UNSAT) {
     // Build solver
-    MiniZinc::MznSolver solver(nullstream, log);
+    MiniZinc::Timer startTime;
+    MiniZinc::MznSolver solver(nullstream, log, startTime);
 
     // Build arguments for MznSolver
     vector<string> args;
