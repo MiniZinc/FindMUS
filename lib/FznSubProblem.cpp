@@ -42,11 +42,11 @@ NullSolns2Out::~NullSolns2Out() {}
 std::ostream &NullSolns2Out::getOutput() { return nullstream; }
 
 inline bool isFunctionalConstraint(const MiniZinc::ConstraintI &ci) {
-  return ci.e()->ann().containsCall(MiniZinc::constants().ann.defines_var);
+  return ci.e()->ann().containsCall(MiniZinc::Constants::constants().ann.defines_var);
 }
 inline bool isDomainConstraint(const MiniZinc::ConstraintI &ci) {
   return ci.e()->ann().contains(
-      MiniZinc::constants().ann.domain_change_constraint);
+      MiniZinc::Constants::constants().ann.domain_change_constraint);
 }
 
 bool FznSubProblem::isBackgroundConstraint(const MiniZinc::ConstraintI &ci,
@@ -195,8 +195,8 @@ FznSubProblem::FznSubProblem(const string &fznpath, const string &pathpath,
       MiniZinc::VarDeclI *vdi = (*it)->cast<MiniZinc::VarDeclI>();
       MiniZinc::VarDecl *vd = vdi->e();
       MiniZinc::Annotation &ann = vd->ann();
-      ann.removeCall(MiniZinc::constants().ann.output_array);
-      ann.remove(MiniZinc::constants().ann.output_var);
+      ann.removeCall(MiniZinc::Constants::constants().ann.output_array);
+      ann.remove(MiniZinc::Constants::constants().ann.output_var);
     }
   }
   fzn_model->compact();
