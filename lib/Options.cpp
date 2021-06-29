@@ -259,12 +259,21 @@ void parse(DriverOptions &dro, MUSEnumOptions &mo,
       dro.oraclepath = p;
     } else if (args[i] == "--shrink-frontier") {
       mo.map_shrink_frontier = true;
+#ifdef MZN_SUPPORTS_SHRINK
     } else if (args[i] == "--native-shrink") {
       mo.subproblem_native_shrink = true;
-    } else if (args[i] == "--dump-timeouts") {
-      mo.subproblem_dump_timeouts = true;
     } else if (args[i] == "--native-shrink-ignore-min") {
       mo.subproblem_native_shrink_ignore_min = true;
+#else
+    } else if (args[i] == "--native-shrink") {
+      std::cerr << "Error: --native-shrink not available. findMUS must be built with -DMZN_SUPPORTS_SHRINK" << std::endl;
+      help_short(EXIT_FAILURE);
+    } else if (args[i] == "--native-shrink-ignore-min") {
+      std::cerr << "Error: --native-shrink-ignore-min not available. findMUS must be built with -DMZN_SUPPORTS_SHRINK" << std::endl;
+      help_short(EXIT_FAILURE);
+#endif
+    } else if (args[i] == "--dump-timeouts") {
+      mo.subproblem_dump_timeouts = true;
     } else if (args[i] == "--shrink-alg") {
       std::string alg = args[++i];
       if (alg == "lin")
