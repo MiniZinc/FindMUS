@@ -364,12 +364,14 @@ bool FznSubProblem::check(const Selection &b) {
       args.push_back("--diagnose");
     }
 
+    vector<string> timeout_args;
     mopts.adjustSolverTimeout();
-    args.push_back("--solver-time-limit");
-    args.push_back(
+    timeout_args.push_back("--solver-time-limit");
+    timeout_args.push_back(
         std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
                            mopts.subproblem_solver_time_limit)
                            .count()));
+
     vector<string> split_extra_args =
         utils::split(mopts.subproblem_solver_flags, ' ');
     args.insert(args.end(), split_extra_args.begin(), split_extra_args.end());
@@ -429,7 +431,11 @@ bool FznSubProblem::check(const Selection &b) {
     }
 
     sf = solver.getSF();
-    si = sf->createSI(fzn_env, log, solver.getSIOptions());
+    int i = 0;
+    auto siOpt = solver.getSIOptions();
+    sf->processOption(siOpt, i, timeout_args);
+
+    si = sf->createSI(fzn_env, log, siOpt);
     si->setSolns2Out(&s2o);
     si->processFlatZinc();
 
