@@ -24,7 +24,7 @@ stages:
 
 build:linux:
   extends: .build
-  image: minizinc/build-environment:cpp
+  image: ghcr.io/minizinc/docker-build-environment:cpp
   variables:
     MZNARCH: "linux"
     CMAKE_ARCH: "Ninja"
