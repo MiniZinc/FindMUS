@@ -31,7 +31,7 @@
     ["--stdlib-dir", "Location of MiniZinc stdlib directory.", "string", ""],
     ["--no-progress", "Disable mzn-progress output for IDE", "bool", "false"],
     ["--filter-path", "Filter constraints based on comma separated substrings of path", "string", ""],
-    ["--filter-name", "Filter constraints based on comma separated substrings of expression and constraint names", "string", ""],
+    ["--filter-named", "Filter constraints based on comma separated substrings of expression and constraint names", "string", ""],
     ["--dump-dot", "Write tree to GraphViz file", "string", ""],
     ["-g", "Attempt to record domain changes as constraints", "bool", "false"],
     ["--soft-defines", "Consider functional constraints as part of MUSes.", "bool", "false"],
