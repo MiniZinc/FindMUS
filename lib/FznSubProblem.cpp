@@ -171,7 +171,7 @@ void FznSubProblem::init_fzn_model(const string &fznpath) {
 
   MiniZinc::register_builtins(fzn_env);
   fzn_env.swap();
-  MiniZinc::populate_output(fzn_env);
+  MiniZinc::populate_output(fzn_env, false);
   fzn_env.model(fzn_model);
   s2o.initFromEnv(&fzn_env);
 }
