@@ -97,16 +97,16 @@ std::string ConstraintSet::getJSONSummary(void) {
       json << "\t\"leaf_name\": "
            << "\"" << ci.leaf_name << "\"," << std::endl;
       json << "\t\"name\": "
-           << "\"" << utils::escape(ci.name, false) << "\"," << std::endl;
+           << "\"" << utils::escape_text(ci.name) << "\"," << std::endl;
       json << "\t\"path\": "
-           << "\"" << utils::escape(ci.path, false) << "\"," << std::endl;
+           << "\"" << utils::escape_text(ci.path) << "\"," << std::endl;
       json << "\t\"assigns\": "
-           << "\"" << utils::escape(ci.assigns, false) << "\"," << std::endl;
+           << "\"" << utils::escape_text(ci.assigns) << "\"," << std::endl;
       json << "\t\"constraint_name\": "
-           << "\"" << utils::escape(ci.constraint_name, false) << "\","
+           << "\"" << utils::escape_text(ci.constraint_name) << "\","
            << std::endl;
       json << "\t\"expression_name\": "
-           << "\"" << utils::escape(ci.expression_name, false) << "\""
+           << "\"" << utils::escape_text(ci.expression_name) << "\""
            << std::endl;
       json << "}";
       if (--remain_inner)

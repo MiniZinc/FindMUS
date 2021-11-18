@@ -41,7 +41,6 @@ std::string HM5::getSolStr(const Selection &b) {
   for (const string &leaf : leaves) {
     ss << leaf << ", ";
   }
-  ss << "\n";
   return ss.str();
 }
 
@@ -70,8 +69,11 @@ bool HM5::check(const Selection &s) {
                (b[1] && b[2] && b[5])); // b2 b3 b6
   // sol = !(b[0] &&b[1] &&b[2] &&b[3] &&b[4] &&b[5]);
 
-  if (mopts.verbose_subsolve)
-    std::cout << "HM5::check(" << s << ") :" << sol << "\n";
+  if (mopts.verbose_subsolve) {
+    std::stringstream ss;
+    ss << "HM5::check(" << s << ") :" << sol;
+    log(ss.str());
+  }
   return sol;
 }
 
@@ -101,7 +103,6 @@ std::string FFLAT::getSolStr(const Selection &b) {
   for (const string &leaf : leaves) {
     ss << leaf << ", ";
   }
-  ss << "\n";
   return ss.str();
 }
 
@@ -156,7 +157,6 @@ std::string GLM::getSolStr(const Selection &b) {
   for (const string &leaf : leaves) {
     ss << leaf << ", ";
   }
-  ss << "\n";
   return ss.str();
 }
 
@@ -201,7 +201,6 @@ std::string HM5_2::getSolStr(const Selection &b) {
   for (const string &leaf : leaves) {
     ss << leaf << ", ";
   }
-  ss << "\n";
   return ss.str();
 }
 
@@ -267,7 +266,6 @@ std::string Path::getSolStr(const Selection &b) {
   for (const string &leaf : leaves) {
     ss << leaf << ", ";
   }
-  ss << "\n";
   return ss.str();
 }
 
@@ -354,7 +352,6 @@ std::string P1f::getSolStr(const Selection &b) {
   for (const string &leaf : leaves) {
     ss << leaf << ", ";
   }
-  ss << "\n";
   return ss.str();
 }
 
@@ -437,7 +434,6 @@ std::string RandomProblem::getSolStr(const Selection &b) {
   for (const string &leaf : leaves) {
     ss << leaf << ", ";
   }
-  ss << "\n";
   return ss.str();
 }
 

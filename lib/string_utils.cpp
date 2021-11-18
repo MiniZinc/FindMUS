@@ -35,20 +35,7 @@ string join(const vector<string> &strs, const string &sep) {
   return ss.str();
 }
 
-string escape(const string &orig, bool html, bool nls) {
-  string repchars = "\\&\"\'<>";
-  vector<string> repstrs;
-  if (html)
-    repstrs = {"\\", "&amp;", "&quot;", "&apos;", "&lt;", "&gt;"};
-  else
-    repstrs = {"\\\\", "&", "\\\"", "'", "<", ">"};
-
-  if (nls) {
-    repchars += "\n\r";
-    repstrs.emplace_back("\\n");
-    repstrs.emplace_back("\\r");
-  }
-
+string escape(const string &orig, const string &repchars, const vector<string> &repstrs) {
   stringstream out;
   size_t last = 0;
   size_t found = orig.find_first_of(repchars);
@@ -66,4 +53,40 @@ string escape(const string &orig, bool html, bool nls) {
   out << orig.substr(last);
   return out.str();
 }
+
+string escape(const string &orig, bool html, bool nls) {
+  string repchars = "\\&\"\'<>";
+  vector<string> repstrs;
+  if (html)
+    repstrs = {"\\", "&amp;", "&quot;", "&apos;", "&lt;", "&gt;"};
+  else
+    repstrs = {"\\\\", "&", "\\\"", "'", "<", ">"};
+
+  if (nls) {
+    repchars += "\n\r";
+    repstrs.emplace_back("\\n");
+    repstrs.emplace_back("\\r");
+  }
+
+  return escape(orig, repchars, repstrs);
+}
+
+string escape_nls(const string& orig) {
+  string repchars = "\n\r";
+  vector<string> repstrs = {"\\n", "\\r"};
+  return escape(orig, repchars, repstrs);
+}
+
+string escape_text(const string& orig) {
+  string repchars = "\\&\"\'<>";
+  vector<string> repstrs = {"\\\\", "&", "\\\"", "'", "<", ">"};
+  return escape(orig, repchars, repstrs);
+}
+
+string escape_html(const string& orig) {
+  string repchars = "\\&\"\'<>";
+  vector<string> repstrs = {"\\", "&amp;", "&quot;", "&apos;", "&lt;", "&gt;"};
+  return escape(orig, repchars, repstrs);
+}
+
 } // namespace utils

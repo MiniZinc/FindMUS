@@ -282,7 +282,7 @@ void MinisatSubsetMap::blockSubsets(const Selection &selection) {
                                       : mkLit(node->var.disj));
   }
   if (mopts.verbose_map == 1) {
-    ss << selection.const_excluded().size() << std::endl;
+    ss << selection.const_excluded().size();
   }
   if (mopts.verbose_map == 2) {
     streamMapNodeSet(ss, selection.const_excluded(), true, "d_");

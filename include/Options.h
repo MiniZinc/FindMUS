@@ -211,10 +211,10 @@ public:
 
   void solution(const std::string& msg) const {
     if(use_sections) {
-      std::cout << "{\"type\": \"solution\", {";
+      std::cout << "{\"type\": \"solution\", ";
       switch(subproblem_output_format) {
         case OUT_JSON:
-          std::cout << "\"object\": " << msg;
+          std::cout << "\"object\": " << utils::escape(msg, "\n\r\t", {"", "", ""});
           break;
         case OUT_HTML:
           std::cout << "\"html\": \"" << utils::escape(msg, true, true) << "\"";
@@ -223,7 +223,7 @@ public:
           std::cout << "\"raw\": \"" << utils::escape(msg, true, true) << "\"";
           break;
       };
-      std::cout << "}}" << std::endl;
+      std::cout << "}" << std::endl;
     } else {
       switch(subproblem_output_format) {
         case OUT_JSON:
@@ -233,14 +233,13 @@ public:
           break;
         case OUT_HTML:
           std::cout << "%%%mzn-html-start\n"
-                    << msg
+                    << utils::escape(msg, true, false)
                     << "%%%mzn-html-end" << std::endl;
           break;
         default:
           std::cout << msg << std::endl;
           break;
       };
-      std::cout << msg << std::endl;
     }
   }
 
@@ -258,9 +257,9 @@ public:
     }
 
     if(use_sections) {
-      std::cout << "{\"type\": \"warning\", "
+      std::cout << "{\"type\": \"message\", "
                 << "\"source\": \"" << prefix << "\", "
-                << "\"message\": \"" << utils::escape(msg, true, true)
+                << "\"message\": \"" << utils::escape(msg, false, true)
                 << "\"}" << std::endl;
     } else {
       std::cout << prefix << ": " << msg << std::endl;
@@ -280,7 +279,7 @@ public:
     if(use_sections) {
       std::cout << "{\"type\": \"error\", "
                 << "\"source\": \"" << prefix << "\", "
-                << "\"message\": \"" << utils::escape(msg, true, true)
+                << "\"message\": \"" << utils::escape(msg, false, true)
                 << "\"}" << std::endl;
     } else {
       std::cerr << prefix << ": " << msg << std::endl;
