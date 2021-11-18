@@ -21,16 +21,15 @@ OldMUSEnumer::OldMUSEnumer(SubProblem &prob, MUSEnumOptions &mo)
   }
 
   inner_enum->setUnsatCallback([&](const Selection &s) {
-    if (mopts.verbose_enum) {
-      std::cout << "OldMUSEnumer: SubEnumerator adding set: " << s
-                << " to frontier, resulting in ";
-    }
     frontier = sel_union(frontier, s);
-    if (!mopts.map_enum_focus_mode)
+    if (!mopts.map_enum_focus_mode) {
       allow_excludes(frontier);
-    if (mopts.verbose_enum) {
-      std::cout << frontier << "\n";
     }
+
+    std::stringstream ss;
+    ss << "OldMUSEnumer: SubEnumerator adding set: " << s
+       << " to frontier, resulting in " << frontier;
+    log(ss.str());
   });
 
   Selection root = subsetMap->getRootSelector();
@@ -70,13 +69,12 @@ bool OldMUSEnumer::search() {
 
 void OldMUSEnumer::printMUS(void) {
   if (mopts.timedOut()) {
-    std::cout << "FindMUS finishing early: ";
-    std::cout << "Last frontier (may not be an MUS):\n";
-    subProblem.printSol(frontier);
+    log("FindMUS finishing early: Last frontier (may not be an MUS):", 0);
+    log(subProblem.getSolStr(frontier), 0);
     return;
   }
   if (!current_mus.empty()) {
-    subProblem.printSol(current_mus);
+    log(subProblem.getSolStr(current_mus), 0);
   }
 }
 

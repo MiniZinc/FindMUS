@@ -16,7 +16,7 @@ public:
   explicit FileSP(MUSEnumOptions &mo, std::istream &is);
   explicit FileSP(MUSEnumOptions &mo, std::string file_path);
   void init(std::istream &is);
-  void printSol(const Selection &b);
+  std::string getSolStr(const Selection &b);
   bool check(const Selection &b);
   bool provedSAT() { return false; };
 

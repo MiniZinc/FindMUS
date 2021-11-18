@@ -13,9 +13,8 @@ HierMUSEnumer::HierMUSEnumer(SubProblem &prob, MUSEnumOptions &mo)
   if (mo.map_enumeration_alg == ALG_REMUS) {
     if (mo.subproblem_structure != STR_FLAT ||
         mo.subproblem_binarize != BIN_NONE) {
-      std::cerr << "Warning: Hierarchical ReMUS has not been implemented. "
-                   "Results will be incorrect!"
-                << std::endl;
+      error("Warning: Hierarchical ReMUS has not been implemented. "
+            "Results will be incorrect!");
     }
     inner_enum = new ReMUS(prob, mo, subsetMap);
   } else {
@@ -23,14 +22,17 @@ HierMUSEnumer::HierMUSEnumer(SubProblem &prob, MUSEnumOptions &mo)
   }
 
   inner_enum->setUnsatCallback([&](const Selection &s) {
-    if (mopts.verbose_enum) {
-      std::cout << "HierMUSEnumer: SubEnumerator adding set: " << s
-                << " to candidates" << std::endl;
+    {
+      std::stringstream ss;
+      ss << "SubEnumerator adding set: " << s << " to candidates";
+      log(ss.str());
     }
+
     if (frontier_idx != -1) {
-      if (mopts.verbose_enum) {
-        std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx]
-                  << std::endl;
+      {
+        std::stringstream ss;
+        ss << "Unsetting: " << candidates[frontier_idx];
+        log(ss.str());
       }
       candidates[frontier_idx].setMinimal(false);
     }
@@ -55,9 +57,7 @@ void HierMUSEnumer::setFrontier(const Selection &) {}
 void HierMUSEnumer::loadNextCandidate() {
   Statistics &stats = inner_enum->getStatistics();
   if (stats.shouldRestart()) {
-    if (mopts.verbose_enum) {
-      std::cout << "HierMUSEnumer: Restarting in flat mode" << std::endl;
-    }
+    log("Restarting in flat mode");
     candidates.clear();
     Selection leaves = subsetMap->getLeavesSelector();
     leaves.setMinimal(false);
@@ -93,9 +93,10 @@ bool HierMUSEnumer::search() {
   while (!mopts.timedOut()) {
     if (inner_enum->search()) {
       if (frontier_idx != -1) {
-        if (mopts.verbose_enum) {
-          std::cout << "HierMUSEnumer: Unsetting: " << candidates[frontier_idx]
-                    << std::endl;
+        {
+          std::stringstream ss;
+          ss << "Unsetting: " << candidates[frontier_idx];
+          log(ss.str());
         }
         candidates[frontier_idx].setMinimal(false);
       }
@@ -111,20 +112,18 @@ bool HierMUSEnumer::search() {
 
 void HierMUSEnumer::printMUS(void) {
   if (mopts.timedOut()) {
-    std::cout << "FindMUS finishing early: ";
     if (candidates.empty()) {
-      std::cout << "No remaining candidates." << std::endl;
+      log("Finished early. No remaining candidates.");
     } else if (mopts.print_leftover) {
-      std::cout << "Last (non-minimal) candidate:" << std::endl;
-      subProblem.printSol(candidates.back());
+      log("Finished early. Last (non-minimal) candidate:", 0);
+      mopts.solution(subProblem.getSolStr(candidates.back()));
     } else {
-      std::cout << "Remaining candidate not printed (--no-leftover)"
-                << std::endl;
+      log("Finished early. Remaining candidate not printed (--no-leftover)", 0);
     }
     return;
   }
   if (!current_mus.empty()) {
-    subProblem.printSol(current_mus);
+    mopts.solution(subProblem.getSolStr(current_mus));
   }
 }
 

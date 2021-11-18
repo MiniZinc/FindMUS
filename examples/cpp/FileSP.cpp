@@ -107,12 +107,14 @@ FileSP::FileSP(MUSEnumOptions &mo, string file_path)
   init(is);
 }
 
-void FileSP::printSol(const Selection &b) {
+std::string FileSP::getSolStr(const Selection &b) {
+  std::stringstream ss;
   set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
-    std::cout << leaf << ", ";
+    ss << leaf << ", ";
   }
-  std::cout << "\n";
+  ss << "\n";
+  return ss.str();
 }
 
 bool FileSP::check(const Selection &s) {

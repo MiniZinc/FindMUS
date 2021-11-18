@@ -35,12 +35,14 @@ HM5::HM5(MUSEnumOptions &mo) : SubProblem(mo) {
   }
 }
 
-void HM5::printSol(const Selection &b) {
+std::string HM5::getSolStr(const Selection &b) {
   set<string> leaves = b.getLeaves();
+  std::stringstream ss;
   for (const string &leaf : leaves) {
-    std::cout << leaf << ", ";
+    ss << leaf << ", ";
   }
-  std::cout << "\n";
+  ss << "\n";
+  return ss.str();
 }
 
 bool HM5::check(const Selection &s) {
@@ -93,12 +95,14 @@ FFLAT::FFLAT(MUSEnumOptions &mo) : SubProblem(mo) {
   }
 }
 
-void FFLAT::printSol(const Selection &b) {
+std::string FFLAT::getSolStr(const Selection &b) {
+  std::stringstream ss;
   set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
-    std::cout << leaf << ", ";
+    ss << leaf << ", ";
   }
-  std::cout << "\n";
+  ss << "\n";
+  return ss.str();
 }
 
 bool FFLAT::check(const Selection &s) {
@@ -146,12 +150,14 @@ GLM::GLM(MUSEnumOptions &mo) : SubProblem(mo) {
   }
 }
 
-void GLM::printSol(const Selection &b) {
+std::string GLM::getSolStr(const Selection &b) {
+  std::stringstream ss;
   set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
-    std::cout << leaf << ", ";
+    ss << leaf << ", ";
   }
-  std::cout << "\n";
+  ss << "\n";
+  return ss.str();
 }
 
 bool GLM::check(const Selection &s) {
@@ -189,12 +195,14 @@ HM5_2::HM5_2(MUSEnumOptions &mo) : SubProblem(mo) {
   }
 }
 
-void HM5_2::printSol(const Selection &b) {
+std::string HM5_2::getSolStr(const Selection &b) {
+  std::stringstream ss;
   set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
-    std::cout << leaf << ", ";
+    ss << leaf << ", ";
   }
-  std::cout << "\n";
+  ss << "\n";
+  return ss.str();
 }
 
 bool HM5_2::check(const Selection &s) {
@@ -253,12 +261,14 @@ Path::Path(MUSEnumOptions &mo) : SubProblem(mo) {
   }
 }
 
-void Path::printSol(const Selection &b) {
+std::string Path::getSolStr(const Selection &b) {
+  std::stringstream ss;
   set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
-    std::cout << leaf << ", ";
+    ss << leaf << ", ";
   }
-  std::cout << "\n";
+  ss << "\n";
+  return ss.str();
 }
 
 bool Path::check(const Selection &s) {
@@ -338,12 +348,14 @@ P1f::P1f(MUSEnumOptions &mo) : SubProblem(mo) {
   }
 }
 
-void P1f::printSol(const Selection &b) {
+std::string P1f::getSolStr(const Selection &b) {
+  std::stringstream ss;
   set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
-    std::cout << leaf << ", ";
+    ss << leaf << ", ";
   }
-  std::cout << "\n";
+  ss << "\n";
+  return ss.str();
 }
 
 bool P1f::check(const Selection &s) {
@@ -419,12 +431,14 @@ RandomProblem::RandomProblem(MUSEnumOptions &mo, int seed, unsigned int ncons,
   }
 }
 
-void RandomProblem::printSol(const Selection &b) {
+std::string RandomProblem::getSolStr(const Selection &b) {
+  std::stringstream ss;
   set<string> leaves = b.getLeaves();
   for (const string &leaf : leaves) {
-    std::cout << leaf << ", ";
+    ss << leaf << ", ";
   }
-  std::cout << "\n";
+  ss << "\n";
+  return ss.str();
 }
 
 inline bool is_subset(const set<string> &mus, const set<string> &sel) {

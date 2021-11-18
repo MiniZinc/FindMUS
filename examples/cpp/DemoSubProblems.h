@@ -12,7 +12,7 @@ namespace HierMUS {
 class HM5 : public SubProblem {
 public:
   explicit HM5(MUSEnumOptions &mo);
-  void printSol(const Selection &b);
+  std::string getSolStr(const Selection &b);
   bool check(const Selection &b);
   bool provedSAT() { return false; };
 };
@@ -20,7 +20,7 @@ public:
 class GLM : public SubProblem {
 public:
   explicit GLM(MUSEnumOptions &mo);
-  void printSol(const Selection &b);
+  std::string getSolStr(const Selection &b);
   bool check(const Selection &b);
   bool provedSAT() { return false; };
 };
@@ -28,7 +28,7 @@ public:
 class HM5_2 : public SubProblem {
 public:
   explicit HM5_2(MUSEnumOptions &mo);
-  void printSol(const Selection &b);
+  std::string getSolStr(const Selection &b);
   bool check(const Selection &b);
   bool provedSAT() { return false; };
 };
@@ -36,7 +36,7 @@ public:
 class FFLAT : public SubProblem {
 public:
   explicit FFLAT(MUSEnumOptions &mo);
-  void printSol(const Selection &b);
+  std::string getSolStr(const Selection &b);
   bool check(const Selection &b);
   bool provedSAT() { return false; };
 };
@@ -44,7 +44,7 @@ public:
 class Path : public SubProblem {
 public:
   explicit Path(MUSEnumOptions &mo);
-  void printSol(const Selection &b);
+  std::string getSolStr(const Selection &b);
   bool check(const Selection &b);
   bool provedSAT() { return false; };
 };
@@ -52,7 +52,7 @@ public:
 class P1f : public SubProblem {
 public:
   explicit P1f(MUSEnumOptions &mo);
-  void printSol(const Selection &b);
+  std::string getSolStr(const Selection &b);
   bool check(const Selection &b);
   bool provedSAT() { return false; };
 };
@@ -64,7 +64,7 @@ private:
 public:
   explicit RandomProblem(MUSEnumOptions &mo, int seed, unsigned int ncons,
                          unsigned int nmuses, unsigned int mussize);
-  void printSol(const Selection &b);
+  std::string getSolStr(const Selection &b);
   bool check(const Selection &b);
   bool provedSAT() { return false; };
 };

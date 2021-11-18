@@ -35,13 +35,19 @@ string join(const vector<string> &strs, const string &sep) {
   return ss.str();
 }
 
-string escape(const string &orig, bool html) {
+string escape(const string &orig, bool html, bool nls) {
   string repchars = "\\&\"\'<>";
   vector<string> repstrs;
   if (html)
     repstrs = {"\\", "&amp;", "&quot;", "&apos;", "&lt;", "&gt;"};
   else
     repstrs = {"\\\\", "&", "\\\"", "'", "<", ">"};
+
+  if (nls) {
+    repchars += "\n\r";
+    repstrs.emplace_back("\\n");
+    repstrs.emplace_back("\\r");
+  }
 
   stringstream out;
   size_t last = 0;

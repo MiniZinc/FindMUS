@@ -35,4 +35,12 @@ Selection SubsetMap::getRandomSelection(const Selection &selection,
   return s;
 }
 
+void SubsetMap::log(const std::string& msg, unsigned int level) const {
+  mopts.log(MUSEnumOptions::LOG_MAP, msg, level);
+}
+
+void SubsetMap::error(const std::string& msg) const {
+  mopts.error(MUSEnumOptions::LOG_MAP, msg);
+}
+
 } // namespace HierMUS

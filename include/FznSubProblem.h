@@ -30,7 +30,7 @@ public:
 class FznSubProblem : public SubProblem {
 private:
   std::ofstream nullstream;
-  std::stringstream log;
+  std::stringstream mzn_log;
 
   NullSolns2Out s2o;
 
@@ -59,6 +59,10 @@ public:
   FznSubProblem(const std::string &fznpath, const std::string &pathpath,
                 MUSEnumOptions &mo, const std::string &oraclepath);
   ~FznSubProblem() { delete fzn_model; }
+
+  std::string getSolStr(const Selection &b);
+  std::string getLongSolStr(const Selection &b);
+  std::string getHtmlStr(const Selection &b);
 
   void printSol(const Selection &b);
   void printLongSol(const Selection &b);

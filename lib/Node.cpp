@@ -62,7 +62,7 @@ void MapNode::getCounts(counts &cs, int depth) const {
     cs.nleaves++;
   } else {
     if (!con_id.empty()) {
-      std::cout << "Found lost leaf: " << con_id << std::endl;
+      std::cerr << "Found lost leaf: " << con_id << std::endl;
     }
     cs.nbranches++;
   }

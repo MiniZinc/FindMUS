@@ -57,6 +57,9 @@ public:
   virtual Selection convertConIds(std::set<string> &con_ids) = 0;
 
   bool isConsistent(void) const { return consistent; }
+
+  void log(const std::string& msg, unsigned int level = 1) const;
+  void error(const std::string& msg) const;
 };
 } // namespace HierMUS
 

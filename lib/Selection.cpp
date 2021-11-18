@@ -130,7 +130,6 @@ Selection Selection::get_diff(const Selection& c2) const {
 }
 
 Selection Selection::get_union(const Selection &c2) const {
-  //std::cout << "UNION of: C1 = " << *this << "\nAND: C2 = " << c2 << "\n";
   Selection un;
   for(const MapNode* mn: const_excluded()) {
     un.exclude(mn);
@@ -144,7 +143,6 @@ Selection Selection::get_union(const Selection &c2) const {
   for(const MapNode* mn: c2.const_selected()) {
     un.select(mn);
   }
-  //std::cout << "UNION of C1+C2 = " << un << "\n";
   return un;
 }
 
@@ -179,45 +177,28 @@ bool contains_child(const ExpandedNodeSet& ens, const MapNode* child) {
 
 
 void Selection::expand(const Selection &m) {
-  //std::cerr << "Expanding " << *this << "   with: " << m << std::endl;
   const ExpandedNodeSet frontier_copy = frontier;
   for (const ExpandedNode &en : frontier_copy) {
-    //std::cerr << "  Checking " << en << std::endl;
     if (contains_child(m.const_included(), en.child)) {
-      //std::cerr << "    m has: " << en << std::endl;
       if (roots.empty() || roots.find(en.parent) != roots.end()) {
-        //std::cerr << "     root is empty or does contain parent" << std::endl;
         roots_erase(en.parent);
         const MapNode *nm = en.child;
         frontier_erase(en.child);
         if (nm->var.isLeaf || nm->children.empty()) {
-          //std::cerr << "      Is leaf, selecting: " << en << std::endl;
           select(en.child, en.parent);
-          //std::cerr << "      Is leaf, result: " << *this << std::endl;
-          //frontier.insert(en);
         } else {
           for (const MapNode& child : nm->children) {
-            //std::cerr << "      Not leaf, selecting: " << printMapNode(true, "d_", &child) << std::endl;
             select(&child, en.parent);
-            //std::cerr << "      Not leaf, result: " << *this << std::endl;
           }
         }
 
       } else {
-        //std::cerr << "     root is not empty or contains parent" << std::endl;
-        //std::cerr << "     removing child of: " << en << std::endl;
         exclude(en.child);
-        //std::cerr << "     removed child result: " << *this << std::endl;
       }
     } else {
-      //std::cerr << "    m not has: " << en << std::endl;
-      //std::cerr << "    selecting child: " << en << std::endl;
       select(en.child, en.parent);
-      //std::cerr << "    selected result: " << *this << std::endl;
     }
   }
-
-  //std::cerr << "after expand: " << *this << std::endl;
 }
 
 

@@ -86,7 +86,6 @@ string ConstraintSet::getShortSummary(const string &sep) {
 
 std::string ConstraintSet::getJSONSummary(void) {
   std::stringstream json;
-  json << "%%%mzn-json-start" << std::endl;
   json << "{";
 
   json << "\"constraints\": [" << std::endl;
@@ -119,7 +118,6 @@ std::string ConstraintSet::getJSONSummary(void) {
   json << "]" << std::endl;
 
   json << "}" << std::endl;
-  json << "%%%mzn-json-end" << std::endl;
   return json.str();
 }
 
@@ -172,14 +170,10 @@ std::string ConstraintSet::getHTMLSummary(MapDepth map_depth) {
   }
   std::vector<string> path_vec(paths.begin(), paths.end());
 
-  ss << "%%%mzn-html-start\n"
-     << "<div class=\"explanation\" style=\"border:1px solid black\">"
+  ss << "<div class=\"explanation\" style=\"border:1px solid black\">"
      << "<a href=\"highlight:?" << utils::join(path_vec, "&")
      << "\">"
-     // << getShortSummary("<br/>")
-     << getHUMANSummary("<br/>", map_depth) << "</a></div>\n"
-     << "%%%mzn-html-end\n"
-     << std::endl;
+     << getHUMANSummary("<br/>", map_depth) << "</a></div>";
 
   return ss.str();
 }

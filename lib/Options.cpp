@@ -445,6 +445,9 @@ void parse(DriverOptions &dro, MUSEnumOptions &mo,
       mo.subproblem_output_format = OUT_DEBUG;
     } else if (args[i] == "--output-human") {
       mo.subproblem_output_format = OUT_HUMAN;
+    } else if (args[i] == "--use-sections") {
+      dro.use_sections = true;
+      mo.use_sections = true;
     } else if (args[i] == "--use-old-enumer") {
       dro.use_new_enumer = false;
 #ifdef BUILD_FINDMUS_EXAMPLES

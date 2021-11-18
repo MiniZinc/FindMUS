@@ -56,6 +56,9 @@ protected:
   Selection current_mus;
   std::function<void(const Selection &)> unsat_callback;
 
+  void log(const std::string& msg, unsigned int level = 1) const;
+  void error(const std::string& msg) const;
+
 public:
   MusEnumerator(SubProblem &p, MUSEnumOptions &mo, SubsetMap *m = NULL);
   virtual ~MusEnumerator();
@@ -90,6 +93,7 @@ private:
                              const NodeSet &criticals);
   OptionalSelection qx_back_with_map(Selection B, size_t D, Selection C,
                                      const NodeSet &criticals);
+
 };
 } // namespace HierMUS
 

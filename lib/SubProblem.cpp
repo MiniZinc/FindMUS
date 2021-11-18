@@ -9,4 +9,12 @@ SubProblem::~SubProblem() {}
 
 MapNode &SubProblem::getTree() { return tree; }
 
+void SubProblem::log(const std::string& msg, unsigned int level) const {
+  mopts.log(MUSEnumOptions::LOG_SOLVE, msg, level);
+}
+
+void SubProblem::error(const std::string& msg) const {
+  mopts.error(MUSEnumOptions::LOG_SOLVE, msg);
+}
+
 } // namespace HierMUS

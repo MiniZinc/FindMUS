@@ -15,9 +15,10 @@ ReMUS::ReMUS(SubProblem &prob, MUSEnumOptions &mo, SubsetMap *m)
 ReMUS::~ReMUS() {}
 
 void ReMUS::setFrontier(const Selection &f) {
-  if (mopts.verbose_enum) {
-    std::cout << "ReMUS: new frontier: " << f << std::endl;
-  }
+  std::stringstream ss;
+  ss  << "ReMUS: new frontier: " << f;
+  log(ss.str());
+
   remus_stack = {{f, {}}};
   frontier = f;
 }
@@ -34,10 +35,12 @@ bool ReMUS::search() {
     ReMUSState &state = remus_stack.back();
     const int depth = static_cast<int>(remus_stack.size()) - 1;
     const string indent(depth, '\t');
-    if (mopts.verbose_enum) {
-      std::cout << indent << "ReMUS: stack.size(): " << remus_stack.size()
-                << " top: " << state.S << " crits: {" << state.criticals << " }"
-                << std::endl;
+
+    {
+      std::stringstream ss;
+      ss << indent << "ReMUS: stack.size(): " << remus_stack.size()
+         << " top: " << state.S << " crits: {" << state.criticals << " }";
+      log(ss.str());
     }
     stats.map_calls++;
 
@@ -45,9 +48,7 @@ bool ReMUS::search() {
     Selection s_max = subsetMap->getSelection(state.S);
 
     if (s_max.size() == 0) {
-      if (mopts.verbose_enum) {
-        std::cout << indent << "ReMUS: popping" << std::endl;
-      }
+      log("ReMUS: popping");
       remus_stack.pop_back();
       continue;
     }
@@ -73,10 +74,10 @@ bool ReMUS::search() {
           p.select(*(it++));
         }
 
-        if (mopts.verbose_enum) {
-          std::cout << indent << "ReMUS: pushing: " << p
-                    << " crits: " << state.criticals << std::endl;
-        }
+        std::stringstream ss;
+        ss << indent << "ReMUS: pushing: " << p << " crits: " << state.criticals;
+        log(ss.str());
+
         remus_stack.push_back({p, state.criticals});
       }
       if (s_mus.isLeaves()) {
@@ -97,10 +98,10 @@ bool ReMUS::search() {
 
       if (s_mcs.size() == 1) {
         state.criticals.insert((*s_mcs.const_included().begin()).child);
-        if (mopts.verbose_enum) {
-          std::cout << indent << "ReMUS: updated crits: {" << state.criticals
-                    << " }" << std::endl;
-        }
+
+        std::stringstream ss;
+        ss << indent << "ReMUS: updated crits: {" << state.criticals << " }";
+        log(ss.str());
       } else {
         // We are aboute to modify remus_stack so we need a copy of criticals
         NodeSet criticals_copy = state.criticals;
@@ -111,11 +112,11 @@ bool ReMUS::search() {
           ReMUSState new_state{s_max, criticals_copy};
           new_state.S.select(n);
           new_state.criticals.insert(n);
-          if (mopts.verbose_enum) {
-            std::cout << indent << "ReMUS: pushing: " << new_state.S
-                      << " crits: {" << new_state.criticals << " }"
-                      << std::endl;
-          }
+
+          std::stringstream ss;
+          ss << indent << "ReMUS: pushing: " << new_state.S << " crits: {" << new_state.criticals << " }";
+          log(ss.str());
+
           remus_stack.push_back(new_state);
         }
       }

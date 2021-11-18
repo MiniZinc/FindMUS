@@ -67,9 +67,9 @@ static void run(DriverOptions &dro, MUSEnumOptions &mo, MusEnumerator &me) {
   std::chrono::time_point<std::chrono::system_clock> start_time =
       std::chrono::system_clock::now();
   Statistics &stats = me.getStatistics();
-  if (dro.output_progress) {
-    std::cout << "%%%mzn-progress 0.0" << std::endl;
-  }
+
+  dro.print_progress(0.0);
+
   int start_sat_calls = 0;
   while (!sigint && !mo.timedOut() && me.search()) {
     me.printMUS();
@@ -77,24 +77,17 @@ static void run(DriverOptions &dro, MUSEnumOptions &mo, MusEnumerator &me) {
     stats.nmuses++;
 
     if (dro.maxmuses > 0) {
-      if (dro.output_progress) {
-        std::cout << "%%%mzn-progress "
-                  << (static_cast<float>(stats.nmuses) / dro.maxmuses * 100.0f)
-                  << std::endl;
-      }
+      dro.print_progress(static_cast<float>(stats.nmuses) / dro.maxmuses * 100.0f);
+
       if (stats.nmuses >= dro.maxmuses)
         break;
     }
 
     int sat_calls_d = stats.sat_calls - start_sat_calls;
-    if (dro.frequent_stats) {
-      std::chrono::duration<double> dur =
-          std::chrono::system_clock::now() - start_time;
-      std::cout << "Intermediate Result: Time: " << std::fixed
-                << std::setprecision(5) << dur.count()
-                << "\tnmuses: " << stats.nmuses << "\t" << stats
-                << "\tdsat: " << sat_calls_d << std::endl;
+    if(dro.frequent_stats) {
+      dro.print_intermediate_stats(start_time, stats, sat_calls_d);
     }
+
     start_sat_calls = stats.sat_calls;
   }
 
@@ -102,15 +95,9 @@ static void run(DriverOptions &dro, MUSEnumOptions &mo, MusEnumerator &me) {
     me.printMUS();
   }
 
-  if (dro.output_progress) {
-    std::cout << "%%%mzn-progress 100.0" << std::endl;
-  }
-  if (dro.output_stats) {
-    std::chrono::duration<double> dur =
-        std::chrono::system_clock::now() - start_time;
-    std::cout << "Total Time: " << std::fixed << std::setprecision(5)
-              << dur.count() << "\tnmuses: " << stats.nmuses << "\t"
-              << me.getStatistics() << std::endl;
+  dro.print_progress(100.0);
+  if(dro.output_stats) {
+    dro.print_totals(start_time, stats);
   }
 }
 } // namespace FindMUSState
@@ -242,7 +229,7 @@ SubProblem *createProblem(DriverOptions &dro, MUSEnumOptions &mo,
 void writeDotFile(const DriverOptions &dro, SubProblem *problem) {
   std::ofstream f(dro.dump_dot_path);
   if (!f.is_open()) {
-    std::cout << "\nFailed to write to file" << std::endl;
+    dro.print("Failed to write to file.");
     return;
   }
   DotWriter dw(f, problem->getTree());
@@ -280,8 +267,9 @@ int main(int argc, const char **argv) {
   HierMUS::SubProblem *problem = createProblem(dro, mo, temp_files);
 
   if (!dro.dump_dot_path.empty()) {
-    std::cout << "Writing diagram to: " << dro.dump_dot_path << " and exiting"
-              << std::endl;
+    std::stringstream ss;
+    ss << "Writing diagram to: " << dro.dump_dot_path << " and exiting.";
+    dro.print(ss.str());
     writeDotFile(dro, problem);
     exit(EXIT_SUCCESS);
   }
@@ -305,13 +293,12 @@ int main(int argc, const char **argv) {
   if (problem->check(
           me->getRootSelector())) { // If unsat isn't proven, check returns SAT
     if (problem->provedSAT()) {
-      std::cout << "Error: Model is Satisfiable" << std::endl;
+      std::cerr << "Error: Model is Satisfiable" << std::endl;
       return EXIT_SUCCESS;
     } else {
-      std::cout
-          << "Error: Cannot prove UNSAT within solver timelimit. "
-          << "Set a larger timeout with the '--solver-timelimit' argument."
-          << std::endl;
+      std::cerr << "Error: Cannot prove UNSAT within solver timelimit. "
+                << "Set a larger timeout with the '--solver-timelimit' argument."
+                << std::endl;
     }
     return EXIT_FAILURE;
   }
@@ -320,7 +307,7 @@ int main(int argc, const char **argv) {
 
   // Is the background satisfiable:
   if (!problem->check(Selection())) {
-    std::cout << "Background is not satisfiable, exiting. "
+    std::cerr << "Background is not satisfiable, exiting. "
               << "Try using --soft-defines." << std::endl;
     return EXIT_FAILURE;
   }
@@ -332,23 +319,22 @@ int main(int argc, const char **argv) {
         scaled_unsat_time.count() < mo.subproblem_solver_time_limit.count()
             ? scaled_unsat_time
             : mo.subproblem_solver_time_limit;
-    std::cout << "%% Adapting solver time limit to: "
-              << std::chrono::duration_cast<std::chrono::seconds>(
-                     mo.subproblem_solver_time_limit)
-                     .count()
-              << std::endl;
+    std::stringstream ss;
+    ss << "%% Adapting solver time limit to: "
+      << std::chrono::duration_cast<std::chrono::seconds>(
+          mo.subproblem_solver_time_limit).count()
+      << std::endl;
+    dro.print(ss.str());
   }
 
   // Print suggestion if using gen/hint
   if (mo.subproblem_structure == STR_GEN) {
-    std::cout << "Note: Generalising model structure (stripping instance "
-                 "specific info). "
-              << "Use \"--paramset mzn\" for more precise output" << std::endl;
+    dro.print(
+        "Note: Generalising model structure (stripping instance specific info). " \
+        "Use \"--paramset mzn\" for more precise output");
   }
   if (mo.subproblem_native_shrink && mo.map_depth != DEPTH_PROGRAM) {
-    std::cout << "Note: Native shrink called without fzn depth. This may not "
-                 "work as expected"
-              << std::endl;
+    dro.print("Note: Native shrink called without fzn depth. This may not work as expected");
   }
 
   FindMUSState::run(dro, mo, *me);

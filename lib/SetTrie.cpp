@@ -9,16 +9,15 @@ using std::string;
 using std::vector;
 
 void printSetTrie(SetTrie *s, int depth = 0) {
-
   std::cout << string(depth, ' ') << s->value << ": " << s->terminal << "\n";
   for (SetTrie &s1 : s->children) {
     printSetTrie(&s1, depth + 2);
   }
 }
+
 void SetTrie::add_set(const vector<string> &set) {
   vector<string> sorted_set(set.begin(), set.end());
   std::sort(sorted_set.begin(), sorted_set.end());
-  // std::cout << "Add set: {" << utils::join(sorted_set, ", ") << "}\n";
 
   SetTrie *curr = this;
   for (int i = 0; i < sorted_set.size(); i++) {

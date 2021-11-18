@@ -91,14 +91,14 @@ MinisatSubsetMap::MinisatSubsetMap(SubProblem *prob, MUSEnumOptions &mo)
 
   setMaximal(true);
 
-  if (mopts.verbose_map) {
-    std::chrono::duration<double> dur =
-        std::chrono::system_clock::now() - build_start;
-    std::cout << "SubsetMap: map loaded: time: " << std::fixed
-              << std::setprecision(5) << dur.count() << std::endl;
-    std::cout << "SubsetMap: nleaves: " << leafNodes.size()
-              << " nbranches: " << branchNodes.size() << std::endl;
-  }
+  std::chrono::duration<double> dur =
+      std::chrono::system_clock::now() - build_start;
+  std::stringstream ss;
+  ss << "map loaded: time: " << std::fixed
+     << std::setprecision(5) << dur.count()
+     << " nleaves: " << leafNodes.size()
+     << " nbranches: " << branchNodes.size();
+  log(ss.str());
 }
 
 void MinisatSubsetMap::reset(void) {
@@ -220,20 +220,19 @@ MapNode MinisatSubsetMap::addConnections(const MapNode &node,
 }
 
 Selection MinisatSubsetMap::expand(const Selection &s, const Selection &m) {
+  std::stringstream ss;
   if (mopts.verbose_map == 1)
-    std::cout << "SubsetMap: Expanding: " << s.size() << " from "
-              << m.size();
+    ss << "SubsetMap: Expanding: " << s.size() << " from " << m.size();
   if (mopts.verbose_map == 2)
-    std::cout << "SubsetMap: Expanding: " << s.const_included() << " from "
-              << m.const_included();
+    ss << "SubsetMap: Expanding: " << s.const_included() << " from " << m.const_included();
 
   Selection newSel = s;
   newSel.expand(m);
 
-  if (mopts.verbose_map == 1)
-    std::cout << " to " << newSel.size() << std::endl;
-  if (mopts.verbose_map == 2)
-    std::cout << " to " << newSel.const_included() << std::endl;
+  if (mopts.verbose_map == 1) ss << " to " << newSel.size();
+  if (mopts.verbose_map == 2) ss << " to " << newSel.const_included();
+
+  log(ss.str());
 
   return newSel;
 }
@@ -245,21 +244,22 @@ void MinisatSubsetMap::block(Minisat::vec<Minisat::Lit> &blockClause) {
 void MinisatSubsetMap::blockSupersets(const Selection &selection) {
   Minisat::vec<Minisat::Lit> blockClause;
 
+  std::stringstream ss;
   if (mopts.verbose_map)
-    std::cout << "SubsetMap: Superset block: "
-              << (tempBlocking ? "<Temp> " : "");
+    ss << "SubsetMap: Superset block: " << (tempBlocking ? "<Temp> " : "");
 
   for (const MapNode *node : selection.const_selected()) {
     blockClause.push(node->var.isLeaf ? ~mkLit(node->var.leaf)
                                       : ~mkLit(node->var.conj));
   }
   if (mopts.verbose_map == 1) {
-    std::cout << selection.size() << std::endl;
+    ss << selection.size();
   }
   if (mopts.verbose_map == 2) {
-    streamMapNodeSet(std::cout, selection.const_selected(), false, "c_");
-    std::cout << std::endl;
+    streamMapNodeSet(ss, selection.const_selected(), false, "c_");
   }
+
+  log(ss.str());
 
   if (tempBlocking) {
     int control = solver.newVar(Minisat::l_Undef, false);
@@ -272,21 +272,23 @@ void MinisatSubsetMap::blockSupersets(const Selection &selection) {
 
 void MinisatSubsetMap::blockSubsets(const Selection &selection) {
   Minisat::vec<Minisat::Lit> blockClause;
+
+  std::stringstream ss;
   if (mopts.verbose_map)
-    std::cout << "SubsetMap: Subset block:   "
-              << (tempBlocking ? "<Temp> " : "");
+    ss << "SubsetMap: Subset block:   " << (tempBlocking ? "<Temp> " : "");
 
   for (const MapNode *node : selection.const_excluded()) {
     blockClause.push(node->var.isLeaf ? mkLit(node->var.leaf)
                                       : mkLit(node->var.disj));
   }
   if (mopts.verbose_map == 1) {
-    std::cout << selection.const_excluded().size() << std::endl;
+    ss << selection.const_excluded().size() << std::endl;
   }
   if (mopts.verbose_map == 2) {
-    streamMapNodeSet(std::cout, selection.const_excluded(), true, "d_");
-    std::cout << std::endl;
+    streamMapNodeSet(ss, selection.const_excluded(), true, "d_");
   }
+
+  log(ss.str());
 
   if (tempBlocking) {
     int control = solver.newVar(Minisat::l_Undef, false);
@@ -314,9 +316,7 @@ Selection MinisatSubsetMap::getSelection() {
 
 Selection MinisatSubsetMap::getSelection(const Selection &selection) {
   if (!consistent) {
-    if (mopts.verbose_map) {
-      std::cout << "SubsetMap: Inconsistent. Returning: {}. " << std::endl;
-    }
+    log("SubsetMap: Inconsistent. Returning: {}. ");
     return {}; // Return empty Selection
   }
   solution_template = selection;
@@ -335,18 +335,18 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
   }
 
   Minisat::vec<Minisat::Lit> atLeastOne;
+  std::stringstream ss;
   if (mopts.verbose_map == 1)
-    std::cout << "SubsetMap: getSelection(" << selection.const_selected().size()
-              << ") with assumptions: { omitted";
+    ss << "SubsetMap: getSelection(" << selection.const_selected().size()
+       << ") with assumptions: { omitted";
   if (mopts.verbose_map == 2)
-    std::cout << "SubsetMap: getSelection(" << selection
-              << ") with assumptions: {";
+    ss << "SubsetMap: getSelection(" << selection << ") with assumptions: {";
   Minisat::vec<Minisat::Lit> all_assumptions;
   for (const MapNode *child : selection.const_included().get_nodes()) {
     if (!child->var.isLeaf) { // Don't force leaves to be active
       all_assumptions.push(mkLit(child->var.eq));
       if (mopts.verbose_map == 2)
-        std::cout << " e" << child->path;
+        ss << " e" << child->path;
     }
     Minisat::Var v =
         child->var.isLeaf ? child->var.leaf : child->var.conj;
@@ -362,7 +362,7 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
     all_assumptions.push(node->var.isLeaf ? mkLit(node->var.leaf)
                                           : mkLit(node->var.conj));
     if (mopts.verbose_map == 2)
-      std::cout << (node->var.isLeaf ? " " : " c") << node->path;
+      ss << (node->var.isLeaf ? " " : " c") << node->path;
   }
 
   solver.addClause(atLeastOne);
@@ -376,24 +376,16 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
     all_assumptions.push(node->var.isLeaf ? ~mkLit(node->var.leaf)
                                           : ~mkLit(node->var.disj));
     if (mopts.verbose_map == 2)
-      std::cout << (node->var.isLeaf ? " ~" : " ~d") << node->path;
+      ss << (node->var.isLeaf ? " ~" : " ~d") << node->path;
   }
 
   if (mopts.verbose_map)
-    std::cout << " }" << std::endl;
+    ss << " }";
+
+  log(ss.str());
 
   auto start_time = std::chrono::system_clock::now();
   bool r = solver.solve(all_assumptions);
-
-  // std::cout << std::endl;
-  // std::cout << "nAssigns(): " <<  solver.nVars() << std::endl;
-  // std::cout << "nVars(): " <<  solver.nVars() << std::endl;
-  // std::cout << "nClauses(): " <<  solver.nVars() << std::endl;
-  // std::cout << "nLearnt(): " <<  solver.nVars() << std::endl;
-  // std::cout << "nFreeVars(): " <<  solver.nVars() << std::endl;
-  // std::cout << "solver.okay(): " << solver.okay() << std::endl;
-  // solver.printStats();
-  // std::cout << std::endl;
 
   solution_set = {};
   solution_set.exclude(solution_template.const_excluded());
@@ -416,17 +408,18 @@ Selection MinisatSubsetMap::getSelection(const Selection &selection) {
   if (mopts.verbose_map == 1) {
     std::chrono::duration<double> dur =
         std::chrono::system_clock::now() - start_time;
-    std::cout << "SubsetMap: Solve took " << std::fixed << std::setprecision(5)
-              << dur.count()
-              << " seconds. Returning: " << solution_set.const_selected().size() << ". "
-              << std::endl;
+    std::stringstream ss;
+    ss << "SubsetMap: Solve took " << std::fixed << std::setprecision(5) << dur.count()
+       << " seconds. Returning: " << solution_set.const_selected().size() << ". ";
+    log(ss.str());
   }
   if (mopts.verbose_map == 2) {
     std::chrono::duration<double> dur =
         std::chrono::system_clock::now() - start_time;
-    std::cout << "SubsetMap: Solve took " << std::fixed << std::setprecision(5)
-              << dur.count() << " seconds. Returning: " << solution_set << ". "
-              << std::endl;
+    std::stringstream ss;
+    ss << "SubsetMap: Solve took " << std::fixed << std::setprecision(5) << dur.count()
+        << " seconds. Returning: " << solution_set << ". ";
+    log(ss.str(), 2);
   }
 
   return solution_set;

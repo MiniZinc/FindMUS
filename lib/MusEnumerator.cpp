@@ -8,6 +8,14 @@ namespace HierMUS {
 using std::set;
 using std::string;
 
+void MusEnumerator::log(const std::string& msg, unsigned int level) const {
+  mopts.log(MUSEnumOptions::LOG_ENUM, msg, level);
+}
+
+void MusEnumerator::error(const std::string& msg) const {
+  mopts.error(MUSEnumOptions::LOG_ENUM, msg);
+}
+
 bool MusEnumerator::shrink(Selection &m, const NodeSet &c) {
   switch (mopts.map_shrink_alg) {
   case SH_MAP_QX:
@@ -32,13 +40,11 @@ bool MusEnumerator::process_native(Selection &model) {
   ShrunkSet shrunk = subProblem.getShrunk();
 
   if (shrunk.con_ids.empty()) {
-    std::cerr << "MusEnumerator::native_shrink: Not supported." << std::endl;
+    error("Not supported: MusEnumerator::native_shrink");
     exit(EXIT_FAILURE);
   }
 
-  if (mopts.verbose_enum)
-    std::cout << "MusEnumerator::native_shrink"
-              << std::endl; //:\tfrom: " << model;
+  log("Using MusEnumerator::native_shrink");
 
   if (mopts.map_shrink_frontier) {
     model.shrinkTo(shrunk.con_ids);
@@ -305,11 +311,6 @@ MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
   }
   C2 = C.get_diff(C1);
 
-  // std::cout << "Part: |C| = " << C.size() << " |C1| = " << C1.size() << " |C2| = " << C2.size() << std::endl;
-  // std::cout << "Part: C = " << C << std::endl
-  //           << "     C1 = " << C1 << std::endl
-  //           << "     C2 = " << C2 << std::endl;
-
   OptionalSelection D2, D1;
   if (C2.size() == 1 && is_subset(C2, criticals)) {
     D2 = C2;
@@ -338,7 +339,6 @@ MusEnumerator::qx_back_with_map(Selection B, size_t D, Selection C,
 
 bool MusEnumerator::qx_with_map(Selection &model,
                                 const NodeSet &criticals) {
-  // std::cout << "\n\n";
   if (process_native(model))
     return true;
 
@@ -369,7 +369,7 @@ Statistics &MusEnumerator::getStatistics(void) { return stats; }
 void MusEnumerator::printMUS(void) {
   if (current_mus.empty())
     return;
-  subProblem.printSol(current_mus);
+  mopts.solution(subProblem.getSolStr(current_mus));
 }
 
 const Selection &MusEnumerator::getCurrentMUS(void) { return current_mus; }

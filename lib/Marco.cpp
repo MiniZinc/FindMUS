@@ -16,9 +16,7 @@ Marco::Marco(SubProblem &p, MUSEnumOptions &mo, SubsetMap *m)
 Marco::~Marco() {}
 
 void Marco::setFrontier(const Selection &f) {
-  if (mopts.verbose_enum) {
-    std::cout << "Marco: new frontier: " << f << std::endl;
-  }
+  log("New frontier");
   frontier = f;
 }
 
