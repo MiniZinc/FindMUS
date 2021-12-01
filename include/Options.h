@@ -47,69 +47,17 @@ public:
 #endif
   }
 
-  void print_progress(float f) {
-    if(output_progress) {
-      if(use_sections) {
-        std::cout << "{\"type\": \"progress\", \"value\": "<< f <<"}" << std::endl;
-      } else {
-        std::cout << "%%%mzn-progress " << std::fixed << std::setprecision(2) << f << std::endl;
-      }
-    }
-  }
+  void print_progress(float f) const;
 
   void print_intermediate_stats(
     std::chrono::time_point<std::chrono::system_clock> start_time,
-    Statistics& stats, int sat_calls_d) {
-
-    std::chrono::duration<double> dur =
-        std::chrono::system_clock::now() - start_time;
-
-    if(use_sections) {
-      std::cout << "{\"type\", \"statistics\", "
-        << "\"time\": " << std::setprecision(5) << dur.count() << ", "
-        << "\"nmuses\": " << std::fixed << stats.nmuses << ", "
-        << "\"map\": " << std::fixed << stats.map_calls << ", "
-        << "\"sat\": " << std::fixed << stats.sat_calls << ", "
-        << "\"total\": " << (stats.sat_calls + stats.map_calls) << ", "
-        << "\"dsat\": " << sat_calls_d
-        << "}" << std::endl;
-    } else {
-      std::cout << "Intermediate Result: Time: " << std::fixed
-                << std::setprecision(5) << dur.count()
-                << "\tnmuses: " << stats.nmuses << "\t" << stats
-                << "\tdsat: " << sat_calls_d << std::endl;
-    }
-  }
+    Statistics& stats, int sat_calls_d) const;
 
   void print_totals(
       std::chrono::time_point<std::chrono::system_clock> start_time,
-      Statistics& stats) {
-    std::chrono::duration<double> dur =
-      std::chrono::system_clock::now() - start_time;
-    if(use_sections) {
-      std::cout << "{\"type\", \"statistics\", "
-        << "\"time\": " << std::setprecision(5) << dur.count() << ", "
-        << "\"nmuses\": " << stats.nmuses << ", "
-        << "\"map\": " << stats.map_calls << ", "
-        << "\"sat\": " << stats.sat_calls << ", "
-        << "\"total\": " << (stats.sat_calls + stats.map_calls)
-        << "}" << std::endl;
-    } else {
-      std::cout << "Total Time: " << std::fixed << std::setprecision(5)
-        << dur.count() << "\tnmuses: " << stats.nmuses << "\t"
-        << stats << std::endl;
-    }
-  }
+      Statistics& stats) const;
 
-  void print(const std::string& msg) const {
-    if(use_sections) {
-      std::cout << "{\"type\": \"info\", \"msg\": \"" << msg << "\"}" << std::endl;
-    } else {
-      std::cout << msg << std::endl;
-    }
-  }
-
-
+  void print(const std::string& msg) const;
 };
 
 class MUSEnumOptions {
@@ -209,82 +157,9 @@ public:
     }
   }
 
-  void solution(const std::string& msg) const {
-    if(use_sections) {
-      std::cout << "{\"type\": \"solution\", ";
-      switch(subproblem_output_format) {
-        case OUT_JSON:
-          std::cout << "\"object\": " << utils::escape(msg, "\n\r\t", {"", "", ""});
-          break;
-        case OUT_HTML:
-          std::cout << "\"html\": \"" << utils::escape(msg, true, true) << "\"";
-          break;
-        default:
-          std::cout << "\"raw\": \"" << utils::escape(msg, true, true) << "\"";
-          break;
-      };
-      std::cout << "}" << std::endl;
-    } else {
-      switch(subproblem_output_format) {
-        case OUT_JSON:
-          std::cout << "%%%mzn-json-start\n"
-                    << msg
-                    << "%%%mzn-json-end" << std::endl;
-          break;
-        case OUT_HTML:
-          std::cout << "%%%mzn-html-start\n"
-                    << utils::escape(msg, true, false)
-                    << "%%%mzn-html-end" << std::endl;
-          break;
-        default:
-          std::cout << msg << std::endl;
-          break;
-      };
-    }
-  }
-
-  void log(LOG_SOURCE source, const std::string& msg, unsigned int level) const {
-    std::string prefix = "Log";
-    if(source == LOG_MAP) {
-      if(level > verbose_map) return;
-      prefix = "MapSolver";
-    } else if(source == LOG_ENUM) {
-      if(level > verbose_enum) return;
-      prefix = "Enumerator";
-    } else if(source == LOG_SOLVE) {
-      if(level > verbose_subsolve) return;
-      prefix = "SubSolver";
-    }
-
-    if(use_sections) {
-      std::cout << "{\"type\": \"message\", "
-                << "\"source\": \"" << prefix << "\", "
-                << "\"message\": \"" << utils::escape(msg, false, true)
-                << "\"}" << std::endl;
-    } else {
-      std::cout << prefix << ": " << msg << std::endl;
-    }
-  }
-
-  void error(LOG_SOURCE source, const std::string& msg) const {
-    std::string prefix = "Log";
-    if(source == LOG_MAP) {
-      prefix = "MapSolver";
-    } else if(source == LOG_ENUM) {
-      prefix = "Enumerator";
-    } else if(source == LOG_SOLVE) {
-      prefix = "SubSolver";
-    }
-
-    if(use_sections) {
-      std::cout << "{\"type\": \"error\", "
-                << "\"source\": \"" << prefix << "\", "
-                << "\"message\": \"" << utils::escape(msg, false, true)
-                << "\"}" << std::endl;
-    } else {
-      std::cerr << prefix << ": " << msg << std::endl;
-    }
-  }
+  void solution(const std::string& msg) const;
+  void log(LOG_SOURCE source, const std::string& msg, unsigned int level) const;
+  void error(LOG_SOURCE source, const std::string& msg) const;
 
 };
 

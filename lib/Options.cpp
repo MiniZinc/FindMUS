@@ -5,6 +5,149 @@
 
 namespace HierMUS {
 
+/////////////////
+// Driver Options
+
+void DriverOptions::print_progress(float f) const {
+  if(output_progress) {
+    if(use_sections) {
+      std::cout << "{\"type\": \"progress\", \"value\": "<< f <<"}" << std::endl;
+    } else {
+      std::cout << "%%%mzn-progress " << std::fixed << std::setprecision(2) << f << std::endl;
+    }
+  }
+}
+
+void DriverOptions::print_intermediate_stats(
+  std::chrono::time_point<std::chrono::system_clock> start_time,
+  Statistics& stats, int sat_calls_d) const {
+
+  std::chrono::duration<double> dur =
+      std::chrono::system_clock::now() - start_time;
+
+  if(use_sections) {
+    std::cout << "{\"type\": \"statistics\", \"statistics\": {"
+      << "\"time\": " << std::setprecision(5) << dur.count() << ", "
+      << "\"nmuses\": " << std::fixed << stats.nmuses << ", "
+      << "\"map\": " << std::fixed << stats.map_calls << ", "
+      << "\"sat\": " << std::fixed << stats.sat_calls << ", "
+      << "\"total\": " << (stats.sat_calls + stats.map_calls) << ", "
+      << "\"dsat\": " << sat_calls_d
+      << "}}" << std::endl;
+  } else {
+    std::cout << "Intermediate Result: Time: " << std::fixed
+              << std::setprecision(5) << dur.count()
+              << "\tnmuses: " << stats.nmuses << "\t" << stats
+              << "\tdsat: " << sat_calls_d << std::endl;
+  }
+}
+
+void DriverOptions::print_totals(
+    std::chrono::time_point<std::chrono::system_clock> start_time,
+    Statistics& stats) const {
+  std::chrono::duration<double> dur =
+    std::chrono::system_clock::now() - start_time;
+  if(use_sections) {
+    std::cout << "{\"type\": \"statistics\", \"statistics\": {"
+      << "\"time\": " << std::setprecision(5) << dur.count() << ", "
+      << "\"nmuses\": " << stats.nmuses << ", "
+      << "\"map\": " << stats.map_calls << ", "
+      << "\"sat\": " << stats.sat_calls << ", "
+      << "\"total\": " << (stats.sat_calls + stats.map_calls)
+      << "}}" << std::endl;
+  } else {
+    std::cout << "Total Time: " << std::fixed << std::setprecision(5)
+      << dur.count() << "\tnmuses: " << stats.nmuses << "\t"
+      << stats << std::endl;
+  }
+}
+
+void DriverOptions::print(const std::string& msg) const {
+  if(use_sections) {
+    std::cout << "{\"type\": \"comment\", \"comment\": \"" << msg << "\\n\"}" << std::endl;
+  } else {
+    std::cout << msg << std::endl;
+  }
+}
+
+/////////////////
+// MUSEnumOptions
+void MUSEnumOptions::solution(const std::string& msg) const {
+  if(use_sections) {
+    std::cout << "{\"type\": \"solution\", \"output\": {";
+    switch(subproblem_output_format) {
+      case OUT_JSON:
+        std::cout << "\"object\": " << utils::escape(msg, "\n\r\t", {"", "", ""});
+        break;
+      case OUT_HTML:
+        std::cout << "\"html\": \"" << utils::escape_text(msg) << "\"";
+        break;
+      default:
+        std::cout << "\"raw\": \"" << utils::escape_text(msg) << "\"";
+        break;
+    };
+    std::cout << "}}" << std::endl;
+  } else {
+    switch(subproblem_output_format) {
+      case OUT_JSON:
+        std::cout << "%%%mzn-json-start\n"
+                  << msg
+                  << "%%%mzn-json-end" << std::endl;
+        break;
+      case OUT_HTML:
+        std::cout << "%%%mzn-html-start\n"
+                  << msg
+                  << "%%%mzn-html-end" << std::endl;
+        break;
+      default:
+        std::cout << msg << std::endl;
+        break;
+    };
+  }
+}
+
+void MUSEnumOptions::log(LOG_SOURCE source, const std::string& msg, unsigned int level) const {
+  std::string prefix = "Log";
+  if(source == LOG_MAP) {
+    if(level > verbose_map) return;
+    prefix = "MapSolver";
+  } else if(source == LOG_ENUM) {
+    if(level > verbose_enum) return;
+    prefix = "Enumerator";
+  } else if(source == LOG_SOLVE) {
+    if(level > verbose_subsolve) return;
+    prefix = "SubSolver";
+  }
+
+  if(use_sections) {
+    std::cout << "{\"type\": \"comment\", "
+              << "\"comment\": \"" << prefix << ": " << utils::escape_text(msg) << "\\n"
+              << "\"}" << std::endl;
+  } else {
+    std::cout << prefix << ": " << msg << std::endl;
+  }
+}
+
+void MUSEnumOptions::error(LOG_SOURCE source, const std::string& msg) const {
+  std::string prefix = "Log";
+  if(source == LOG_MAP) {
+    prefix = "MapSolver";
+  } else if(source == LOG_ENUM) {
+    prefix = "Enumerator";
+  } else if(source == LOG_SOLVE) {
+    prefix = "SubSolver";
+  }
+
+  if(use_sections) {
+    std::cout << "{\"type\": \"error\", "
+              << "\"source\": \"" << prefix << "\", "
+              << "\"error\": \"" << utils::escape(msg, false, true)
+              << "\"}" << std::endl;
+  } else {
+    std::cerr << prefix << ": " << msg << std::endl;
+  }
+}
+
 namespace OptionsHelper {
 void help_short(int exit_code) {
   std::cout << "findMUS: Explain an unsatisfiable model\n"
@@ -79,6 +222,8 @@ void help_long(void) {
       << "    Output modes, html for use with MiniZincIDE, brief for testing, "
          "json\n"
       << "    for easier to parse output.\n"
+      << "  --json-stream\n"
+      << "    Use new sections output\n"
       << "  --use-old-enumer\n"
       << "    Use old approach (for testing only).\n"
       << "\n"
@@ -330,7 +475,7 @@ void parse(DriverOptions &dro, MUSEnumOptions &mo,
       if (dro.maxmuses != 1) { // Disable focus mode
         mo.map_enum_focus_mode = false;
       }
-    } else if (args[i] == "-a") {
+    } else if (args[i] == "-a" || args[i] == "--all-solutions") {
       dro.maxmuses = 0;               // Find all MUSes
       mo.map_enum_focus_mode = false; // Don't use focus mode
     } else if (args[i] == "-t") {
@@ -445,11 +590,14 @@ void parse(DriverOptions &dro, MUSEnumOptions &mo,
       mo.subproblem_output_format = OUT_DEBUG;
     } else if (args[i] == "--output-human") {
       mo.subproblem_output_format = OUT_HUMAN;
-    } else if (args[i] == "--use-sections") {
+    } else if (args[i] == "--json-stream") {
       dro.use_sections = true;
       mo.use_sections = true;
     } else if (args[i] == "--use-old-enumer") {
       dro.use_new_enumer = false;
+    } else if (args[i] == "--no-intermediate-solutions" ||
+               args[i] == "--intermediate-solutions") {
+      // NOOP
 #ifdef BUILD_FINDMUS_EXAMPLES
     } else if (args[i] == "--demo") {
       dro.demo_name = args[++i];
