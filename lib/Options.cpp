@@ -83,7 +83,7 @@ void MUSEnumOptions::solution(const std::string& msg) const {
         std::cout << "\"html\": \"" << utils::escape_text(msg) << "\"";
         break;
       default:
-        std::cout << "\"raw\": \"" << utils::escape_text(msg) << "\"";
+        std::cout << "\"raw\": \"" << utils::escape_nls(msg) << "\"";
         break;
     };
     std::cout << "}}" << std::endl;
