@@ -11,7 +11,9 @@ namespace HierMUS {
 void DriverOptions::print_progress(float f) const {
   if(output_progress) {
     if(use_sections) {
-      std::cout << "{\"type\": \"progress\", \"value\": "<< f <<"}" << std::endl;
+      std::cout << "{\"type\": \"progress\", \"progress\": "
+        << std::fixed << std::setprecision(2) << f
+        << "}" << std::endl;
     } else {
       std::cout << "%%%mzn-progress " << std::fixed << std::setprecision(2) << f << std::endl;
     }
