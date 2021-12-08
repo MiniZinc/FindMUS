@@ -153,7 +153,7 @@ void MUSEnumOptions::error(LOG_SOURCE source, const std::string& msg) const {
 namespace OptionsHelper {
 void help_short(int exit_code) {
   std::cout << "findMUS: Explain an unsatisfiable model\n"
-            << "  version: 0.6.0\n"
+            << "  version: 0.7.0\n"
             << "  usage: findMUS <flatzinc file> [paths file]\n"
             << "                 [-a] [-n <n>]\n"
             << "                 [--paramset {hint, mzn, fzn}]\n"

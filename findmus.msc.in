@@ -1,11 +1,11 @@
 {
   "id": "org.minizinc.findmus",
   "name": "findMUS",
-  "executable": "../../../bin/findMUS",
+  "executable": "${REL_INSTALL_BINARY}",
   "isGUIApplication": false,
   "mznlib": "",
   "supportsMzn": true,
-  "version": "0.5.0",
+  "version": "${findMUS_VERSION_MAJOR}.${findMUS_VERSION_MINOR}.${findMUS_VERSION_PATCH}",
   "needsSolns2Out": false,
   "needsStdlibDir": true,
   "needsPathsFile": false,

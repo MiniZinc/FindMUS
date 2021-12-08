@@ -2,6 +2,19 @@
 # findMUS Changelog #
 ======================
 
+version 0.7.0
+=============
+  - Automatically generate findmus.msc file
+  - Major rework of output system. Support for --json-stream sections
+  - Renamed --filter-named argument in .msc file
+  - Fix: --solver-timelimit options are not processed by processOptions any more. Now processed separately
+  - Added Error if findMUS is compiled without -DMZN_SUPPORTS_SHRINK and called with --native-shrink
+  - Changed bullet point symbol to dash in human output
+  - Changed some underlying data structures
+  - Applied clang-format
+  - Integrated some more changes from native shrink branches; Run cmake with -DMZN_SUPPORTS_SHRINK=on
+  - Human output for --paramset fzn should output fzn level path element instead of mzn level
+  - Added missing --num-solutions argument
 
 version 0.6.0
 ==============

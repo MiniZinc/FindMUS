@@ -24,7 +24,7 @@ include_directories("include" ${CMAKE_BINARY_DIR})
 
 # The version number.
 set (findMUS_VERSION_MAJOR 0)
-set (findMUS_VERSION_MINOR 6)
+set (findMUS_VERSION_MINOR 7)
 set (findMUS_VERSION_PATCH 0)
 
 add_library(hiermus
@@ -93,10 +93,18 @@ if(libminizinc_FOUND)
       target_link_libraries(tests hiermus mzn ${CMAKE_THREAD_LIBS_INIT})
     endif()
 
-    INSTALL(TARGETS findMUS
-      RUNTIME DESTINATION bin
-      LIBRARY DESTINATION lib
-      ARCHIVE DESTINATION lib)
+    include(GNUInstallDirs)
+
+    file(RELATIVE_PATH REL_INSTALL_BINARY ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/minizinc/solvers ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/findMUS)
+    configure_file(findmus.msc.in findmus.msc)
+
+      install(TARGETS findMUS
+              RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+              ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(FILES ${CMAKE_BINARY_DIR}/findmus.msc 
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/minizinc/solvers)
+
 else()
     message("Error: Could not find MiniZinc library. findMUS cannot be compiled. Install libminizinc from source and set CMAKE_PREFIX_PATH or libminizinc_DIR.")
 endif()
