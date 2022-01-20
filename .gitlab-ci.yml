@@ -9,7 +9,7 @@ stages:
   stage: build
   before_script: *download_script
   script:
-    - sh download.sh vendor master vendor:${MZNARCH} vendor.zip
+    - sh download.sh minizinc-vendor master vendor:${MZNARCH} vendor.zip
     - unzip -q vendor.zip
     - sh download.sh minizinc develop build:${MZNARCH} minizinc.zip
     - unzip -q minizinc.zip
@@ -49,7 +49,7 @@ build:win64:
     - curl -o download.sh --location --header "PRIVATE-TOKEN:%ACCESS_TOKEN%" --silent https://gitlab.com/api/v4/snippets/1796163/raw
     - dos2unix download.sh
   script:
-    - sh download.sh vendor master vendor:%MZNARCH% vendor.zip
+    - sh download.sh minizinc-vendor master vendor:%MZNARCH% vendor.zip
     - unzip -q vendor.zip
     - sh download.sh minizinc develop build:%MZNARCH% minizinc.zip
     - unzip -q minizinc.zip
