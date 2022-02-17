@@ -42,6 +42,7 @@
     ["--dump-dot", "Write tree to GraphViz file", "string", ""],
     ["-g", "Attempt to record domain changes as constraints", "bool", "true"],
     ["--soft-defines", "Consider functional constraints as part of MUSes.", "bool", "true"],
+    ["--named-only", "Treat constraints with name annotations as foreground", "bool", "true"],
     ["--help", "Extra help information", "bool", "true"],
     ]
 }
