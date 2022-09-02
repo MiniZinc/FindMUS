@@ -449,9 +449,9 @@ bool FznSubProblem::check(const Selection &b) {
 
     si = sf->createSI(fzn_env, mzn_log, siOpt);
     si->setSolns2Out(&s2o);
-    si->processFlatZinc();
-
     try {
+      si->processFlatZinc();
+
       s = si->solve();
 #ifdef MZN_SUPPORTS_SHRINK
       if (s == MiniZinc::SolverInstance::UNSAT) {
@@ -465,6 +465,12 @@ bool FznSubProblem::check(const Selection &b) {
 #endif
       sf->destroySI(si);
     } catch (const MiniZinc::InternalError &err) {
+      std::stringstream ess;
+      ess << "Exception during sub-solving: " << err.msg()
+          << ": " << err.what();
+      error(ess.str());
+      exit(EXIT_FAILURE);
+    } catch (const MiniZinc::Error &err) {
       std::stringstream ess;
       ess << "Exception during sub-solving: " << err.msg()
           << ": " << err.what();
