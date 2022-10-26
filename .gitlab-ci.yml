@@ -13,7 +13,7 @@ stages:
     - unzip -q vendor.zip
     - sh download.sh minizinc develop build:${MZNARCH} minizinc.zip
     - unzip -q minizinc.zip
-    - cmake -S . -B build -G"$CMAKE_ARCH" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$CI_PROJECT_DIR/minizinc/$CMAKEDIR -DGecode_ROOT="$CI_PROJECT_DIR/vendor/gecode" -DOsiCBC_ROOT="$CI_PROJECT_DIR/vendor/cbc" -DHIGHS_DIR="$CI_PROJECT_DIR/vendor/highs/lib/cmake/highs" -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
+    - cmake -S . -B build -G"$CMAKE_ARCH" -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_LIBMINIZINC=1 -Dlibminizinc_DIR=$CI_PROJECT_DIR/minizinc/$CMAKEDIR/libminizinc -DGecode_ROOT="$CI_PROJECT_DIR/vendor/gecode" -DOsiCBC_ROOT="$CI_PROJECT_DIR/vendor/cbc" -DHIGHS_DIR="$CI_PROJECT_DIR/vendor/highs/$CMAKEDIR/highs" -DCMAKE_INSTALL_PREFIX="$CI_PROJECT_DIR/findMUS"
     - cmake --build build --config Release --target install
   artifacts:
     paths:
@@ -28,7 +28,7 @@ build:linux:
   variables:
     MZNARCH: "linux"
     CMAKE_ARCH: "Ninja"
-    CMAKEDIR: "lib64/cmake/libminizinc"
+    CMAKEDIR: "lib64/cmake"
   tags: [linux, docker]
 
 build:osx:
@@ -36,7 +36,7 @@ build:osx:
   variables:
     MZNARCH: "osx"
     CMAKE_ARCH: "Ninja"
-    CMAKEDIR: "lib/cmake/libminizinc"
+    CMAKEDIR: "lib/cmake"
     MACOSX_DEPLOYMENT_TARGET: "10.9"
     CMAKE_OSX_ARCHITECTURES: "x86_64;arm64"
   tags: [osx, cmake, cpp]
