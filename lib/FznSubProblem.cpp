@@ -42,10 +42,10 @@ NullSolns2Out::~NullSolns2Out() {}
 std::ostream &NullSolns2Out::getOutput() { return nullstream; }
 
 inline bool isFunctionalConstraint(const MiniZinc::ConstraintI &ci) {
-  return ci.e()->ann().containsCall(MiniZinc::Constants::constants().ann.defines_var);
+  return MiniZinc::Expression::ann(ci.e()).containsCall(MiniZinc::Constants::constants().ann.defines_var);
 }
 inline bool isDomainConstraint(const MiniZinc::ConstraintI &ci) {
-  return ci.e()->ann().contains(
+  return MiniZinc::Expression::ann(ci.e()).contains(
       MiniZinc::Constants::constants().ann.domain_change_constraint);
 }
 
@@ -65,21 +65,19 @@ struct ConNames {
 inline ConNames getNames(const MiniZinc::ConstraintI &ci) {
   ConNames names;
   MiniZinc::Expression *cn =
-      MiniZinc::get_annotation(ci.e()->ann(), "mzn_constraint_name");
+      MiniZinc::get_annotation(MiniZinc::Expression::ann(ci.e()), "mzn_constraint_name");
   if (cn)
-    names.cons_name = cn->cast<MiniZinc::Call>()
-                          ->arg(0)
-                          ->cast<MiniZinc::StringLit>()
-                          ->v()
-                          .c_str();
+    names.cons_name = MiniZinc::Expression::cast<MiniZinc::StringLit>(
+      MiniZinc::Expression::cast<MiniZinc::Call>(cn)
+      ->arg(0)
+    )->v().c_str();
   MiniZinc::Expression *en =
-      MiniZinc::get_annotation(ci.e()->ann(), "mzn_expression_name");
+      MiniZinc::get_annotation(MiniZinc::Expression::ann(ci.e()), "mzn_expression_name");
   if (en)
-    names.expr_name = en->cast<MiniZinc::Call>()
-                          ->arg(0)
-                          ->cast<MiniZinc::StringLit>()
-                          ->v()
-                          .c_str();
+    names.expr_name = MiniZinc::Expression::cast<MiniZinc::StringLit>(
+      MiniZinc::Expression::cast<MiniZinc::Call>(en)
+      ->arg(0)
+    )->v().c_str();
   return names;
 }
 
@@ -200,8 +198,7 @@ FznSubProblem::FznSubProblem(const string &fznpath, const string &pathpath,
     }
     if ((*it)->isa<MiniZinc::VarDeclI>()) {
       MiniZinc::VarDeclI *vdi = (*it)->cast<MiniZinc::VarDeclI>();
-      MiniZinc::VarDecl *vd = vdi->e();
-      MiniZinc::Annotation &ann = vd->ann();
+      MiniZinc::Annotation &ann = MiniZinc::Expression::ann(vdi->e());
       ann.removeCall(MiniZinc::Constants::constants().ann.output_array);
       ann.remove(MiniZinc::Constants::constants().ann.output_var);
     }

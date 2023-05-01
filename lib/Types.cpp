@@ -18,16 +18,16 @@ std::ostream &operator<<(std::ostream &os, Statistics const &s) {
 void ConstraintInfo::setAnnotatedNamesFrom(const MiniZinc::ConstraintI *ci) {
   std::stringstream explain;
   MiniZinc::Expression *en =
-      MiniZinc::get_annotation(ci->e()->ann(), "mzn_expression_name");
+      MiniZinc::get_annotation(MiniZinc::Expression::ann(ci->e()), "mzn_expression_name");
   if (en) {
-    MiniZinc::Call *c = en->cast<MiniZinc::Call>();
-    expression_name = c->arg(0)->cast<MiniZinc::StringLit>()->v().c_str();
+    MiniZinc::Call *c = MiniZinc::Expression::cast<MiniZinc::Call>(en);
+    expression_name = MiniZinc::Expression::cast<MiniZinc::StringLit>(c->arg(0))->v().c_str();
   }
   MiniZinc::Expression *cn =
-      MiniZinc::get_annotation(ci->e()->ann(), "mzn_constraint_name");
+      MiniZinc::get_annotation(MiniZinc::Expression::ann(ci->e()), "mzn_constraint_name");
   if (cn) {
-    MiniZinc::Call *c = cn->cast<MiniZinc::Call>();
-    constraint_name = c->arg(0)->cast<MiniZinc::StringLit>()->v().c_str();
+    MiniZinc::Call *c = MiniZinc::Expression::cast<MiniZinc::Call>(cn);
+    constraint_name = MiniZinc::Expression::cast<MiniZinc::StringLit>(c->arg(0))->v().c_str();
   }
 }
 
