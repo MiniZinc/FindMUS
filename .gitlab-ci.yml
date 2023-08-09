@@ -61,11 +61,11 @@ build:win64:
     key: "build_win64"
   tags: [win64, cmake, cpp]
 
-# ----------- Trigger MiniZincIDE pipeline -----------
+# ----------- Trigger mzn-analyse pipeline -----------
 
-trigger:ide:
+trigger:mzn-analyse:
   stage: trigger
   trigger:
-    project: minizinc/minizinc-ide
+    project: minizinc/mzn-analyse
     branch: develop
   only: [develop]
