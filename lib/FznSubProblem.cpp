@@ -444,9 +444,9 @@ bool FznSubProblem::check(const Selection &b) {
     auto siOpt = solver.getSIOptions();
     sf->processOption(siOpt, i, timeout_args);
 
-    si = sf->createSI(fzn_env, mzn_log, siOpt);
-    si->setSolns2Out(&s2o);
     try {
+      si = sf->createSI(fzn_env, mzn_log, siOpt);
+      si->setSolns2Out(&s2o);
       si->processFlatZinc();
 
       s = si->solve();

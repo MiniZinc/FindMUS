@@ -172,6 +172,10 @@ SubProblem *createProblem(DriverOptions &dro, MUSEnumOptions &mo,
         std::cerr << e.loc() << ":" << std::endl;
         std::cerr << e.what() << ": " << e.msg() << std::endl;
         exit(EXIT_FAILURE);
+      } catch (const MiniZinc::Error &e) {
+        std::cerr << std::endl;
+        e.print(std::cerr);
+        exit(EXIT_FAILURE);
       } catch (const MiniZinc::Exception &e) {
         std::cerr << std::endl;
         std::string what = e.what();
