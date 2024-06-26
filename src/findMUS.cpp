@@ -301,7 +301,7 @@ int main(int argc, const char **argv) {
       return EXIT_SUCCESS;
     } else {
       std::cerr << "Error: Cannot prove UNSAT within solver timelimit. "
-                << "Set a larger timeout with the '--solver-timelimit' argument."
+                << "Set a larger timeout with the '--subsolver-timelimit' argument."
                 << std::endl;
     }
     return EXIT_FAILURE;
