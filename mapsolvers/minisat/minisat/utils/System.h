@@ -21,7 +21,9 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #ifndef Minisat_System_h
 #define Minisat_System_h
 
-#if defined(__linux__)
+// musl has no fpu_control.h. The only use of it (System.cc) is already guarded
+// on the macros this header defines, so skipping it costs nothing there.
+#if defined(__linux__) && __has_include(<fpu_control.h>)
 #include <fpu_control.h>
 #endif
 
