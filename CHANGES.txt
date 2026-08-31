@@ -2,6 +2,9 @@
 # findMUS Changelog #
 ======================
 
+version 2.10.1
+  - Synchronise version number with MiniZInc version.
+
 version 0.7.0
 =============
   - Automatically generate findmus.msc file
