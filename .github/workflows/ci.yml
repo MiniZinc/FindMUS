@@ -31,6 +31,114 @@ env:
   MZN_RELEASE: ${{ github.event.inputs.minizinc_release }}
 
 jobs:
+  read-versions:
+    name: read versions
+    runs-on: ubuntu-24.04
+    outputs:
+      findmus: ${{ steps.versions.outputs.findmus }}
+      mzn: ${{ steps.versions.outputs.mzn }}
+      mismatch: ${{ steps.versions.outputs.mismatch }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Read the FindMUS and compiler versions
+        id: versions
+        shell: bash
+        run: |
+          set -eux
+          bash scripts/fetch_minizinc.sh x86_64-linux-gnu
+          major=$(sed -nE 's/^set *\(findMUS_VERSION_MAJOR +([0-9]+) *\)$/\1/p' CMakeLists.txt)
+          minor=$(sed -nE 's/^set *\(findMUS_VERSION_MINOR +([0-9]+) *\)$/\1/p' CMakeLists.txt)
+          patch=$(sed -nE 's/^set *\(findMUS_VERSION_PATCH +([0-9]+) *\)$/\1/p' CMakeLists.txt)
+          findmus="$major.$minor.$patch"
+          mzn=$(minizinc/bin/minizinc --version | sed -nE 's/.*version ([^,]+),.*/\1/p')
+          echo "FindMUS=$findmus MiniZinc=$mzn"
+          [ -n "$major" ] && [ -n "$minor" ] && [ -n "$patch" ] && [ -n "$mzn" ]
+          {
+            echo "findmus=$findmus"
+            echo "mzn=$mzn"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ "$findmus" = "$mzn" ]; then
+            echo "mismatch=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "mismatch=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  propose-version-bump:
+    name: propose version bump
+    needs: read-versions
+    if: >-
+      github.ref == 'refs/heads/develop' &&
+      (github.event_name != 'workflow_dispatch' || inputs.minizinc_release == '') &&
+      needs.read-versions.outputs.mismatch == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      MZN_VERSION: ${{ needs.read-versions.outputs.mzn }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Prepare version bump
+        shell: bash
+        run: |
+          set -eux
+          IFS=. read -r major minor patch extra <<< "$MZN_VERSION"
+          [ -n "$major" ] && [ -n "$minor" ] && [ -n "$patch" ] && [ -z "$extra" ]
+          [[ "$major" =~ ^[0-9]+$ && "$minor" =~ ^[0-9]+$ && "$patch" =~ ^[0-9]+$ ]]
+          sed -i -E \
+            -e "s/^(set *\(findMUS_VERSION_MAJOR +)[0-9]+( *\))$/\1$major\2/" \
+            -e "s/^(set *\(findMUS_VERSION_MINOR +)[0-9]+( *\))$/\1$minor\2/" \
+            -e "s/^(set *\(findMUS_VERSION_PATCH +)[0-9]+( *\))$/\1$patch\2/" \
+            CMakeLists.txt
+
+      - name: Open version bump pull request
+        shell: bash
+        run: |
+          set -eux
+          branch="bot/bump-minizinc-version-$MZN_VERSION"
+          git switch -c "$branch"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CMakeLists.txt
+          git commit -m "Bump FindMUS version to $MZN_VERSION"
+          # This branch is owned by this job and is unique to the target
+          # version. Force-pushing refreshes it if develop advances before the
+          # version bump is merged.
+          git push --force origin "$branch"
+          if [ "$(gh pr list --base develop --head "$branch" --state open --json number --jq 'length')" -eq 0 ]; then
+            gh pr create \
+              --base develop \
+              --head "$branch" \
+              --title "Bump FindMUS version to $MZN_VERSION" \
+              --body "Updates the FindMUS version to match the MiniZinc compiler."
+          fi
+
+  check-version:
+    name: check version
+    needs: [read-versions, propose-version-bump]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Propagate a version read failure
+        if: needs.read-versions.result != 'success'
+        run: exit 1
+
+      - name: Fail on a version mismatch
+        if: needs.read-versions.outputs.mismatch == 'true'
+        shell: bash
+        run: |
+          echo "FindMUS ${{ needs.read-versions.outputs.findmus }} does not match MiniZinc ${{ needs.read-versions.outputs.mzn }}" >&2
+          exit 1
+
+      - name: Compare the tag version
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            [ "$GITHUB_REF_NAME" = "${{ needs.read-versions.outputs.mzn }}" ] \
+              || { echo "tag $GITHUB_REF_NAME does not match version ${{ needs.read-versions.outputs.mzn }}" >&2; exit 1; }
+          fi
+
   build:
     name: build (${{ matrix.platform }})
     strategy:
@@ -99,7 +207,7 @@ jobs:
 
   publish:
     name: publish release
-    needs: build
+    needs: [build, check-version]
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-24.04
     permissions:
