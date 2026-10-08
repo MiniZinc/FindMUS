@@ -140,7 +140,6 @@ void FznSubProblem::init_oracle_model(const string &oraclepath, int ncons,
 }
 
 void FznSubProblem::init_fzn_model(const string &fznpath) {
-  MiniZinc::GCLock lock;
   vector<string> includes;
 
   includes.push_back(mopts.mzn_stdlib_dir + "/std/");
