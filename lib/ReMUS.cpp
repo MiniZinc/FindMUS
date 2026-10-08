@@ -95,9 +95,12 @@ bool ReMUS::search() {
     } else {
       subsetMap->blockSubsets(s_max);
       Selection s_mcs = state.S.get_diff(s_max);
+      // Count the included nodes, not the selected ones: when state.S selects a
+      // parent (e.g. the root), the difference still selects only that parent.
+      const NodeSet& s_mcs_included = s_mcs.const_included().get_nodes();
 
-      if (s_mcs.size() == 1) {
-        state.criticals.insert((*s_mcs.const_included().begin()).child);
+      if (s_mcs_included.size() == 1) {
+        state.criticals.insert(*s_mcs_included.begin());
 
         std::stringstream ss;
         ss << indent << "ReMUS: updated crits: {" << state.criticals << " }";
@@ -105,7 +108,6 @@ bool ReMUS::search() {
       } else {
         // We are aboute to modify remus_stack so we need a copy of criticals
         NodeSet criticals_copy = state.criticals;
-        const NodeSet& s_mcs_included = s_mcs.const_included().get_nodes();
         vector<const MapNode *>::const_reverse_iterator rit;
         for (rit = s_mcs_included.rbegin(); rit != s_mcs_included.rend(); ++rit) {
           const MapNode *n = *rit;
