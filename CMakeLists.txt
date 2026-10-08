@@ -6,6 +6,7 @@ if(POLICY CMP0074)
 endif(POLICY CMP0074)
 
 option(BUILD_FINDMUS_EXAMPLES "Build set of cpp example SubProblems" OFF)
+option(BUILD_FINDMUS_TESTS "Build the MUS enumeration tests" OFF)
 option(MZN_SUPPORTS_SHRINK "Indicate that minizinc supports native shrink" OFF)
 
 message("-- Configuring: C++ options")

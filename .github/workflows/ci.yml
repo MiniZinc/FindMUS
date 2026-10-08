@@ -200,9 +200,32 @@ jobs:
           name: findMUS-${{ matrix.platform }}
           path: findMUS-${{ matrix.triple }}.tar.gz
 
+  # The tests exercise the MUS enumeration algorithms only, which do not depend
+  # on the platform, so one platform is enough. Same container as the linux build.
+  test:
+    name: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Fetch libminizinc + Gecode
+        shell: bash
+        run: bash scripts/fetch_minizinc.sh x86_64-linux-gnu
+
+      - name: Build & run tests
+        shell: bash
+        run: |
+          set -eux
+          docker run --rm -v "$PWD:/work" -w /work \
+            -e ROOT=/work \
+            -e CMAKE_GENERATOR="Unix Makefiles" \
+            -e CMAKEDIR="lib64/cmake" \
+            "quay.io/pypa/manylinux_2_28_x86_64" \
+            bash scripts/ci_test.sh
+
   publish:
     name: publish release
-    needs: [build, check-version]
+    needs: [build, test, check-version]
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-24.04
     permissions:
