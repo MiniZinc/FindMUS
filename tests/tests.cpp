@@ -64,7 +64,7 @@ bool run_test(size_t id, const vector<string> &args, string path) {
   return result == "PASS";
 }
 
-int run_tests(vector<size_t> ids) {
+bool run_tests(vector<size_t> ids) {
   vector<vector<string>> test_args = {
     {"-t", "1000", "--paramset", "fzn", "--no-binarize", "--structure", "flat", "--shrink-alg", "map_lin"},
     {"-t", "1000", "--paramset", "fzn", "--structure", "flat", "--shrink-alg", "map_lin"},
@@ -140,5 +140,5 @@ int main(int argc, char **argv) {
     i++;
   }
 
-  return HierMUS::run_tests(ids);
+  return HierMUS::run_tests(ids) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
