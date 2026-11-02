@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <list>
 
 #ifdef WIN32
 #define NOMINMAX
@@ -103,7 +104,7 @@ static void run(DriverOptions &dro, MUSEnumOptions &mo, MusEnumerator &me) {
 } // namespace FindMUSState
 
 SubProblem *createProblem(DriverOptions &dro, MUSEnumOptions &mo,
-                          vector<MiniZinc::FileUtils::TmpFile> &temp_files) {
+                          std::list<MiniZinc::FileUtils::TmpFile> &temp_files) {
   SubProblem *problem = nullptr;
 #ifdef BUILD_FINDMUS_EXAMPLES
   if (!dro.demo_name.empty()) {
@@ -139,7 +140,6 @@ SubProblem *createProblem(DriverOptions &dro, MUSEnumOptions &mo,
 
       args.insert(args.end(), dro.input_files.begin(), dro.input_files.end());
 
-      temp_files.reserve(2);
       temp_files.emplace_back(".fzn");
       dro.fznpath = temp_files.back().name();
       temp_files.emplace_back(".paths");
@@ -266,7 +266,7 @@ int main(int argc, const char **argv) {
     exit(EXIT_SUCCESS);
   }
 
-  vector<MiniZinc::FileUtils::TmpFile> temp_files;
+  std::list<MiniZinc::FileUtils::TmpFile> temp_files;
   // Create SubProblem
   HierMUS::SubProblem *problem = createProblem(dro, mo, temp_files);
 
