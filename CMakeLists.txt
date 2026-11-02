@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.5.0)
+cmake_minimum_required (VERSION 3.8)
 project (findMUS CXX C)
 
 if(POLICY CMP0074)
@@ -10,7 +10,7 @@ option(BUILD_FINDMUS_TESTS "Build the MUS enumeration tests" OFF)
 option(MZN_SUPPORTS_SHRINK "Indicate that minizinc supports native shrink" OFF)
 
 message("-- Configuring: C++ options")
-include(cmake-helpers/configure_cpp_11.cmake)
+include(cmake-helpers/configure_cpp_17.cmake)
 
 message("-- Configuring: libminzinc")
 include(cmake-helpers/configure_libminizinc.cmake)
