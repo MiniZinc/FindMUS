@@ -2,7 +2,12 @@
 # findMUS Changelog #
 ======================
 
+version 2.11.0
+==============
+  - Fix node counting bug in ReMUS.
+
 version 2.10.1
+==============
   - Synchronise version number with MiniZinc version.
 
 version 0.7.0
