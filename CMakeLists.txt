@@ -26,7 +26,7 @@ include_directories("include" ${CMAKE_BINARY_DIR})
 # The version number.
 set (findMUS_VERSION_MAJOR 2)
 set (findMUS_VERSION_MINOR 11)
-set (findMUS_VERSION_PATCH 0)
+set (findMUS_VERSION_PATCH 1)
 
 add_library(hiermus
   lib/SubProblem.cpp
